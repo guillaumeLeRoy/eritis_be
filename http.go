@@ -6,6 +6,7 @@ import (
 	"golang.org/x/net/context"
 	"bytes"
 	"google.golang.org/appengine/log"
+	"strings"
 )
 
 func decode(r *http.Request, v interface{}) error {
@@ -54,8 +55,14 @@ func respondErr(ctx context.Context, w http.ResponseWriter, r *http.Request, err
 
 func pathParams(r *http.Request, pattern string) map[string]string {
 	params := map[string]string{}
-	//strings.Trim()
-	//strings.Split()
-
+	//remove any extra '/' before or after the url
+	trim := strings.Trim(r.URL.Path, "/")
+	pathSegs := strings.Split(trim, "/")
+	for i, seg := range strings.Split(strings.Trim(pattern, "/"), "/") {
+		if i > len(pathSegs) - 1 {
+			return params
+		}
+		params[seg] = pathSegs[i]
+	}
 	return params
 }

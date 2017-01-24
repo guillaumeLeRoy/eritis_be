@@ -6,7 +6,7 @@ import (
 )
 
 func TestPathParams(t *testing.T) {
-	r, err := http.NewRequest("GET", "1/2/3/4/5", nil)
+	r, err := http.NewRequest("GET", "/1/2/3/4/5/", nil)
 	if err != nil {
 		t.Errorf("NewRequest: %s", err)
 	}
