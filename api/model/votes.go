@@ -1,4 +1,4 @@
-package hello
+package model
 
 import (
 	"time"
@@ -16,12 +16,19 @@ type Vote struct {
 	Score    int `json:"score" datastore:",noindex"`
 }
 
-func CastVote(ctx context.Context, answerKey *datastore.Key, score int) (*Vote, error) {
+func CastVote(ctx context.Context, answerKey *datastore.Key, score int, uid string) (*Vote, error) {
 	question, err := GetQuestion(ctx, answerKey.Parent())
 	if err != nil {
 		return nil, err
 	}
-	user, err := UserFromAEUser(ctx)
+
+	//get key from uid
+	userKey, err := datastore.DecodeKey(uid)
+	if err != nil {
+		return nil, err
+	}
+
+	user, err := getUser(ctx, userKey)
 	if err != nil {
 		return nil, err
 	}
@@ -41,8 +48,7 @@ func CastVote(ctx context.Context, answerKey *datastore.Key, score int) (*Vote, 
 	return &vote, nil
 }
 
-func castVoteInTransaction(ctx context.Context, answerKey *datastore.Key,
-question *Question, user *User, score int) (Vote, error) {
+func castVoteInTransaction(ctx context.Context, answerKey *datastore.Key, question *Question, user *User, score int) (Vote, error) {
 	var vote Vote
 	answer, err := GetAnswer(ctx, answerKey)
 	if err != nil {

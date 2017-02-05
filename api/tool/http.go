@@ -1,4 +1,4 @@
-package hello
+package tool
 
 import (
 	"net/http"
@@ -9,7 +9,7 @@ import (
 	"strings"
 )
 
-func decode(r *http.Request, v interface{}) error {
+func Decode(r *http.Request, v interface{}) error {
 	err := json.NewDecoder(r.Body).Decode(v)
 	if err != nil {
 		return err
@@ -25,23 +25,29 @@ func decode(r *http.Request, v interface{}) error {
 	return nil
 }
 
-func respond(ctx context.Context, w http.ResponseWriter, r *http.Request, v interface{}, code int) {
+func Respond(ctx context.Context, w http.ResponseWriter, r *http.Request, v interface{}, code int) {
 	var buf bytes.Buffer
 	err := json.NewEncoder(&buf).Encode(v)
 
 	if err != nil {
-		respondErr(ctx, w, r, err, http.StatusInternalServerError)
+		RespondErr(ctx, w, r, err, http.StatusInternalServerError)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.WriteHeader(code)
 	_, err = buf.WriteTo(w)
+
+	log.Debugf(ctx, "respond ---> %s", v)
+
 	if err != nil {
 		log.Errorf(ctx, "respond: %s", err)
 	}
 }
 
-func respondErr(ctx context.Context, w http.ResponseWriter, r *http.Request, err error, code int) {
+func RespondErr(ctx context.Context, w http.ResponseWriter, r *http.Request, err error, code int) {
+
+	log.Errorf(ctx, "respondErr: %s", err)
+
 	errObj := struct {
 		Error string `json:"error"`
 	}{Error: err.Error() }
@@ -53,7 +59,7 @@ func respondErr(ctx context.Context, w http.ResponseWriter, r *http.Request, err
 	}
 }
 
-func pathParams(r *http.Request, pattern string) map[string]string {
+func PathParams(r *http.Request, pattern string) map[string]string {
 	params := map[string]string{}
 	//remove any extra '/' before or after the url
 	trim := strings.Trim(r.URL.Path, "/")

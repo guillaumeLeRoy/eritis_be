@@ -1,0 +1,12 @@
+{
+  "type": "service_account",
+  "project_id": "eritis-150320",
+  "private_key_id": "97911f39ed2a2f1abae26a910eacdad7629205f3",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQC3qlNQjugng84F\n+VQHlDuTVjTaBjeCN4IUO0OPWOdXC8/QNdmyikNijgQ324mVV0VKMboFCrSjDdPg\nBkgLX2hvtf9/02Xob+OIbCOONLaHrvA1ivLtTR1L2sn4hL9F5tau2WtoXfuXFBiz\n8j8J1wlbyad0E1QQXiZIM1GBsmULj9icqPNxxOfM8gTIc5OiML3n2T/VKXwWH/yC\nzRbu3NiTyKIzH6ddXI19uJT/jK2kdykKrG3RxJ4ZTbdK6C7qz1H7KxLgz1pSjG/f\n5RkMZvjJbWS/aWWDkS6VaPpo/4YixKbNClPD5xkFfUX87tpm48DRg9ZRjYFx84KJ\nj4aEGYbDAgMBAAECggEALy9mCis8v3IgSu6cRPozOA4Ms/qm5iBmndX/7GL1xCo3\nsJE1JaZZ24cK1GLlfOWX2pDd7o+qir1xsntKpQlU5mZGhsuDweyE8zZ9B/rI7iDm\ne4sAEDEglq1V+C/6h/XfL7qR2pVSnqS+F/Tjdx60u80Z5TtV/IKDqUbt6LkxNn/E\n+rVwTUIXsZl+tBva6S9SP2WnfDLtSOZuj+9xban0nqXwisdOlFzTBnQ5d1dNrFGN\nef5EyEE+RAW7Wp4o5ipyxilbU88l28cu/Iwi7D8V274mAnOL2ezB+6IrV2EVlYKS\nVbh9u4fUSZ2SQWEcdgC56dVLqnDz1uYuMavAePEWiQKBgQD0Zlb+rKH2oH6/DDnr\n9J7SJWBS1rOjydAH3HRRY9W9t+kcDC3EuVFurr5jptDIhlPL+aEQ2ua8nZSGvIyV\nHfAm09ILfEr1VVwWLnrHlyebBRdVxlN9cFwOxdNbi45dRfGC9tqn3g0/mpky5Q+c\naAZs9HNBQBsLQrlzGFpTyEsxrQKBgQDAYgMHYpbkplPa5gOh+cWgD2i/9c16F8zH\nSfLCJpxVdqXGJxGcpNAPS6qg1Vq8wVdKV2ZlhD0hN4vEjWwqe33MlkNuT2QHZ+EE\nK9Nj3W3r04KggJxqyCnb6pXlBqPaMzrt01CwYgS6ovuc//MaELolOPVQFr5+4j7d\nElT1W3YILwKBgDVDlJQedZH1eooSlREKmA5+nNaQ+keo9RCxiBww4OVfDovRT6w/\nIzM3HEFFmt0JAXxD5ElzG7Rht3wB3bWl96/OnElqhj+fodknuhSDqdsMKgDEn2+I\nLFf/30dlS9qiIreDKzZIm6SQAfFooJVayoO2ZuQCn6I9oYMm/JCj51dlAoGAXpQQ\nvyG14wTuNrBb2tarVIweyDh0YvCuaM8u/En1E4L37pmoa+UOsGZXpSgeqqs2WcLs\nAT5ouxrOqLuKELyTVPAOiH2ZRJbKJb3R98eVUZmzH2r6+vgatBX4yRZhmVUURHVd\ntskJYCPeJQojno3YpZIB7/SuhDyAATkQ8WqcdVsCgYEAxj7Gd5tpAW3ZREZfXYUN\nxXAUwciqgdKN09AasyLXVIVrh+aKXFLFp5p9zY665Gv09Mexdt12o0zze3LuomOX\noilKXApZN9Jkqq6viMZ4H/wq31XGJImsL0dtEtn+bZpS8nV/jGvjXqJbS5dhTqDL\na20TONjs+bep1QFnsM9MAAE=\n-----END PRIVATE KEY-----\n",
+  "client_email": "eritis-backend@eritis-150320.iam.gserviceaccount.com",
+  "client_id": "117397297917864840709",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://accounts.google.com/o/oauth2/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/eritis-backend%40eritis-150320.iam.gserviceaccount.com"
+}

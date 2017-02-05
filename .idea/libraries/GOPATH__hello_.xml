@@ -16,7 +16,6 @@
       <root url="file://$PROJECT_DIR$/../sourcegraph.com" />
       <root url="file://$PROJECT_DIR$/../golang.org" />
       <root url="file://$USER_HOME$/goWork/src/testGo" />
-      <root url="file://$PROJECT_DIR$/../hello" />
     </CLASSES>
     <JAVADOC />
     <SOURCES>
@@ -35,7 +34,6 @@
       <root url="file://$PROJECT_DIR$/../sourcegraph.com" />
       <root url="file://$PROJECT_DIR$/../golang.org" />
       <root url="file://$USER_HOME$/goWork/src/testGo" />
-      <root url="file://$PROJECT_DIR$/../hello" />
     </SOURCES>
     <excluded>
       <root url="file://$PROJECT_DIR$" />

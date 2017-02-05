@@ -1,4 +1,4 @@
-package hello
+package model
 
 import (
 	"time"
@@ -38,7 +38,7 @@ func (a Answer) OK() error {
 
 func GetAnswer(ctx context.Context, answerKey *datastore.Key) (*Answer, error) {
 	var answer Answer
-	err := datastore.Get(ctx, answerKey, answer)
+	err := datastore.Get(ctx, answerKey, &answer)
 	if err != nil {
 		return nil, err
 	}
@@ -56,10 +56,10 @@ func ( a *Answer) Put(ctx context.Context) error {
 	return nil
 }
 
-func ( a *Answer) Create(ctx context.Context, questionKey *datastore.Key) error {
+func ( a *Answer) Create(ctx context.Context, questionKey *datastore.Key, uid string) error {
 
 	a.Key = datastore.NewIncompleteKey(ctx, "Answer", questionKey)
-	user, err := UserFromAEUser(ctx)
+	user, err := getUser(ctx, a.User.Key)
 	if err != nil {
 		return err
 	}
@@ -97,7 +97,7 @@ func ( a *Answer) Create(ctx context.Context, questionKey *datastore.Key) error 
 func GetAnswers(ctx context.Context, questionKey *datastore.Key) ([]*Answer, error) {
 	var answers []*Answer
 
-	answerKeys, err := datastore.NewQuery("Answer").Ancestor(questionKey).Order("-Score").Order("-CTime").GetAll(ctx, answers)
+	answerKeys, err := datastore.NewQuery("Answer").Ancestor(questionKey).Order("-Score").Order("-CTime").GetAll(ctx, &answers)
 
 	for i, answer := range answers {
 		answer.Key = answerKeys[i]

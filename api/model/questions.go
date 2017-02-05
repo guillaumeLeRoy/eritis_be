@@ -1,16 +1,16 @@
-package hello
+package model
 
 import (
-	"time"
 	"google.golang.org/appengine/datastore"
 	"errors"
 	"golang.org/x/net/context"
 	"google.golang.org/appengine/log"
+	"time"
 )
 
 type Question struct {
 	Key          *datastore.Key `json:"id" datastore:"-"`
-	CTime        time.Time `json:"created" datastore:",noindex"`
+	CTime        time.Time `json:"created"`
 	Question     string `json:"question" datastore:",noindex"`
 	User         UserCard `json:"user"`
 	AnswersCount int `json:"answers_count"`
@@ -37,13 +37,18 @@ func ( q Question) OK() error {
 	return nil
 }
 
-func ( q *Question) Create(ctx context.Context) error {
+func ( q *Question) Create(ctx context.Context, uid string) error {
 	log.Debugf(ctx, "Saving question: %s", q.Question)
+
+	userKey, err := datastore.DecodeKey(uid)//todo won't work
+	if err != nil {
+		return err
+	}
 
 	if q.Key == nil {
 		q.Key = datastore.NewIncompleteKey(ctx, "Question", nil)
 	}
-	user, err := UserFromAEUser(ctx)
+	user, err := getUser(ctx, userKey)
 	if err != nil {
 		return err
 	}
@@ -74,19 +79,24 @@ func ( q *Question) Update(ctx context.Context) error {
 }
 
 func GetQuestion(ctx context.Context, key *datastore.Key) (*Question, error) {
-	var q *Question
+	var q Question
 	err := datastore.Get(ctx, key, &q)
 	if ( err != nil ) {
 		return nil, err
 	}
 	q.Key = key
-	return q, nil
+	return &q, nil
 }
 
 func TopQuestions(ctx context.Context) ([]*Question, error) {
 	var questions []*Question
 
-	questionKeys, err := datastore.NewQuery("Question").Order("-AnswersCount").Order("-CTime").Limit(25).GetAll(ctx, questions)
+	questionKeys, err := datastore.NewQuery("Question").
+		Order("-AnswersCount").
+		Order("-CTime").
+		Limit(25).
+		GetAll(ctx, &questions)
+
 	for i, question := range questions {
 		question.Key = questionKeys[i]
 	}

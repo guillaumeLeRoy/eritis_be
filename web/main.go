@@ -3,7 +3,6 @@ package web
 import (
 	"html/template"
 	"net/http"
-
 	"golang.org/x/net/context"
 	"google.golang.org/appengine"
 	"google.golang.org/appengine/user"
@@ -17,7 +16,6 @@ func init() {
 	}
 	http.Handle("/questions/", templateHandler(tmpl, "question"))
 	http.Handle("/", templateHandler(tmpl, "index"))
-
 }
 
 func templateHandler(tmpl *template.Template, name string) http.Handler {
