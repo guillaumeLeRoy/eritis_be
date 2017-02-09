@@ -73,7 +73,7 @@ func CreateCoachFromFirebaseUser(ctx context.Context, fbUser *FirebaseUser) (*Co
 
 func getCoachFromFirebaseId(ctx context.Context, fbId string) (*Coach, error) {
 	var coachs []*Coach
-	keys, err := datastore.NewQuery("Coach").Filter("FirebaseUID = ", fbId).GetAll(ctx, &coachs)
+	keys, err := datastore.NewQuery("Coach").Filter("FirebaseId = ", fbId).GetAll(ctx, &coachs)
 	if err != nil {
 		return nil, err
 	}

@@ -75,7 +75,7 @@ func CreateCoacheeFromFirebaseUser(ctx context.Context, fbUser *FirebaseUser) (*
 func getCoacheeFromFirebaseId(ctx context.Context, fbId string) (*Coachee, error) {
 	var coachees []*Coachee
 
-	keys, err := datastore.NewQuery("Coachee").Filter("FirebaseUID = ", fbId).GetAll(ctx, &coachees)
+	keys, err := datastore.NewQuery("Coachee").Filter("FirebaseId = ", fbId).GetAll(ctx, &coachees)
 	if err != nil {
 		return nil, err
 	}
@@ -87,7 +87,7 @@ func getCoacheeFromFirebaseId(ctx context.Context, fbId string) (*Coachee, error
 	//todo too many users ??
 	var coachee Coachee
 	var key = keys[0]
-	err = datastore.Get(ctx, key, &coachee)
+	err = datastore.Get(ctx, key, &coachee)//TODO pk refaire un geT ??
 	if err != nil {
 		return nil, err
 	}

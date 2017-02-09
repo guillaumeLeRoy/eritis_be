@@ -15,6 +15,7 @@
       <root url="file://$PROJECT_DIR$/../eritis" />
       <root url="file://$PROJECT_DIR$/../sourcegraph.com" />
       <root url="file://$PROJECT_DIR$/../golang.org" />
+      <root url="file://$PROJECT_DIR$/../vault" />
       <root url="file://$USER_HOME$/goWork/src/testGo" />
     </CLASSES>
     <JAVADOC />
@@ -33,6 +34,7 @@
       <root url="file://$PROJECT_DIR$/../eritis" />
       <root url="file://$PROJECT_DIR$/../sourcegraph.com" />
       <root url="file://$PROJECT_DIR$/../golang.org" />
+      <root url="file://$PROJECT_DIR$/../vault" />
       <root url="file://$USER_HOME$/goWork/src/testGo" />
     </SOURCES>
     <excluded>

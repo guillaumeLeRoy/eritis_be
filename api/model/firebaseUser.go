@@ -3,7 +3,6 @@ package model
 import (
 	"errors"
 	"golang.org/x/net/context"
-	"google.golang.org/appengine/datastore"
 	"google.golang.org/appengine/log"
 )
 
@@ -19,30 +18,30 @@ func ( u FirebaseUser) OK() error {
 	}
 	return nil
 }
-
-func (u *FirebaseUser) create(ctx context.Context) (*User, error) {
-	log.Debugf(ctx, "firebaseUser, create, %s", u)
-
-	//make sure a user doesn't already exists for the given Firebase User
-	user, err := u.GetUser(ctx)
-	if err != nil && err != ErrNoUser {
-		return nil, errors.New("Error trying to know if a user is already in the datastore")
-	}
-
-	if user != nil {
-		return nil, errors.New("User already exists")
-	}
-
-	//create a new user
-	user, err = UserFromFirebaseUser(ctx, u)
-	if err != nil {
-		return nil, err
-	}
-
-	log.Debugf(ctx, "firebaseUser, user created %s", user)
-
-	return user, nil
-}
+//
+//func (u *FirebaseUser) create(ctx context.Context) (interface{}, error) {
+//	log.Debugf(ctx, "firebaseUser, create, %s", u)
+//
+//	//make sure a user doesn't already exists for the given Firebase User
+//	user, err := u.GetUser(ctx)
+//	if err != nil && err != ErrNoUser {
+//		return nil, errors.New("Error trying to know if a user is already in the datastore")
+//	}
+//
+//	if user != nil {
+//		return nil, errors.New("User already exists")
+//	}
+//
+//	//create a new user
+//	user, err = UserFromFirebaseUser(ctx, u)
+//	if err != nil {
+//		return nil, err
+//	}
+//
+//	log.Debugf(ctx, "firebaseUser, user created %s", user)
+//
+//	return user, nil
+//}
 
 func (u *FirebaseUser) CreateBis(ctx context.Context) (interface{}, error) {
 	log.Debugf(ctx, "createBis, create, %s", u)
@@ -97,29 +96,66 @@ func (u *FirebaseUser) CreateBis(ctx context.Context) (interface{}, error) {
 }
 
 //get User for the given user Firebase id
-func (u *FirebaseUser) GetUser(ctx context.Context) (*User, error) {
-	var users []*User
+func (u *FirebaseUser) GetUser(ctx context.Context) (interface{}, error) {
 
-	keys, err := datastore.NewQuery("User").Filter("FirebaseUID = ", u.UID).GetAll(ctx, &users)
-	if err != nil {
+	coach, err := getCoachFromFirebaseId(ctx, u.UID)
+	if err != nil && err != ErrNoUser {
 		return nil, err
 	}
 
-	if len(keys) == 0 {
-		return nil, ErrNoUser
+	if err == nil {
+		//we have a coach
+		return coach, nil
 	}
 
-	var user User
-	var key = keys[0]
-	err = datastore.Get(ctx, key, &user)
-	if err != nil {
+	//no coach
+	coachee, err := getCoacheeFromFirebaseId(ctx, u.UID)
+	if err != nil && err != ErrNoUser {
 		return nil, err
 	}
-	user.Key = key
-	return &user, nil
+
+	//no coachee
+	if err == nil {
+		//we have a coachee
+		return coachee, nil
+	}
+
+	//no one ...
+	return nil, ErrNoUser
+
+
+	//var users []*User
+	//
+	//log.Debugf(ctx, "firebaseUser, GetUser for fbId : %s", u.UID)
+	//
+	////search in Coach table
+	//keys, err := datastore.NewQuery("Coach").Filter("FirebaseUID = ", u.UID).GetAll(ctx, &users)
+	//if err != nil {
+	//	return nil, err
+	//}
+	//
+	//if len(keys) == 0 {
+	//	//search in Coachee table
+	//	keys, err = datastore.NewQuery("Coachee").Filter("FirebaseUID = ", u.UID).GetAll(ctx, &users)
+	//	if err != nil {
+	//		return nil, err
+	//	}
+	//	if len(keys) == 0 {
+	//		return nil, ErrNoUser
+	//	}
+	//	log.Debugf(ctx, "firebaseUser, getUser, found a Coachee")
+	//
+	//} else {
+	//	log.Debugf(ctx, "firebaseUser, getUser, found a Coach")
+	//}
+	//
+	////we have a user
+	//var user User
+	//var key = keys[0]
+	//err = datastore.Get(ctx, key, &user)
+	//if err != nil {
+	//	return nil, err
+	//}
+	//user.Key = key
+	//return &user, nil
 }
-
-
-
-
-
