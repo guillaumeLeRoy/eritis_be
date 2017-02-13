@@ -9,6 +9,7 @@ import (
 	"errors"
 	"handler"
 	"tool"
+	"model"
 )
 
 func init() {
@@ -43,6 +44,10 @@ func corsHandler(handler func(w http.ResponseWriter, r *http.Request)) http.Hand
 		ctx := appengine.NewContext(r)
 
 		log.Debugf(ctx, "corsHandler start")
+
+		log.Debugf(ctx, "corsHandler, coach  : ",model.COACH)
+		log.Debugf(ctx, "corsHandler, coachee : ",model.COACHEE)
+
 
 		//handle preflight in here
 		w.Header().Add("Access-Control-Allow-Origin", "*")

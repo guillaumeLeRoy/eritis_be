@@ -57,7 +57,7 @@ func CreateCoacheeFromFirebaseUser(ctx context.Context, fbUser *FirebaseUser) (*
 	coach.FirebaseId = fbUser.UID
 	coach.DisplayName = fbUser.Email
 	coach.AvatarURL = gravatarURL(fbUser.Email)
-	coach.Status = COACH
+	coach.Status = COACHEE
 	coach.StartDate = time.Now()
 
 	//log.Infof(ctx, "saving new user: %s", aeuser.String())
@@ -73,14 +73,17 @@ func CreateCoacheeFromFirebaseUser(ctx context.Context, fbUser *FirebaseUser) (*
 }
 
 func getCoacheeFromFirebaseId(ctx context.Context, fbId string) (*Coachee, error) {
+	log.Debugf(ctx, "getCoacheeFromFirebaseId id : %s", fbId)
+
 	var coachees []*Coachee
 
-	keys, err := datastore.NewQuery("Coachee").Filter("FirebaseId = ", fbId).GetAll(ctx, &coachees)
+	keys, err := datastore.NewQuery("Coachee").Filter("FirebaseId =", fbId).GetAll(ctx, &coachees)
 	if err != nil {
 		return nil, err
 	}
 
 	if len(keys) == 0 {
+		log.Debugf(ctx, "getCoacheeFromFirebaseId no keys")
 		return nil, ErrNoUser
 	}
 

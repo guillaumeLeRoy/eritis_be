@@ -8,7 +8,7 @@ import (
 
 type FirebaseUser struct {
 	Email  string `json:"email"`
-	UID    string `json:"uid"`
+	UID    string `json:"uid"`     //firebaseId
 	Status Status `json:"status"` // coach or coachee
 }
 
@@ -97,6 +97,7 @@ func (u *FirebaseUser) CreateBis(ctx context.Context) (interface{}, error) {
 
 //get User for the given user Firebase id
 func (u *FirebaseUser) GetUser(ctx context.Context) (interface{}, error) {
+	log.Debugf(ctx, "firebaseUser, GetUser with FB id : %s", u.UID)
 
 	coach, err := getCoachFromFirebaseId(ctx, u.UID)
 	if err != nil && err != ErrNoUser {
@@ -104,6 +105,8 @@ func (u *FirebaseUser) GetUser(ctx context.Context) (interface{}, error) {
 	}
 
 	if err == nil {
+		log.Debugf(ctx, "GetUser, found a coach")
+
 		//we have a coach
 		return coach, nil
 	}
@@ -116,9 +119,13 @@ func (u *FirebaseUser) GetUser(ctx context.Context) (interface{}, error) {
 
 	//no coachee
 	if err == nil {
+		log.Debugf(ctx, "GetUser, found a coachee")
+
 		//we have a coachee
 		return coachee, nil
 	}
+
+	log.Debugf(ctx, "GetUser, no one")
 
 	//no one ...
 	return nil, ErrNoUser
