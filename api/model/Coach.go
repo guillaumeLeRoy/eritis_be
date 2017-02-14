@@ -101,3 +101,18 @@ func getCoachFromFirebaseId(ctx context.Context, fbId string) (*Coach, error) {
 	return &coach, nil
 }
 
+func (c *Coach)Update(ctx context.Context, displayName string, avatarUrl string) (error) {
+	log.Debugf(ctx, "update coach displayName : %s, avatar Url : %s", displayName, avatarUrl)
+
+	c.DisplayName = displayName
+	c.AvatarURL = avatarUrl
+
+	key, err := datastore.Put(ctx, c.Key, c)
+	if err != nil {
+		return err
+	}
+	c.Key = key
+
+	return nil
+}
+

@@ -23,6 +23,16 @@ func HandleCoachs(w http.ResponseWriter, r *http.Request) {
 		}
 		handleGetAllCoachs(w, r)// GET /api/coachs/
 		return
+
+	case "PUT":
+		params := tool.PathParams(r, "/api/coachs/:id")
+		userId, ok := params[":id"]
+		if ok {
+			handleUpdateCoachForId(w, r, userId)// PUT /api/coachs/ID
+			return
+		}
+		http.NotFound(w, r)
+
 	default:
 		http.NotFound(w, r)
 	}
@@ -52,5 +62,34 @@ func handleGetCoachForId(w http.ResponseWriter, r *http.Request, id string) {
 	if err != nil {
 		tool.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
 	}
+	tool.Respond(ctx, w, r, coach, http.StatusOK)
+}
+
+func handleUpdateCoachForId(w http.ResponseWriter, r *http.Request, id string) {
+	ctx := appengine.NewContext(r)
+	log.Debugf(ctx, "handleUpdateCoachForId %s", id)
+
+	key, err := datastore.DecodeKey(id)
+	if err != nil {
+		tool.RespondErr(ctx, w, r, err, http.StatusBadRequest)
+	}
+
+	coach, err := model.GetCoach(ctx, key)
+	if err != nil {
+		tool.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
+	}
+
+	var updateCoach struct {
+		DisplayName string `json:"display_name"`
+		AvatarUrl   string `json:"avatar_url"`
+	}
+	err = tool.Decode(r, &updateCoach)
+	if err != nil {
+		tool.RespondErr(ctx, w, r, err, http.StatusBadRequest)
+		return
+	}
+
+	coach.Update(ctx, updateCoach.DisplayName, updateCoach.AvatarUrl)
+
 	tool.Respond(ctx, w, r, coach, http.StatusOK)
 }
