@@ -10,6 +10,7 @@ import (
 type Coachee struct {
 	Key         *datastore.Key `json:"id" datastore:"-"`
 	FirebaseId  string `json:"firebase_id"`
+	Email       string `json:"email"`
 	DisplayName string `json:"display_name"`
 	AvatarURL   string`json:"avatar_url"`
 	StartDate   time.Time `json:"start_date"`
@@ -55,6 +56,7 @@ func CreateCoacheeFromFirebaseUser(ctx context.Context, fbUser *FirebaseUser) (*
 
 	//create new user
 	coach.FirebaseId = fbUser.UID
+	coach.Email = fbUser.Email
 	coach.DisplayName = fbUser.Email
 	coach.AvatarURL = gravatarURL(fbUser.Email)
 	coach.Status = COACHEE
@@ -90,7 +92,7 @@ func getCoacheeFromFirebaseId(ctx context.Context, fbId string) (*Coachee, error
 	//todo too many users ??
 	var coachee Coachee
 	var key = keys[0]
-	err = datastore.Get(ctx, key, &coachee)//TODO pk refaire un geT ??
+	err = datastore.Get(ctx, key, &coachee)//TODO pk refaire un get ??
 	if err != nil {
 		return nil, err
 	}

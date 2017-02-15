@@ -40,12 +40,6 @@ func handleUserCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	//user, err := fbUser.create(ctx)
-	//if err != nil {
-	//	RespondErr(ctx, w, r, err, http.StatusInternalServerError)
-	//	return
-	//}
-
 	user, err := fbUser.CreateBis(ctx)
 	if err != nil {
 		tool.RespondErr(ctx, w, r, err, http.StatusInternalServerError)

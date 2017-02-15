@@ -9,6 +9,7 @@ import (
 
 type Coach struct {
 	Key         *datastore.Key `json:"id" datastore:"-"`
+	Email       string `json:"email"`
 	FirebaseId  string `json:"firebase_id"`
 	DisplayName string `json:"display_name"`
 	AvatarURL   string`json:"avatar_url"`
@@ -54,6 +55,7 @@ func CreateCoachFromFirebaseUser(ctx context.Context, fbUser *FirebaseUser) (*Co
 
 	//create new user
 	coach.FirebaseId = fbUser.UID
+	coach.Email = fbUser.Email
 	coach.DisplayName = fbUser.Email
 	coach.AvatarURL = gravatarURL(fbUser.Email)
 	coach.Status = COACH
