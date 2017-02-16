@@ -18,6 +18,18 @@ func HandleMeeting(w http.ResponseWriter, r *http.Request) {
 
 	switch r.Method {
 	case "POST":
+
+		/// create new meeting review
+
+		params := tool.PathParams(r, "/api/meeting/:uid/review")
+		uid, ok := params[":uid"]
+		if ok {
+			createReviewForAMeeting(w, r, uid)// POST /api/meeting/:uid/review
+			return
+		}
+
+		/// create new meeting
+
 		handleCreateMeeting(w, r)
 	case "GET":
 		params := tool.PathParams(r, "/api/meetings/coachee/:uid")
@@ -31,6 +43,15 @@ func HandleMeeting(w http.ResponseWriter, r *http.Request) {
 		uid, ok = params[":uid"]
 		if ok {
 			getAllMeetingsForCoach(w, r, uid)// GET /api/meeting/coach/:uid
+			return
+		}
+
+		//get all reviews for a meeting
+
+		params := tool.PathParams(r, "/api/meeting/:uid/reviews")
+		uid, ok := params[":uid"]
+		if ok {
+			getReviewsForAMeeting(w, r, uid)// GET /api/meeting/:uid/reviews
 			return
 		}
 
@@ -128,7 +149,64 @@ func getAllMeetingsForCoachee(w http.ResponseWriter, r *http.Request, uid string
 	}
 
 	tool.Respond(ctx, w, r, meetings, http.StatusCreated)
+}
 
+func createReviewForAMeeting(w http.ResponseWriter, r *http.Request, meetingId string) {
+	ctx := appengine.NewContext(r)
+	log.Debugf(ctx, "createReviewForAMeeting, meetingId : ", meetingId)
+
+	key, err := datastore.DecodeKey(meetingId)
+	if err != nil {
+		tool.RespondErr(ctx, w, r, err, http.StatusBadRequest)
+		return
+	}
+
+	meeting, err := model.GetMeeting(ctx, key)
+
+	log.Debugf(ctx, "createReviewForAMeeting, get meeting : ", meeting)
+
+	var review struct {
+		Comment string `json:"comment"`
+		Score   int `json:"score"`
+	}
+	err = tool.Decode(r, &review)
+	if err != nil {
+		tool.RespondErr(ctx, w, r, err, http.StatusBadRequest)
+		return
+	}
+
+	meetingRev, err := model.CreateReview(ctx, meeting, review.Comment, review.Score)
+	if err != nil {
+		tool.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
+		return
+	}
+
+	tool.Respond(ctx, w, r, meetingRev, http.StatusCreated)
+
+}
+
+func getReviewsForAMeeting(w http.ResponseWriter, r *http.Request, meetingId string) {
+
+	ctx := appengine.NewContext(r)
+	log.Debugf(ctx, "getReviewsForAMeeting, meetingId : ", meetingId)
+
+	key, err := datastore.DecodeKey(meetingId)
+	if err != nil {
+		tool.RespondErr(ctx, w, r, err, http.StatusBadRequest)
+		return
+	}
+
+	meeting, err := model.GetMeeting(ctx, key)
+
+	log.Debugf(ctx, "getReviewsForAMeeting, get meeting : ", meeting)
+
+	reviews, err := model.GetReviewsForMeeting(ctx, key)
+	if err != nil {
+		tool.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
+		return
+	}
+
+	tool.Respond(ctx, w, r, reviews, http.StatusCreated)
 }
 
 

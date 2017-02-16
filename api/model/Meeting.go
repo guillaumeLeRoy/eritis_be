@@ -29,6 +29,16 @@ func (m *Meeting) Create(ctx context.Context) error {
 	return nil
 }
 
+func GetMeeting(ctx context.Context, key *datastore.Key) (*Meeting, error) {
+	var meeting Meeting
+	err := datastore.Get(ctx, key, &meeting)
+	if err != nil {
+		return nil, err
+	}
+
+	return &meeting, nil
+}
+
 func GetMeetingsForCoach(ctx context.Context, key *datastore.Key) ([]*Meeting, error) {
 	var meetings []*Meeting
 	keys, err := datastore.NewQuery("Meeting").Filter("CoachKey =", key).GetAll(ctx, &meetings)
