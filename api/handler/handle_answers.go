@@ -10,7 +10,6 @@ import (
 )
 
 func HandleAnswers(w http.ResponseWriter, r *http.Request) {
-
 	ctx := appengine.NewContext(r)
 	log.Debugf(ctx, "handle answers")
 
@@ -18,7 +17,7 @@ func HandleAnswers(w http.ResponseWriter, r *http.Request) {
 	case "GET":
 		handleAnswersGet(w, r)
 	case "POST":
-		params := tool.PathParams(r, "/api/answers/userId/:id")
+		params := tool.PathParams(ctx, r, "/api/answers/userId/:id")
 		userId, ok := params[":id"]
 		if ok {
 			handleAnswerCreate(w, r, userId)// POST /api/answers/user/ID

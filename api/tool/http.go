@@ -59,11 +59,17 @@ func RespondErr(ctx context.Context, w http.ResponseWriter, r *http.Request, err
 	}
 }
 
-func PathParams(r *http.Request, pattern string) map[string]string {
+func PathParams(ctx context.Context, r *http.Request, pattern string) map[string]string {
+
+	log.Debugf(ctx, "PathParams %s", r.URL.Path)
+
 	params := map[string]string{}
 	//remove any extra '/' before or after the url
 	trim := strings.Trim(r.URL.Path, "/")
 	pathSegs := strings.Split(trim, "/")
+
+	log.Debugf(ctx, "PathParams, segs %s", pathSegs)
+
 	for i, seg := range strings.Split(strings.Trim(pattern, "/"), "/") {
 		if i > len(pathSegs) - 1 {
 			return params

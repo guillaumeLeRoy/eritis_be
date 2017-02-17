@@ -15,7 +15,7 @@ func HandleCoachs(w http.ResponseWriter, r *http.Request) {
 
 	switch r.Method {
 	case "GET":
-		params := tool.PathParams(r, "/api/coachs/:id")
+		params := tool.PathParams(ctx, r, "/api/coachs/:id")
 		userId, ok := params[":id"]
 		if ok {
 			handleGetCoachForId(w, r, userId)// POST /api/coachs/ID
@@ -25,7 +25,7 @@ func HandleCoachs(w http.ResponseWriter, r *http.Request) {
 		return
 
 	case "PUT":
-		params := tool.PathParams(r, "/api/coachs/:id")
+		params := tool.PathParams(ctx,r, "/api/coachs/:id")
 		userId, ok := params[":id"]
 		if ok {
 			handleUpdateCoachForId(w, r, userId)// PUT /api/coachs/ID

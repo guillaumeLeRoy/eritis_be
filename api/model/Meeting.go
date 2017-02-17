@@ -35,6 +35,7 @@ func GetMeeting(ctx context.Context, key *datastore.Key) (*Meeting, error) {
 	if err != nil {
 		return nil, err
 	}
+	meeting.Key = key
 
 	return &meeting, nil
 }
@@ -63,6 +64,7 @@ func GetMeetingsForCoachee(ctx context.Context, key *datastore.Key) ([]*Meeting,
 	for i, meeting := range meetings {
 		meeting.Key = keys[i]
 	}
+
 
 	return meetings, nil
 }

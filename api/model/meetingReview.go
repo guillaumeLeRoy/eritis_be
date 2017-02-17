@@ -38,7 +38,7 @@ func GetReviewsForMeeting(ctx context.Context, parent *Meeting) ([]*MeetingRevie
 	log.Debugf(ctx, "getReviewsForMeeting")
 
 	var reviews []*MeetingReview
-	keys, err := datastore.NewQuery("MeetingReview").Ancestor(parent.Key).GetAll(ctx, reviews)
+	keys, err := datastore.NewQuery("MeetingReview").Ancestor(parent.Key).GetAll(ctx, &reviews)
 
 	for i, review := range reviews {
 		review.Key = keys[i]
@@ -46,6 +46,8 @@ func GetReviewsForMeeting(ctx context.Context, parent *Meeting) ([]*MeetingRevie
 	if err != nil {
 		return nil, err
 	}
+
+	log.Debugf(ctx, "getReviewsForMeeting", reviews)
 
 	return reviews, nil
 

@@ -22,7 +22,7 @@ func HandleVotes(w http.ResponseWriter, r *http.Request) {
 
 	// POST /api/votes/userId/:id
 
-	params := tool.PathParams(r, "/api/votes/userId/:id")
+	params := tool.PathParams(ctx, r, "/api/votes/userId/:id")
 	userId, ok := params[":id"]
 	if ok {
 		handleVote(w, r, userId)// POST /api/questions/user/ID

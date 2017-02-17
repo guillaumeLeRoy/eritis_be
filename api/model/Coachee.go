@@ -20,8 +20,8 @@ type Coachee struct {
 
 
 //get Coachee for the given user id
-func GetCoachee(ctx context.Context, key *datastore.Key) (*Coach, error) {
-	var user Coach
+func GetCoachee(ctx context.Context, key *datastore.Key) (*Coachee, error) {
+	var user Coachee
 	err := datastore.Get(ctx, key, &user)
 	if err != nil {
 		return nil, err
@@ -98,4 +98,19 @@ func getCoacheeFromFirebaseId(ctx context.Context, fbId string) (*Coachee, error
 	}
 	coachee.Key = key
 	return &coachee, nil
+}
+
+func (c *Coachee)Update(ctx context.Context, displayName string, avatarUrl string) (error) {
+	log.Debugf(ctx, "update coachee displayName : %s, avatar Url : %s", displayName, avatarUrl)
+
+	c.DisplayName = displayName
+	c.AvatarURL = avatarUrl
+
+	key, err := datastore.Put(ctx, c.Key, c)
+	if err != nil {
+		return err
+	}
+	c.Key = key
+
+	return nil
 }

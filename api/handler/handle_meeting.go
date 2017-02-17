@@ -10,6 +10,7 @@ import (
 	"time"
 	"errors"
 	"strconv"
+	"strings"
 )
 
 func HandleMeeting(w http.ResponseWriter, r *http.Request) {
@@ -21,7 +22,7 @@ func HandleMeeting(w http.ResponseWriter, r *http.Request) {
 
 		/// create new meeting review
 
-		params := tool.PathParams(r, "/api/meeting/:uid/review")
+		params := tool.PathParams(ctx, r, "/api/meeting/:uid/review")
 		uid, ok := params[":uid"]
 		if ok {
 			createReviewForAMeeting(w, r, uid)// POST /api/meeting/:uid/review
@@ -32,27 +33,47 @@ func HandleMeeting(w http.ResponseWriter, r *http.Request) {
 
 		handleCreateMeeting(w, r)
 	case "GET":
-		params := tool.PathParams(r, "/api/meetings/coachee/:uid")
-		uid, ok := params[":uid"]
-		if ok {
-			getAllMeetingsForCoachee(w, r, uid)// GET /api/meeting/coachee/:uid
-			return
+		contains := strings.Contains(r.URL.Path, "/api/meetings/coachee")
+		if contains {
+			params := tool.PathParams(ctx, r, "/api/meetings/coachee/:uid")
+			//verify url contains coachee
+			if _, ok := params["coachee"]; ok {
+				//get uid param
+				uid, ok := params[":uid"]
+				if ok {
+					getAllMeetingsForCoachee(w, r, uid)// GET /api/meeting/coachee/:uid
+					return
+				}
+			}
 		}
 
-		params = tool.PathParams(r, "/api/meetings/coach/:uid")
-		uid, ok = params[":uid"]
-		if ok {
-			getAllMeetingsForCoach(w, r, uid)// GET /api/meeting/coach/:uid
-			return
+		contains = strings.Contains(r.URL.Path, "/api/meetings/coach")
+		if contains {
+			params := tool.PathParams(ctx, r, "/api/meetings/coach/:uid")
+			//verify url contains coach
+			if _, ok := params["coach"]; ok {
+				//get uid param
+				uid, ok := params[":uid"]
+				if ok {
+					getAllMeetingsForCoach(w, r, uid)// GET /api/meeting/coach/:uid
+					return
+				}
+			}
 		}
 
 		//get all reviews for a meeting
-
-		params := tool.PathParams(r, "/api/meeting/:uid/reviews")
-		uid, ok := params[":uid"]
-		if ok {
-			getReviewsForAMeeting(w, r, uid)// GET /api/meeting/:uid/reviews
-			return
+		contains = strings.Contains(r.URL.Path, "/api/meeting/")
+		if contains {
+			params := tool.PathParams(ctx, r, "/api/meeting/:meetingId/reviews")
+			//verify url contains meeting
+			if _, ok := params["meeting"]; ok {
+				//get uid param
+				meetingId, ok := params[":meetingId"]
+				if ok {
+					getReviewsForAMeeting(w, r, meetingId)// GET /api/meeting/:meetingId/reviews
+					return
+				}
+			}
 		}
 
 		http.NotFound(w, r)
@@ -200,7 +221,7 @@ func getReviewsForAMeeting(w http.ResponseWriter, r *http.Request, meetingId str
 
 	log.Debugf(ctx, "getReviewsForAMeeting, get meeting : ", meeting)
 
-	reviews, err := model.GetReviewsForMeeting(ctx, key)
+	reviews, err := model.GetReviewsForMeeting(ctx, meeting)
 	if err != nil {
 		tool.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
 		return

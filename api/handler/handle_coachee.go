@@ -17,7 +17,7 @@ func HandleCoachees(w http.ResponseWriter, r *http.Request) {
 	case "GET":
 		handleGetAllCoachees(w, r)// GET /api/coachees/
 	case "PUT":
-		params := tool.PathParams(r, "/api/coachees/:id")
+		params := tool.PathParams(ctx, r, "/api/coachees/:id")
 		userId, ok := params[":id"]
 		if ok {
 			handleUpdateCoacheeForId(w, r, userId)// PUT /api/coachees/ID

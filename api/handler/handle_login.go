@@ -16,7 +16,7 @@ func HandleLogin(w http.ResponseWriter, r *http.Request) {
 	case "POST":
 		handleUserCreate(w, r)
 	case "GET":
-		params := tool.PathParams(r, "/api/login/:firebaseId")
+		params := tool.PathParams(ctx, r, "/api/login/:firebaseId")
 		uid, ok := params[":firebaseId"]
 		if ok {
 			handleGetUser(w, r, uid)// GET /api/login/:firebaseId

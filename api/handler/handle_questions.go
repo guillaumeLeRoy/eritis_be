@@ -15,7 +15,7 @@ func HandleQuestions(w http.ResponseWriter, r *http.Request) {
 
 	switch r.Method {
 	case "POST":
-		params := tool.PathParams(r, "/api/questions/userId/:id")
+		params := tool.PathParams(ctx, r, "/api/questions/userId/:id")
 		userId, ok := params[":id"]
 		if ok {
 			handleQuestionCreate(w, r, userId)// POST /api/questions/user/ID
@@ -24,7 +24,7 @@ func HandleQuestions(w http.ResponseWriter, r *http.Request) {
 		http.NotFound(w, r)
 		return
 	case "GET":
-		params := tool.PathParams(r, "/api/questions/:id")
+		params := tool.PathParams(ctx, r, "/api/questions/:id")
 		questionId, ok := params[":id"]
 		if ok {
 			handleQuestionGet(w, r, questionId)// GET /api/questions/ID
