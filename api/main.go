@@ -32,7 +32,7 @@ func init() {
 
 func handleHello(w http.ResponseWriter, r *http.Request) {
 	ctx := appengine.NewContext(r)
-	log.Debugf(ctx, "handle hello")
+	log.Debugf(ctx, "handle hello, for url %s", r.URL.Path)
 
 	io.WriteString(w, "Hello from App Engine")
 }

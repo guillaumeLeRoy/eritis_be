@@ -18,7 +18,7 @@ func HandleCoachs(w http.ResponseWriter, r *http.Request) {
 		params := tool.PathParams(ctx, r, "/api/coachs/:id")
 		userId, ok := params[":id"]
 		if ok {
-			handleGetCoachForId(w, r, userId)// POST /api/coachs/ID
+			handleGetCoachForId(w, r, userId)// GET /api/coachs/ID
 			return
 		}
 		handleGetAllCoachs(w, r)// GET /api/coachs/
