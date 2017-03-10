@@ -16,6 +16,7 @@ type Coach struct {
 	Score       string `json:"score"`
 	StartDate   time.Time `json:"start_date"`
 	Status      Status `json:"status"`
+	Description string `json:"description"`
 }
 
 
@@ -103,11 +104,38 @@ func getCoachFromFirebaseId(ctx context.Context, fbId string) (*Coach, error) {
 	return &coach, nil
 }
 
-func (c *Coach)Update(ctx context.Context, displayName string, avatarUrl string) (error) {
-	log.Debugf(ctx, "update coach displayName : %s, avatar Url : %s", displayName, avatarUrl)
+func (c *Coach)UpdateDisplayName(ctx context.Context, displayName string) (error) {
+	log.Debugf(ctx, "update coach displayName : %s", displayName)
 
 	c.DisplayName = displayName
+
+	key, err := datastore.Put(ctx, c.Key, c)
+	if err != nil {
+		return err
+	}
+	c.Key = key
+
+	return nil
+}
+
+func (c *Coach)UpdateAvatarUrl(ctx context.Context, avatarUrl string) (error) {
+	log.Debugf(ctx, "update coach avatar Url : %s", avatarUrl)
+
 	c.AvatarURL = avatarUrl
+
+	key, err := datastore.Put(ctx, c.Key, c)
+	if err != nil {
+		return err
+	}
+	c.Key = key
+
+	return nil
+}
+
+func (c *Coach)UpdateDescription(ctx context.Context, description string) (error) {
+	log.Debugf(ctx, "update coach description : %s", description)
+
+	c.Description = description
 
 	key, err := datastore.Put(ctx, c.Key, c)
 	if err != nil {
