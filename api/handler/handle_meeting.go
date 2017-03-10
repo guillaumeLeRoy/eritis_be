@@ -32,6 +32,20 @@ func HandleMeeting(w http.ResponseWriter, r *http.Request) {
 		/// create new meeting
 
 		handleCreateMeeting(w, r)
+
+	case "PUT":
+
+		// update review ?
+
+		//close meeting with review
+
+		params := tool.PathParams(ctx, r, "/api/meeting/:uid/close")
+		uid, ok := params[":uid"]
+		if ok {
+			closeMeeting(w, r, uid)// PUT /api/meeting/:uid/close
+			return
+		}
+
 	case "GET":
 		contains := strings.Contains(r.URL.Path, "/api/meetings/coachee")
 		if contains {
@@ -172,6 +186,9 @@ func getAllMeetingsForCoachee(w http.ResponseWriter, r *http.Request, uid string
 	tool.Respond(ctx, w, r, meetings, http.StatusCreated)
 }
 
+/*
+Suppose this review is created by a Coachee
+*/
 func createReviewForAMeeting(w http.ResponseWriter, r *http.Request, meetingId string) {
 	ctx := appengine.NewContext(r)
 	log.Debugf(ctx, "createReviewForAMeeting, meetingId : ", meetingId)
@@ -196,14 +213,13 @@ func createReviewForAMeeting(w http.ResponseWriter, r *http.Request, meetingId s
 		return
 	}
 
-	meetingRev, err := model.CreateReview(ctx, meeting, review.Comment, review.Score)
+	meetingRev, err := model.CreateReview(ctx, meeting, meeting.CoacheeKey, review.Comment, review.Score)
 	if err != nil {
 		tool.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
 		return
 	}
 
 	tool.Respond(ctx, w, r, meetingRev, http.StatusCreated)
-
 }
 
 func getReviewsForAMeeting(w http.ResponseWriter, r *http.Request, meetingId string) {
@@ -228,6 +244,46 @@ func getReviewsForAMeeting(w http.ResponseWriter, r *http.Request, meetingId str
 	}
 
 	tool.Respond(ctx, w, r, reviews, http.StatusCreated)
+}
+
+/* We suppose the meeting is closed by a Coach */
+func closeMeeting(w http.ResponseWriter, r *http.Request, meetingId string) {
+	ctx := appengine.NewContext(r)
+	log.Debugf(ctx, "closeMeeting, meetingId : ", meetingId)
+
+	key, err := datastore.DecodeKey(meetingId)
+	if err != nil {
+		tool.RespondErr(ctx, w, r, err, http.StatusBadRequest)
+		return
+	}
+
+	meeting, err := model.GetMeeting(ctx, key)
+
+	log.Debugf(ctx, "closeMeeting, get meeting : ", meeting)
+
+	var review struct {
+		Comment string `json:"comment"`
+	}
+	err = tool.Decode(r, &review)
+	if err != nil {
+		tool.RespondErr(ctx, w, r, err, http.StatusBadRequest)
+		return
+	}
+
+	meetingRev, err := model.CreateReview(ctx, meeting, meeting.CoachKey, review.Comment, 5)
+	if err != nil {
+		tool.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
+		return
+	}
+
+	//close meeting
+	err = meeting.Close(ctx)
+	if err != nil {
+		tool.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
+		return
+	}
+
+	tool.Respond(ctx, w, r, meetingRev, http.StatusCreated)
 }
 
 

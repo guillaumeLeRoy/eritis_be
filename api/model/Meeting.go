@@ -12,6 +12,7 @@ type Meeting struct {
 	StartDate  time.Time `json:"date"`
 	CoachKey   *datastore.Key `json:"coach_id"`
 	CoacheeKey *datastore.Key `json:"coachee_id"`
+	IsOpen     bool `json:"open"`
 }
 
 func (m *Meeting) Create(ctx context.Context) error {
@@ -20,6 +21,21 @@ func (m *Meeting) Create(ctx context.Context) error {
 	//TODO add an ancestor
 	m.Key = datastore.NewIncompleteKey(ctx, "Meeting", nil)
 
+	//meeting is open
+	m.IsOpen = true
+
+	key, err := datastore.Put(ctx, m.Key, m)
+	if err != nil {
+		return err
+	}
+	m.Key = key
+
+	return nil
+}
+
+func (m *Meeting)Close(ctx context.Context) (error) {
+	m.IsOpen = false
+	log.Debugf(ctx, "Close : ", m)
 	key, err := datastore.Put(ctx, m.Key, m)
 	if err != nil {
 		return err
@@ -65,6 +81,6 @@ func GetMeetingsForCoachee(ctx context.Context, key *datastore.Key) ([]*Meeting,
 		meeting.Key = keys[i]
 	}
 
-
 	return meetings, nil
 }
+

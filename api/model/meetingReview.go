@@ -7,14 +7,18 @@ import (
 	"google.golang.org/appengine/log"
 )
 
+/*
+Origin : from a Coach or a Coachee
+*/
 type MeetingReview struct {
 	Key     *datastore.Key `json:"id" datastore:"-"`
 	Date    time.Time `json:"date"`
 	Comment string `json:"comment"`
 	Score   int `json:"score"`
+	Origin  *datastore.Key `json:"score"`
 }
 
-func CreateReview(ctx context.Context, parent *Meeting, comment string, score int) (*MeetingReview, error) {
+func CreateReview(ctx context.Context, parent *Meeting, originUserId *datastore.Key, comment string, score int) (*MeetingReview, error) {
 	log.Debugf(ctx, "Create createReview")
 
 	var review = MeetingReview{}
@@ -22,6 +26,7 @@ func CreateReview(ctx context.Context, parent *Meeting, comment string, score in
 	review.Comment = comment
 	review.Score = score
 	review.Date = time.Now()
+	review.Origin = originUserId
 
 	review.Key = datastore.NewIncompleteKey(ctx, "MeetingReview", parent.Key)
 

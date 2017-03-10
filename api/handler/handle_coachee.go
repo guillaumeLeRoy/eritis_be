@@ -15,7 +15,15 @@ func HandleCoachees(w http.ResponseWriter, r *http.Request) {
 
 	switch r.Method {
 	case "GET":
+
+		params := tool.PathParams(ctx, r, "/api/coachees/:id")
+		userId, ok := params[":id"]
+		if ok {
+			handleGetCoacheeForId(w, r, userId)// GET /api/coachees/ID
+			return
+		}
 		handleGetAllCoachees(w, r)// GET /api/coachees/
+		return
 	case "PUT":
 		params := tool.PathParams(ctx, r, "/api/coachees/:id")
 		userId, ok := params[":id"]
@@ -28,6 +36,22 @@ func HandleCoachees(w http.ResponseWriter, r *http.Request) {
 	default:
 		http.NotFound(w, r)
 	}
+}
+
+func handleGetCoacheeForId(w http.ResponseWriter, r *http.Request, id string) {
+	ctx := appengine.NewContext(r)
+	log.Debugf(ctx, "handleGetCoacheeForId %s", id)
+
+	key, err := datastore.DecodeKey(id)
+	if err != nil {
+		tool.RespondErr(ctx, w, r, err, http.StatusBadRequest)
+	}
+
+	coach, err := model.GetCoachee(ctx, key)
+	if err != nil {
+		tool.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
+	}
+	tool.Respond(ctx, w, r, coach, http.StatusOK)
 }
 
 func handleGetAllCoachees(w http.ResponseWriter, r *http.Request) {
