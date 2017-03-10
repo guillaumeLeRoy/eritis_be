@@ -11,6 +11,7 @@ import (
 	"errors"
 	"strconv"
 	"strings"
+	"golang.org/x/net/context"
 )
 
 func HandleMeeting(w http.ResponseWriter, r *http.Request) {
@@ -18,6 +19,16 @@ func HandleMeeting(w http.ResponseWriter, r *http.Request) {
 	log.Debugf(ctx, "handle meeting")
 
 	switch r.Method {
+
+	case "PUT":
+		//close meeting
+		params := tool.PathParams(ctx, r, "/api/meeting/:uid/close")
+		uid, ok := params[":uid"]
+		if ok {
+			closeMeeting(w, r, uid)// PUT /api/meeting/:uid/close
+			return
+		}
+		break;
 	case "POST":
 
 		/// create new meeting review
@@ -257,12 +268,9 @@ func closeMeeting(w http.ResponseWriter, r *http.Request, meetingId string) {
 		return
 	}
 
-	meeting, err := model.GetMeeting(ctx, key)
-
-	log.Debugf(ctx, "closeMeeting, get meeting : ", meeting)
-
 	var review struct {
 		Comment string `json:"comment"`
+		Score   int `json:"score"`
 	}
 	err = tool.Decode(r, &review)
 	if err != nil {
@@ -270,20 +278,36 @@ func closeMeeting(w http.ResponseWriter, r *http.Request, meetingId string) {
 		return
 	}
 
-	meetingRev, err := model.CreateReview(ctx, meeting, meeting.CoachKey, review.Comment, 5)
+	var meeting *model.Meeting
+	err = datastore.RunInTransaction(ctx, func(ctx context.Context) error {
+		var err error
+		meeting, err = model.GetMeeting(ctx, key)
+		if err != nil {
+			return err
+		}
+
+		log.Debugf(ctx, "closeMeeting, get meeting", meeting)
+
+		meetingRev, err := model.CreateReview(ctx, meeting, meeting.CoachKey, review.Comment, review.Score)
+		if err != nil {
+			return err
+		}
+
+		log.Debugf(ctx, "closeMeeting, review created : ", meetingRev)
+
+		err = meeting.Close(ctx)
+		if err != nil {
+			return err
+		}
+
+		log.Debugf(ctx, "closeMeeting, closed")
+		return nil
+	}, &datastore.TransactionOptions{XG: true})
 	if err != nil {
 		tool.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
-		return
 	}
 
-	//close meeting
-	err = meeting.Close(ctx)
-	if err != nil {
-		tool.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
-		return
-	}
-
-	tool.Respond(ctx, w, r, meetingRev, http.StatusCreated)
+	tool.Respond(ctx, w, r, meeting, http.StatusOK)
 }
 
 
