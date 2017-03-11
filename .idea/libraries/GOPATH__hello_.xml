@@ -1,15 +1,41 @@
 <component name="libraryTable">
   <library name="GOPATH &lt;hello&gt;">
     <CLASSES>
-      <root url="file://$PROJECT_DIR$/../../golang.org" />
-      <root url="file://$PROJECT_DIR$/.." />
-      <root url="file://$PROJECT_DIR$/../../google.golang.org" />
+      <root url="file://$USER_HOME$/goWork/src/github.com" />
+      <root url="file://$USER_HOME$/goWork/src/labix.org" />
+      <root url="file://$PROJECT_DIR$/../github.com" />
+      <root url="file://$PROJECT_DIR$/../cpd200-hello-endpoints-go" />
+      <root url="file://$PROJECT_DIR$/../labix.org" />
+      <root url="file://$PROJECT_DIR$/../gopkg.in" />
+      <root url="file://$PROJECT_DIR$/../helloworld" />
+      <root url="file://$USER_HOME$/goWork/src/golang.org" />
+      <root url="file://$USER_HOME$/goWork/src/google.golang.org" />
+      <root url="file://$USER_HOME$/goWork/src/gopkg.in" />
+      <root url="file://$USER_HOME$/goWork/src/sourcegraph.com" />
+      <root url="file://$PROJECT_DIR$/../eritis" />
+      <root url="file://$PROJECT_DIR$/../sourcegraph.com" />
+      <root url="file://$PROJECT_DIR$/../golang.org" />
+      <root url="file://$PROJECT_DIR$/../vault" />
+      <root url="file://$USER_HOME$/goWork/src/testGo" />
     </CLASSES>
     <JAVADOC />
     <SOURCES>
-      <root url="file://$PROJECT_DIR$/../../golang.org" />
-      <root url="file://$PROJECT_DIR$/.." />
-      <root url="file://$PROJECT_DIR$/../../google.golang.org" />
+      <root url="file://$USER_HOME$/goWork/src/github.com" />
+      <root url="file://$USER_HOME$/goWork/src/labix.org" />
+      <root url="file://$PROJECT_DIR$/../github.com" />
+      <root url="file://$PROJECT_DIR$/../cpd200-hello-endpoints-go" />
+      <root url="file://$PROJECT_DIR$/../labix.org" />
+      <root url="file://$PROJECT_DIR$/../gopkg.in" />
+      <root url="file://$PROJECT_DIR$/../helloworld" />
+      <root url="file://$USER_HOME$/goWork/src/golang.org" />
+      <root url="file://$USER_HOME$/goWork/src/google.golang.org" />
+      <root url="file://$USER_HOME$/goWork/src/gopkg.in" />
+      <root url="file://$USER_HOME$/goWork/src/sourcegraph.com" />
+      <root url="file://$PROJECT_DIR$/../eritis" />
+      <root url="file://$PROJECT_DIR$/../sourcegraph.com" />
+      <root url="file://$PROJECT_DIR$/../golang.org" />
+      <root url="file://$PROJECT_DIR$/../vault" />
+      <root url="file://$USER_HOME$/goWork/src/testGo" />
     </SOURCES>
     <excluded>
       <root url="file://$PROJECT_DIR$" />

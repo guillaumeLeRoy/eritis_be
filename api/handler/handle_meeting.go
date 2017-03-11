@@ -20,15 +20,6 @@ func HandleMeeting(w http.ResponseWriter, r *http.Request) {
 
 	switch r.Method {
 
-	case "PUT":
-		//close meeting
-		params := tool.PathParams(ctx, r, "/api/meeting/:uid/close")
-		uid, ok := params[":uid"]
-		if ok {
-			closeMeeting(w, r, uid)// PUT /api/meeting/:uid/close
-			return
-		}
-		break;
 	case "POST":
 
 		/// create new meeting review
@@ -45,7 +36,6 @@ func HandleMeeting(w http.ResponseWriter, r *http.Request) {
 		handleCreateMeeting(w, r)
 
 	case "PUT":
-
 		// update review ?
 
 		//close meeting with review
@@ -56,7 +46,7 @@ func HandleMeeting(w http.ResponseWriter, r *http.Request) {
 			closeMeeting(w, r, uid)// PUT /api/meeting/:uid/close
 			return
 		}
-
+		http.NotFound(w, r)
 	case "GET":
 		contains := strings.Contains(r.URL.Path, "/api/meetings/coachee")
 		if contains {
