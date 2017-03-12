@@ -5,6 +5,10 @@ import (
 	"time"
 	"golang.org/x/net/context"
 	"google.golang.org/appengine/log"
+	"crypto/md5"
+	"io"
+	"fmt"
+	"strings"
 )
 
 type Coach struct {
@@ -15,10 +19,14 @@ type Coach struct {
 	AvatarURL   string`json:"avatar_url"`
 	Score       string `json:"score"`
 	StartDate   time.Time `json:"start_date"`
-	Status      Status `json:"status"`
 	Description string `json:"description"`
 }
 
+func gravatarURL(email string) string {
+	m := md5.New()
+	io.WriteString(m, strings.ToLower(email))
+	return fmt.Sprintf("//www.gravatar.com/avatar/%x", m.Sum(nil))
+}
 
 //get User for the given user id
 func GetCoach(ctx context.Context, key *datastore.Key) (*Coach, error) {
@@ -59,7 +67,6 @@ func CreateCoachFromFirebaseUser(ctx context.Context, fbUser *FirebaseUser) (*Co
 	coach.Email = fbUser.Email
 	coach.DisplayName = fbUser.Email
 	coach.AvatarURL = gravatarURL(fbUser.Email)
-	coach.Status = COACH
 	coach.StartDate = time.Now()
 
 	//log.Infof(ctx, "saving new user: %s", aeuser.String())

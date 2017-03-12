@@ -14,7 +14,6 @@ type Coachee struct {
 	DisplayName string `json:"display_name"`
 	AvatarURL   string`json:"avatar_url"`
 	StartDate   time.Time `json:"start_date"`
-	Status      Status `json:"status"`
 }
 
 
@@ -59,7 +58,6 @@ func CreateCoacheeFromFirebaseUser(ctx context.Context, fbUser *FirebaseUser) (*
 	coach.Email = fbUser.Email
 	coach.DisplayName = fbUser.Email
 	coach.AvatarURL = gravatarURL(fbUser.Email)
-	coach.Status = COACHEE
 	coach.StartDate = time.Now()
 
 	//log.Infof(ctx, "saving new user: %s", aeuser.String())

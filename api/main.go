@@ -15,9 +15,9 @@ func init() {
 
 	http.HandleFunc("/", corsHandler(handleHello))
 	http.HandleFunc("/api/login/", corsHandler(handler.HandleLogin))
-	http.HandleFunc("/api/questions/", corsHandler(handler.HandleQuestions))
-	http.HandleFunc("/api/answers/", corsHandler(handler.HandleAnswers))
-	http.HandleFunc("/api/votes/", corsHandler(handler.HandleVotes))
+	//http.HandleFunc("/api/questions/", corsHandler(handler.HandleQuestions))
+	//http.HandleFunc("/api/answers/", corsHandler(handler.HandleAnswers))
+	//http.HandleFunc("/api/votes/", corsHandler(handler.HandleVotes))
 
 	//meetings
 	http.HandleFunc("/api/meeting/", corsHandler(handler.HandleMeeting))

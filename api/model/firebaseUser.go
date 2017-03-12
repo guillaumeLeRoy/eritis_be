@@ -7,9 +7,13 @@ import (
 )
 
 type FirebaseUser struct {
-	Email  string `json:"email"`
-	UID    string `json:"uid"`     //firebaseId
-	Status Status `json:"status"` // coach or coachee
+	Email string `json:"email"`
+	UID   string `json:"uid"` //firebaseId
+}
+
+type Login struct {
+	Coach   *Coach `json:"coach"`
+	Coachee *Coachee `json:"coachee"`
 }
 
 func ( u FirebaseUser) OK() error {
@@ -18,6 +22,20 @@ func ( u FirebaseUser) OK() error {
 	}
 	return nil
 }
+
+
+//User status
+//type Status int
+//
+//const (
+//	COACH Status = 1 + iota
+//	COACHEE
+//)
+
+// ErrNoUser is the error that is returned when the
+// datastore instance is unable to provide a User because it doesn't exist.
+var ErrNoUser = errors.New("user : No user found")
+
 //
 //func (u *FirebaseUser) create(ctx context.Context) (interface{}, error) {
 //	log.Debugf(ctx, "firebaseUser, create, %s", u)
@@ -43,60 +61,55 @@ func ( u FirebaseUser) OK() error {
 //	return user, nil
 //}
 
-func (u *FirebaseUser) CreateBis(ctx context.Context) (interface{}, error) {
-	log.Debugf(ctx, "createBis, create, %s", u)
+func (u *FirebaseUser) CreateCoach(ctx context.Context) (*Coach, error) {
+	log.Debugf(ctx, "CreateCoach, create, %s", u)
 
-	if u.Status == COACH {
-		log.Debugf(ctx, "createBis, coach")
-
-		coach, err := getCoachFromFirebaseId(ctx, u.UID)
-		if err != nil && err != ErrNoUser {
-			return nil, errors.New("Error trying to know if a user is already in the datastore")
-		}
-
-		if coach != nil {
-			return nil, errors.New("Coach already exists")
-		}
-
-		//create a new user
-		coach, err = CreateCoachFromFirebaseUser(ctx, u)
-		if err != nil {
-			return nil, err
-		}
-
-		log.Debugf(ctx, "firebaseUser, coach created %s", coach)
-
-		return coach, nil
-
-	} else if u.Status == COACHEE {
-		log.Debugf(ctx, "createBis, coachee")
-
-		coachee, err := getCoacheeFromFirebaseId(ctx, u.UID)
-		if err != nil && err != ErrNoUser {
-			return nil, errors.New("Error trying to know if a user is already in the datastore")
-		}
-
-		if coachee != nil {
-			return nil, errors.New("coachee already exists")
-		}
-
-		//create a new coachee
-		coachee, err = CreateCoacheeFromFirebaseUser(ctx, u)
-		if err != nil {
-			return nil, err
-		}
-
-		log.Debugf(ctx, "firebaseUser, coachee created %s", coachee)
-
-		return coachee, nil
-
+	coach, err := getCoachFromFirebaseId(ctx, u.UID)
+	if err != nil && err != ErrNoUser {
+		return nil, errors.New("Error trying to know if a user is already in the datastore")
 	}
 
-	return nil, errors.New("No user created")
+	if coach != nil {
+		return nil, errors.New("Coach already exists")
+	}
+
+	//create a new user
+	coach, err = CreateCoachFromFirebaseUser(ctx, u)
+	if err != nil {
+		return nil, err
+	}
+
+	log.Debugf(ctx, "firebaseUser, coach created %s", coach)
+
+	return coach, nil
+
+}
+
+func (u *FirebaseUser) CreateCoachee(ctx context.Context) (*Coachee, error) {
+	log.Debugf(ctx, "CreateCoachee, create, %s", u)
+
+	coachee, err := getCoacheeFromFirebaseId(ctx, u.UID)
+	if err != nil && err != ErrNoUser {
+		return nil, errors.New("Error trying to know if a user is already in the datastore")
+	}
+
+	if coachee != nil {
+		return nil, errors.New("coachee already exists")
+	}
+
+	//create a new coachee
+	coachee, err = CreateCoacheeFromFirebaseUser(ctx, u)
+	if err != nil {
+		return nil, err
+	}
+
+	log.Debugf(ctx, "firebaseUser, coachee created %s", coachee)
+
+	return coachee, nil
 }
 
 //get User for the given user Firebase id
-func (u *FirebaseUser) GetUser(ctx context.Context) (interface{}, error) {
+func (u *FirebaseUser) GetUser(ctx context.Context) (*Login, error) {
 	log.Debugf(ctx, "firebaseUser, GetUser with FB id : %s", u.UID)
 
 	coach, err := getCoachFromFirebaseId(ctx, u.UID)
@@ -106,9 +119,8 @@ func (u *FirebaseUser) GetUser(ctx context.Context) (interface{}, error) {
 
 	if err == nil {
 		log.Debugf(ctx, "GetUser, found a coach")
-
 		//we have a coach
-		return coach, nil
+		return &Login{Coach:coach}, nil
 	}
 
 	//no coach
@@ -122,7 +134,7 @@ func (u *FirebaseUser) GetUser(ctx context.Context) (interface{}, error) {
 		log.Debugf(ctx, "GetUser, found a coachee")
 
 		//we have a coachee
-		return coachee, nil
+		return &Login{Coachee:coachee}, nil
 	}
 
 	log.Debugf(ctx, "GetUser, no one")

@@ -6,6 +6,7 @@ import (
 	"google.golang.org/appengine/log"
 	"model"
 	"tool"
+	"strings"
 )
 
 func HandleLogin(w http.ResponseWriter, r *http.Request) {
@@ -14,7 +15,17 @@ func HandleLogin(w http.ResponseWriter, r *http.Request) {
 
 	switch r.Method {
 	case "POST":
-		handleUserCreate(w, r)
+		if ok := strings.Contains(r.URL.Path, "coachee"); ok {
+			handleCreateCoachee(w, r)
+			return
+		}
+
+		if ok := strings.Contains(r.URL.Path, "coach"); ok {
+			handleCreateCoach(w, r)
+			return
+		}
+
+		http.NotFound(w, r)
 	case "GET":
 		params := tool.PathParams(ctx, r, "/api/login/:firebaseId")
 		uid, ok := params[":firebaseId"]
@@ -29,9 +40,9 @@ func HandleLogin(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func handleUserCreate(w http.ResponseWriter, r *http.Request) {
+func handleCreateCoach(w http.ResponseWriter, r *http.Request) {
 	ctx := appengine.NewContext(r)
-	log.Debugf(ctx, "handleUserCreate")
+	log.Debugf(ctx, "handleCreateCoach")
 
 	var fbUser model.FirebaseUser
 	err := tool.Decode(r, &fbUser)
@@ -40,13 +51,37 @@ func handleUserCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := fbUser.CreateBis(ctx)
+	coach, err := fbUser.CreateCoach(ctx)
 	if err != nil {
 		tool.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
 		return
 	}
 
-	tool.Respond(ctx, w, r, user, http.StatusCreated)
+	//construct response
+	var res = &model.Login{Coach:coach}
+
+	tool.Respond(ctx, w, r, res, http.StatusCreated)
+}
+
+func handleCreateCoachee(w http.ResponseWriter, r *http.Request) {
+	ctx := appengine.NewContext(r)
+	log.Debugf(ctx, "handleCreateCoachee")
+
+	var fbUser model.FirebaseUser
+	err := tool.Decode(r, &fbUser)
+	if err != nil {
+		tool.RespondErr(ctx, w, r, err, http.StatusBadRequest)
+		return
+	}
+
+	coachee, err := fbUser.CreateCoachee(ctx)
+	if err != nil {
+		tool.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
+		return
+	}
+	//construct response
+	var res = &model.Login{Coachee:coachee}
+	tool.Respond(ctx, w, r, res, http.StatusCreated)
 }
 
 func handleGetUser(w http.ResponseWriter, r *http.Request, firebaseId string) {
@@ -54,11 +89,11 @@ func handleGetUser(w http.ResponseWriter, r *http.Request, firebaseId string) {
 
 	var fbUser model.FirebaseUser
 	fbUser.UID = firebaseId
-	user, err := fbUser.GetUser(ctx)
+	response, err := fbUser.GetUser(ctx)
 	if err != nil {
 		tool.RespondErr(ctx, w, r, err, http.StatusBadRequest)
 		return
 	}
 
-	tool.Respond(ctx, w, r, user, http.StatusOK)
+	tool.Respond(ctx, w, r, response, http.StatusOK)
 }
