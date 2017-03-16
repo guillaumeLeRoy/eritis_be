@@ -13,7 +13,7 @@ type FirebaseUser struct {
 
 type Login struct {
 	Coach   *Coach `json:"coach"`
-	Coachee *Coachee `json:"coachee"`
+	Coachee *APICoachee `json:"coachee"`
 }
 
 func ( u FirebaseUser) OK() error {
@@ -24,42 +24,9 @@ func ( u FirebaseUser) OK() error {
 }
 
 
-//User status
-//type Status int
-//
-//const (
-//	COACH Status = 1 + iota
-//	COACHEE
-//)
-
 // ErrNoUser is the error that is returned when the
 // datastore instance is unable to provide a User because it doesn't exist.
 var ErrNoUser = errors.New("user : No user found")
-
-//
-//func (u *FirebaseUser) create(ctx context.Context) (interface{}, error) {
-//	log.Debugf(ctx, "firebaseUser, create, %s", u)
-//
-//	//make sure a user doesn't already exists for the given Firebase User
-//	user, err := u.GetUser(ctx)
-//	if err != nil && err != ErrNoUser {
-//		return nil, errors.New("Error trying to know if a user is already in the datastore")
-//	}
-//
-//	if user != nil {
-//		return nil, errors.New("User already exists")
-//	}
-//
-//	//create a new user
-//	user, err = UserFromFirebaseUser(ctx, u)
-//	if err != nil {
-//		return nil, err
-//	}
-//
-//	log.Debugf(ctx, "firebaseUser, user created %s", user)
-//
-//	return user, nil
-//}
 
 func (u *FirebaseUser) CreateCoach(ctx context.Context) (*Coach, error) {
 	log.Debugf(ctx, "CreateCoach, create, %s", u)
@@ -85,7 +52,7 @@ func (u *FirebaseUser) CreateCoach(ctx context.Context) (*Coach, error) {
 
 }
 
-func (u *FirebaseUser) CreateCoachee(ctx context.Context) (*Coachee, error) {
+func (u *FirebaseUser) CreateCoachee(ctx context.Context) (*APICoachee, error) {
 	log.Debugf(ctx, "CreateCoachee, create, %s", u)
 
 	coachee, err := getCoacheeFromFirebaseId(ctx, u.UID)
@@ -141,40 +108,4 @@ func (u *FirebaseUser) GetUser(ctx context.Context) (*Login, error) {
 
 	//no one ...
 	return nil, ErrNoUser
-
-
-	//var users []*User
-	//
-	//log.Debugf(ctx, "firebaseUser, GetUser for fbId : %s", u.UID)
-	//
-	////search in Coach table
-	//keys, err := datastore.NewQuery("Coach").Filter("FirebaseUID = ", u.UID).GetAll(ctx, &users)
-	//if err != nil {
-	//	return nil, err
-	//}
-	//
-	//if len(keys) == 0 {
-	//	//search in Coachee table
-	//	keys, err = datastore.NewQuery("Coachee").Filter("FirebaseUID = ", u.UID).GetAll(ctx, &users)
-	//	if err != nil {
-	//		return nil, err
-	//	}
-	//	if len(keys) == 0 {
-	//		return nil, ErrNoUser
-	//	}
-	//	log.Debugf(ctx, "firebaseUser, getUser, found a Coachee")
-	//
-	//} else {
-	//	log.Debugf(ctx, "firebaseUser, getUser, found a Coach")
-	//}
-	//
-	////we have a user
-	//var user User
-	//var key = keys[0]
-	//err = datastore.Get(ctx, key, &user)
-	//if err != nil {
-	//	return nil, err
-	//}
-	//user.Key = key
-	//return &user, nil
 }

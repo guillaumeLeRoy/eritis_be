@@ -30,16 +30,16 @@ func gravatarURL(email string) string {
 
 //get User for the given user id
 func GetCoach(ctx context.Context, key *datastore.Key) (*Coach, error) {
-	var user Coach
-	err := datastore.Get(ctx, key, &user)
+	log.Debugf(ctx, "getCoach, for key %s",key)
+
+	var coach Coach
+	err := datastore.Get(ctx, key, &coach)
 	if err != nil {
 		return nil, err
 	}
-	user.Key = key
+	coach.Key = key
 
-	log.Debugf(ctx, "getCoach")
-
-	return &user, nil
+	return &coach, nil
 }
 
 func GetAllCoach(ctx context.Context) ([]*Coach, error) {

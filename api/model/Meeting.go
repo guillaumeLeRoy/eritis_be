@@ -1,7 +1,6 @@
 package model
 
 import (
-	"time"
 	"google.golang.org/appengine/datastore"
 	"golang.org/x/net/context"
 	"google.golang.org/appengine/log"
@@ -9,7 +8,7 @@ import (
 
 type Meeting struct {
 	Key        *datastore.Key `json:"id" datastore:"-"`
-	StartDate  time.Time `json:"date"`
+	AgreedTime *datastore.Key `json:"agreed_date"`
 	CoachKey   *datastore.Key `json:"coach_id"`
 	CoacheeKey *datastore.Key `json:"coachee_id"`
 	IsOpen     bool `json:"isOpen"`
@@ -18,12 +17,12 @@ type Meeting struct {
 /**
 Visual representation of a meeting
  */
-type MeetingCard struct {
-	Key       *datastore.Key `json:"id" datastore:"-"`
-	StartDate time.Time `json:"date"`
-	Coach     *Coach `json:"coach"`
-	Coachee   *Coachee `json:"coachee"`
-	IsOpen    bool `json:"isOpen"`
+type ApiMeeting struct {
+	Key        *datastore.Key `json:"id" datastore:"-"`
+	AgreedTime *MeetingTime `json:"agreed_date"`
+	Coach      *Coach `json:"coach"`
+	Coachee    *APICoachee `json:"coachee"`
+	IsOpen     bool `json:"isOpen"`
 }
 
 func (m *Meeting) Create(ctx context.Context) error {
@@ -31,7 +30,6 @@ func (m *Meeting) Create(ctx context.Context) error {
 
 	//TODO add an ancestor
 	m.Key = datastore.NewIncompleteKey(ctx, "Meeting", nil)
-	m.IsOpen = true
 
 	//meeting is open
 	m.IsOpen = true
@@ -60,6 +58,8 @@ func (m *Meeting) Close(ctx context.Context) error {
 }
 
 func GetMeeting(ctx context.Context, key *datastore.Key) (*Meeting, error) {
+	log.Debugf(ctx, "GetAPIMeeting for key %s", key)
+
 	var meeting Meeting
 	err := datastore.Get(ctx, key, &meeting)
 	if err != nil {
@@ -70,7 +70,50 @@ func GetMeeting(ctx context.Context, key *datastore.Key) (*Meeting, error) {
 	return &meeting, nil
 }
 
-func GetMeetingsForCoach(ctx context.Context, coachKey *datastore.Key) ([]*MeetingCard, error) {
+func (m *Meeting)GetAPIMeeting(ctx context.Context) (*ApiMeeting, error) {
+	log.Debugf(ctx, "GetAPIMeeting", m)
+
+	var ApiMeeting ApiMeeting
+	ApiMeeting.Key = m.Key
+	ApiMeeting.IsOpen = m.IsOpen
+
+	//get meeting time
+	time, err := GetMeetingTime(ctx, m.AgreedTime)
+	if err != nil {
+		return nil, err
+	}
+	ApiMeeting.AgreedTime = time
+	//get coach
+	coach, err := GetCoach(ctx, m.CoachKey)
+	if err != nil {
+		return nil, err
+	}
+	ApiMeeting.Coach = coach
+	//get coachee
+	coachee, err := GetCoachee(ctx, m.CoacheeKey)
+	if err != nil {
+		return nil, err
+	}
+	ApiMeeting.Coachee = coachee
+
+	return &ApiMeeting, nil
+}
+
+func (m *Meeting) SetMeetingTime(ctx context.Context, meetingTimeKey *datastore.Key) error {
+	log.Debugf(ctx, "SetMeetingTime", m)
+
+	m.AgreedTime = meetingTimeKey
+
+	key, err := datastore.Put(ctx, m.Key, m)
+	if err != nil {
+		return err
+	}
+	m.Key = key
+
+	return nil
+}
+
+func GetMeetingsForCoach(ctx context.Context, coachKey *datastore.Key) ([]*ApiMeeting, error) {
 	log.Debugf(ctx, "GetMeetingsForCoach")
 
 	var meetings []*Meeting
@@ -89,32 +132,39 @@ func GetMeetingsForCoach(ctx context.Context, coachKey *datastore.Key) ([]*Meeti
 
 	log.Debugf(ctx, "GetMeetingsForCoach, coach obtained")
 
-	var meetingCards []*MeetingCard = make([]*MeetingCard, len(meetings))
+	var ApiMeetings []*ApiMeeting = make([]*ApiMeeting, len(meetings))
 	for i, meeting := range meetings {
 		meeting.Key = keys[i]
-		//convert to MeetingCard
-		var meetingCard MeetingCard
-		meetingCard.Key = meeting.Key
-		meetingCard.IsOpen = meeting.IsOpen
-		meetingCard.StartDate = meeting.StartDate
-		meetingCard.Coach = coach
+		//convert to ApiMeeting
+		var ApiMeeting ApiMeeting
+		ApiMeeting.Key = meeting.Key
+		ApiMeeting.IsOpen = meeting.IsOpen
+		ApiMeeting.Coach = coach
 
 		//get coachee
 		coachee, err := GetCoachee(ctx, meeting.CoacheeKey)
 		if err != nil {
 			return nil, err
 		}
-		meetingCard.Coachee = coachee
+		ApiMeeting.Coachee = coachee
 
-		log.Debugf(ctx, "GetMeetingsForCoach, meetingCard created, %s", meetingCard)
+		//get meeting agreed time
+		if meeting.AgreedTime != nil {
+			ApiMeeting.AgreedTime, err = GetMeetingTime(ctx, meeting.AgreedTime)
+			if err != nil {
+				return nil, err
+			}
+		}
 
-		meetingCards[i] = &meetingCard
+		log.Debugf(ctx, "GetMeetingsForCoach, ApiMeeting created, %s", ApiMeeting)
+
+		ApiMeetings[i] = &ApiMeeting
 	}
 
-	return meetingCards, nil
+	return ApiMeetings, nil
 }
 
-func GetMeetingsForCoachee(ctx context.Context, coacheeKey *datastore.Key) ([]*MeetingCard, error) {
+func GetMeetingsForCoachee(ctx context.Context, coacheeKey *datastore.Key) ([]*ApiMeeting, error) {
 	log.Debugf(ctx, "GetMeetingsForCoachee")
 
 	var meetings []*Meeting
@@ -133,27 +183,34 @@ func GetMeetingsForCoachee(ctx context.Context, coacheeKey *datastore.Key) ([]*M
 
 	log.Debugf(ctx, "GetMeetingsForCoachee, coachee obtained", coachee)
 
-	var meetingCards []*MeetingCard = make([]*MeetingCard, len(meetings))
+	var ApiMeetings []*ApiMeeting = make([]*ApiMeeting, len(meetings))
 	for i, meeting := range meetings {
 		meeting.Key = keys[i]
-		//convert to MeetingCard
-		var meetingCard MeetingCard
-		meetingCard.Key = meeting.Key
-		meetingCard.IsOpen = meeting.IsOpen
-		meetingCard.StartDate = meeting.StartDate
-		meetingCard.Coachee = coachee
+		//convert to ApiMeeting
+		var ApiMeeting ApiMeeting
+		ApiMeeting.Key = meeting.Key
+		ApiMeeting.IsOpen = meeting.IsOpen
+		ApiMeeting.Coachee = coachee
 
 		//get coach
 		coach, err := GetCoach(ctx, meeting.CoachKey)
 		if err != nil {
 			return nil, err
 		}
-		meetingCard.Coach = coach
+		ApiMeeting.Coach = coach
 
-		log.Debugf(ctx, "GetMeetingsForCoachee, meetingCard created, %s", meetingCard)
+		if meeting.AgreedTime != nil {
+			//get meeting agreed time
+			ApiMeeting.AgreedTime, err = GetMeetingTime(ctx, meeting.AgreedTime)
+			if err != nil {
+				return nil, err
+			}
+		}
 
-		meetingCards[i] = &meetingCard
+		log.Debugf(ctx, "GetMeetingsForCoachee, ApiMeeting created, %s", ApiMeeting)
+
+		ApiMeetings[i] = &ApiMeeting
 	}
 
-	return meetingCards, nil
+	return ApiMeetings, nil
 }
