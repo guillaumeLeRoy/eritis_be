@@ -1,4 +1,4 @@
-package handler
+package api
 //
 //import (
 //	"net/http"
@@ -6,8 +6,8 @@ package handler
 //	"google.golang.org/appengine"
 //	"google.golang.org/appengine/datastore"
 //	"google.golang.org/appengine/log"
-//	"model"
-//	"tool"
+//	"
+//	"
 //)
 //
 //func HandleVotes(w http.ResponseWriter, r *http.Request) {
@@ -22,7 +22,7 @@ package handler
 //
 //	// POST /api/votes/userId/:id
 //
-//	params := tool.PathParams(ctx, r, "/api/votes/userId/:id")
+//	params := PathParams(ctx, r, "/api/votes/userId/:id")
 //	userId, ok := params[":id"]
 //	if ok {
 //		handleVote(w, r, userId)// POST /api/questions/user/ID
@@ -45,26 +45,26 @@ package handler
 //		AnswerID string `json:"answer_id"`
 //		Score    int    `json:"score"`
 //	}
-//	err := tool.Decode(r, &newVote)
+//	err := Decode(r, &newVote)
 //	if err != nil {
-//		tool.RespondErr(ctx, w, r, err, http.StatusBadRequest)
+//		RespondErr(ctx, w, r, err, http.StatusBadRequest)
 //		return
 //	}
 //	err = validScore(newVote.Score)
 //	if err != nil {
-//		tool.RespondErr(ctx, w, r, err, http.StatusBadRequest)
+//		RespondErr(ctx, w, r, err, http.StatusBadRequest)
 //		return
 //	}
 //	answerKey, err := datastore.DecodeKey(newVote.AnswerID)
 //	if err != nil {
-//		tool.RespondErr(ctx, w, r, errors.New("invalid answer_id"),
+//		RespondErr(ctx, w, r, errors.New("invalid answer_id"),
 //			http.StatusBadRequest)
 //		return
 //	}
-//	vote, err := model.CastVote(ctx, answerKey, newVote.Score, uid)
+//	vote, err := CastVote(ctx, answerKey, newVote.Score, uid)
 //	if err != nil {
-//		tool.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
+//		RespondErr(ctx, w, r, err, http.StatusInternalServerError)
 //		return
 //	}
-//	tool.Respond(ctx, w, r, vote, http.StatusCreated)
+//	Respond(ctx, w, r, vote, http.StatusCreated)
 //}

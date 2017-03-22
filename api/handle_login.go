@@ -1,11 +1,9 @@
-package handler
+package api
 
 import (
 	"net/http"
 	"google.golang.org/appengine"
 	"google.golang.org/appengine/log"
-	"model"
-	"tool"
 	"strings"
 )
 
@@ -27,7 +25,7 @@ func HandleLogin(w http.ResponseWriter, r *http.Request) {
 
 		http.NotFound(w, r)
 	case "GET":
-		params := tool.PathParams(ctx, r, "/api/login/:firebaseId")
+		params := PathParams(ctx, r, "/api/login/:firebaseId")
 		uid, ok := params[":firebaseId"]
 		if ok {
 			handleGetUser(w, r, uid)// GET /api/login/:firebaseId
@@ -44,56 +42,56 @@ func handleCreateCoach(w http.ResponseWriter, r *http.Request) {
 	ctx := appengine.NewContext(r)
 	log.Debugf(ctx, "handleCreateCoach")
 
-	var fbUser model.FirebaseUser
-	err := tool.Decode(r, &fbUser)
+	var fbUser FirebaseUser
+	err := Decode(r, &fbUser)
 	if err != nil {
-		tool.RespondErr(ctx, w, r, err, http.StatusBadRequest)
+		RespondErr(ctx, w, r, err, http.StatusBadRequest)
 		return
 	}
 
 	coach, err := fbUser.CreateCoach(ctx)
 	if err != nil {
-		tool.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
+		RespondErr(ctx, w, r, err, http.StatusInternalServerError)
 		return
 	}
 
 	//construct response
-	var res = &model.Login{Coach:coach}
+	var res = &Login{Coach:coach}
 
-	tool.Respond(ctx, w, r, res, http.StatusCreated)
+	Respond(ctx, w, r, res, http.StatusCreated)
 }
 
 func handleCreateCoachee(w http.ResponseWriter, r *http.Request) {
 	ctx := appengine.NewContext(r)
 	log.Debugf(ctx, "handleCreateCoachee")
 
-	var fbUser model.FirebaseUser
-	err := tool.Decode(r, &fbUser)
+	var fbUser FirebaseUser
+	err := Decode(r, &fbUser)
 	if err != nil {
-		tool.RespondErr(ctx, w, r, err, http.StatusBadRequest)
+		RespondErr(ctx, w, r, err, http.StatusBadRequest)
 		return
 	}
 
 	coachee, err := fbUser.CreateCoachee(ctx)
 	if err != nil {
-		tool.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
+		RespondErr(ctx, w, r, err, http.StatusInternalServerError)
 		return
 	}
 	//construct response
-	var res = &model.Login{Coachee:coachee}
-	tool.Respond(ctx, w, r, res, http.StatusCreated)
+	var res = &Login{Coachee:coachee}
+	Respond(ctx, w, r, res, http.StatusCreated)
 }
 
 func handleGetUser(w http.ResponseWriter, r *http.Request, firebaseId string) {
 	ctx := appengine.NewContext(r)
 
-	var fbUser model.FirebaseUser
+	var fbUser FirebaseUser
 	fbUser.UID = firebaseId
 	response, err := fbUser.GetUser(ctx)
 	if err != nil {
-		tool.RespondErr(ctx, w, r, err, http.StatusBadRequest)
+		RespondErr(ctx, w, r, err, http.StatusBadRequest)
 		return
 	}
 
-	tool.Respond(ctx, w, r, response, http.StatusOK)
+	Respond(ctx, w, r, response, http.StatusOK)
 }

@@ -1,12 +1,12 @@
-package handler
+package api
 //
 //import (
 //	"net/http"
 //	"google.golang.org/appengine/datastore"
 //	"google.golang.org/appengine"
 //	"google.golang.org/appengine/log"
-//	"model"
-//	"tool"
+//	"
+//	"
 //)
 //
 //func HandleQuestions(w http.ResponseWriter, r *http.Request) {
@@ -15,7 +15,7 @@ package handler
 //
 //	switch r.Method {
 //	case "POST":
-//		params := tool.PathParams(ctx, r, "/api/questions/userId/:id")
+//		params := PathParams(ctx, r, "/api/questions/userId/:id")
 //		userId, ok := params[":id"]
 //		if ok {
 //			handleQuestionCreate(w, r, userId)// POST /api/questions/user/ID
@@ -24,7 +24,7 @@ package handler
 //		http.NotFound(w, r)
 //		return
 //	case "GET":
-//		params := tool.PathParams(ctx, r, "/api/questions/:id")
+//		params := PathParams(ctx, r, "/api/questions/:id")
 //		questionId, ok := params[":id"]
 //		if ok {
 //			handleQuestionGet(w, r, questionId)// GET /api/questions/ID
@@ -39,20 +39,20 @@ package handler
 //
 //func handleQuestionCreate(w http.ResponseWriter, r *http.Request, uid string) {
 //	ctx := appengine.NewContext(r)
-//	var q model.Question
-//	err := tool.Decode(r, &q)
+//	var q Question
+//	err := Decode(r, &q)
 //	if err != nil {
-//		tool.RespondErr(ctx, w, r, err, http.StatusBadRequest)
+//		RespondErr(ctx, w, r, err, http.StatusBadRequest)
 //		return
 //	}
 //
 //	err = q.Create(ctx, uid)
 //	if err != nil {
-//		tool.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
+//		RespondErr(ctx, w, r, err, http.StatusInternalServerError)
 //		return
 //	}
 //
-//	tool.Respond(ctx, w, r, q, http.StatusCreated)
+//	Respond(ctx, w, r, q, http.StatusCreated)
 //}
 //
 //func handleQuestionGet(w http.ResponseWriter, r *http.Request, id string) {
@@ -62,23 +62,23 @@ package handler
 //
 //	key, err := datastore.DecodeKey(id)
 //	if err != nil {
-//		tool.RespondErr(ctx, w, r, err, http.StatusBadRequest)
+//		RespondErr(ctx, w, r, err, http.StatusBadRequest)
 //		return
 //	}
 //
 //	log.Debugf(ctx, "handleQuestionGet, questionId : %s, questionKey : ", id, key)
 //
-//	question, err := model.GetQuestion(ctx, key)
+//	question, err := GetQuestion(ctx, key)
 //	if err != nil {
 //		if err == datastore.ErrNoSuchEntity {
-//			tool.RespondErr(ctx, w, r, datastore.ErrNoSuchEntity, http.StatusNotFound)
+//			RespondErr(ctx, w, r, datastore.ErrNoSuchEntity, http.StatusNotFound)
 //			return
 //		}
-//		tool.RespondErr(ctx, w, r, err, http.StatusBadRequest)
+//		RespondErr(ctx, w, r, err, http.StatusBadRequest)
 //		return
 //	}
 //
-//	tool.Respond(ctx, w, r, question, http.StatusOK)
+//	Respond(ctx, w, r, question, http.StatusOK)
 //}
 //
 //func handleTopQuestions(w http.ResponseWriter, r *http.Request) {
@@ -86,12 +86,12 @@ package handler
 //
 //	log.Debugf(ctx, "handleTopQuestions")
 //
-//	questions, err := model.TopQuestions(ctx)
+//	questions, err := TopQuestions(ctx)
 //	if err != nil {
-//		tool.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
+//		RespondErr(ctx, w, r, err, http.StatusInternalServerError)
 //		return
 //	}
 //	log.Debugf(ctx, "handleTopQuestions, questions %s", questions)
 //
-//	tool.Respond(ctx, w, r, questions, http.StatusOK)
+//	Respond(ctx, w, r, questions, http.StatusOK)
 //}

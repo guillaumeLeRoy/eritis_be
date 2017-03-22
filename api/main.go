@@ -3,31 +3,29 @@ package api
 import (
 	"io"
 	"net/http"
-	"strings"
 	"google.golang.org/appengine"
 	"google.golang.org/appengine/log"
 	"errors"
-	"handler"
-	"tool"
+	"strings"
 )
 
 func init() {
 
 	http.HandleFunc("/", corsHandler(handleHello))
-	http.HandleFunc("/api/login/", corsHandler(handler.HandleLogin))
+	http.HandleFunc("/api/login/", corsHandler(HandleLogin))
 	//http.HandleFunc("/api/questions/", corsHandler(handler.HandleQuestions))
 	//http.HandleFunc("/api/answers/", corsHandler(handler.HandleAnswers))
 	//http.HandleFunc("/api/votes/", corsHandler(handler.HandleVotes))
 
 	//meetings
-	http.HandleFunc("/api/meeting/", corsHandler(handler.HandleMeeting))
-	http.HandleFunc("/api/meetings/", corsHandler(handler.HandleMeeting))
+	http.HandleFunc("/api/meeting/", corsHandler(HandleMeeting))
+	http.HandleFunc("/api/meetings/", corsHandler(HandleMeeting))
 
 	//coach
-	http.HandleFunc("/api/coachs/", corsHandler(handler.HandleCoachs))
+	http.HandleFunc("/api/coachs/", corsHandler(HandleCoachs))
 
 	//coachee
-	http.HandleFunc("/api/coachees/", corsHandler(handler.HandleCoachees))
+	http.HandleFunc("/api/coachees/", corsHandler(HandleCoachees))
 }
 
 func handleHello(w http.ResponseWriter, r *http.Request) {
@@ -64,7 +62,7 @@ func corsHandler(handler func(w http.ResponseWriter, r *http.Request)) http.Hand
 			// If the token is empty...
 			if token == "" {
 				// If we get here, the required token is missing
-				tool.RespondErr(ctx, w, r, errors.New("invalid token"), http.StatusUnauthorized)
+				RespondErr(ctx, w, r, errors.New("invalid token"), http.StatusUnauthorized)
 				return
 			}
 
@@ -78,7 +76,7 @@ func corsHandler(handler func(w http.ResponseWriter, r *http.Request)) http.Hand
 			// If the token is empty...
 			if token == "" {
 				// If we get here, the required token is missing
-				tool.RespondErr(ctx, w, r, errors.New("invalid token"), http.StatusUnauthorized)
+				RespondErr(ctx, w, r, errors.New("invalid token"), http.StatusUnauthorized)
 				return
 			}
 

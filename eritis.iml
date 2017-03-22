@@ -1,10 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <module type="GO_MODULE" version="4">
+  <component name="Go">
+    <buildTags>
+      <option name="goVersion" value="go1.1" />
+    </buildTags>
+  </component>
   <component name="NewModuleRootManager" inherit-compiler-output="true">
     <exclude-output />
     <content url="file://$MODULE_DIR$" />
-    <orderEntry type="inheritedJdk" />
+    <orderEntry type="jdk" jdkName="Go 1.6.3 (appengine-1.9.48)" jdkType="Go SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="library" name="GOPATH &lt;hello&gt;" level="project" />
+    <orderEntry type="library" name="GOPATH &lt;eritis&gt;" level="project" />
   </component>
 </module>

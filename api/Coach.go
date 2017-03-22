@@ -1,4 +1,4 @@
-package model
+package api
 
 import (
 	"google.golang.org/appengine/datastore"
@@ -30,7 +30,7 @@ func gravatarURL(email string) string {
 
 //get User for the given user id
 func GetCoach(ctx context.Context, key *datastore.Key) (*Coach, error) {
-	log.Debugf(ctx, "getCoach, for key %s",key)
+	log.Debugf(ctx, "getCoach, for key %s", key)
 
 	var coach Coach
 	err := datastore.Get(ctx, key, &coach)
