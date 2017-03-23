@@ -1,1 +1,3 @@
-.idea**
+# User-specific stuff:
+.idea/workspace.xml
+.idea/libraries/GOPATH__eritis_.xml
