@@ -7,11 +7,14 @@ import (
 	"google.golang.org/appengine/log"
 	"errors"
 	"strings"
+	"github.com/wuman/firebase-server-sdk-go"
+	"fmt"
+	"google.golang.org/appengine/mail"
 )
 
 func init() {
 
-	http.HandleFunc("/", corsHandler(handleHello))
+	//http.HandleFunc("/", corsHandler(handleHello))
 	http.HandleFunc("/api/login/", corsHandler(HandleLogin))
 	//http.HandleFunc("/api/questions/", corsHandler(handler.HandleQuestions))
 	//http.HandleFunc("/api/answers/", corsHandler(handler.HandleAnswers))
@@ -26,6 +29,9 @@ func init() {
 
 	//coachee
 	http.HandleFunc("/api/coachees/", corsHandler(HandleCoachees))
+
+	//send email
+	http.HandleFunc("/api/mail/", confirm)
 }
 
 func handleHello(w http.ResponseWriter, r *http.Request) {
@@ -82,6 +88,16 @@ func corsHandler(handler func(w http.ResponseWriter, r *http.Request)) http.Hand
 
 			log.Debugf(ctx, "corsHandler VERIFY token")
 
+			//app, err := firebase.InitializeApp(&firebase.Options{
+			//	ServiceAccountPath: "eritis-be-97911f39ed2a.json",
+			//})
+			//
+			//if err != nil {
+			//	log.Debugf(ctx, "corsHandler InitializeApp failed %s", err)
+			//	//RespondErr(ctx, w, r, err, http.StatusUnauthorized)
+			//	//return
+			//}
+
 			//firebase.InitializeApp(&firebase.Options{
 			//	ServiceAccountPath: "eritis-be-97911f39ed2a.json",
 			//})
@@ -89,12 +105,18 @@ func corsHandler(handler func(w http.ResponseWriter, r *http.Request)) http.Hand
 			//log.Debugf(ctx, "corsHandler InitializeApp ok")
 			//
 			////verify token
-			//auth, _ := firebase.GetAuth()
-			//_, err := auth.VerifyIDToken(token)
-			//if err != nil {
-			//	RespondErr(ctx, w, r, err, http.StatusUnauthorized)
-			//	return
-			//}
+			auth, _ := firebase.GetAuth()
+			decodedToken, err := auth.VerifyIDToken(token)
+			if err != nil {
+				log.Debugf(ctx, "corsHandler VerifyIDToken failed %s", err)
+				//RespondErr(ctx, w, r, err, http.StatusUnauthorized)
+				return
+			}
+
+			if err == nil {
+				uid, found := decodedToken.UID()
+				log.Debugf(ctx, "corsHandler decodedToken uid %s, found %s", uid, found)
+			}
 
 			//uid, found := decodedToken.UID()
 			//if !found {
@@ -110,3 +132,36 @@ func corsHandler(handler func(w http.ResponseWriter, r *http.Request)) http.Hand
 		}
 	}
 }
+
+func confirm(w http.ResponseWriter, r *http.Request) {
+	ctx := appengine.NewContext(r)
+	//addr := r.FormValue("email")
+
+	//addrs := []string{"marcolini.theo@gmail.com", "gleroy78@gmail.com", "jordhan.madec@gmail.com"}
+	addrs := []string{"gleroy78@gmail.com"}
+
+	url := "this is a Url"
+	//addr := "gleroy78@gmail.com"
+	//msg := &mail.Message{
+	//	Sender:  "gleroy78@gmail.com",
+	//	To:      []string{addr},
+	//	Subject: "Confirm your registration",
+	//	Body:    fmt.Sprintf(confirmMessage, url),
+	//}
+
+	msg := &mail.Message{
+		Sender:  "gleroy78@gmail.com",
+		To:      addrs,
+		Subject: "Confirm your registration",
+		Body:    fmt.Sprintf(confirmMessage, url),
+	}
+
+	if err := mail.Send(ctx, msg); err != nil {
+		log.Errorf(ctx, "Couldn't send email: %v", err)
+	}
+
+	io.WriteString(w, "Email was sent")
+
+}
+
+const confirmMessage = `this is a test from eritis BE %s`
