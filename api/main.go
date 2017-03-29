@@ -7,6 +7,7 @@ import (
 	"google.golang.org/appengine/log"
 	"errors"
 	"strings"
+	"github.com/wuman/firebase-server-sdk-go"
 )
 
 func init() {
@@ -82,6 +83,16 @@ func corsHandler(handler func(w http.ResponseWriter, r *http.Request)) http.Hand
 
 			log.Debugf(ctx, "corsHandler VERIFY token")
 
+			//app, err := firebase.InitializeApp(&firebase.Options{
+			//	ServiceAccountPath: "eritis-be-97911f39ed2a.json",
+			//})
+			//
+			//if err != nil {
+			//	log.Debugf(ctx, "corsHandler InitializeApp failed %s", err)
+			//	//RespondErr(ctx, w, r, err, http.StatusUnauthorized)
+			//	//return
+			//}
+
 			//firebase.InitializeApp(&firebase.Options{
 			//	ServiceAccountPath: "eritis-be-97911f39ed2a.json",
 			//})
@@ -89,12 +100,18 @@ func corsHandler(handler func(w http.ResponseWriter, r *http.Request)) http.Hand
 			//log.Debugf(ctx, "corsHandler InitializeApp ok")
 			//
 			////verify token
-			//auth, _ := firebase.GetAuth()
-			//_, err := auth.VerifyIDToken(token)
-			//if err != nil {
-			//	RespondErr(ctx, w, r, err, http.StatusUnauthorized)
-			//	return
-			//}
+			auth, _ := firebase.GetAuth()
+			decodedToken, err := auth.VerifyIDToken(token)
+			if err != nil {
+				log.Debugf(ctx, "corsHandler VerifyIDToken failed %s", err)
+				//RespondErr(ctx, w, r, err, http.StatusUnauthorized)
+				return
+			}
+
+			if err == nil {
+				uid, found := decodedToken.UID()
+				log.Debugf(ctx, "corsHandler decodedToken uid %s, found %s", uid, found)
+			}
 
 			//uid, found := decodedToken.UID()
 			//if !found {
