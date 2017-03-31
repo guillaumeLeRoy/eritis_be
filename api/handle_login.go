@@ -55,6 +55,9 @@ func handleCreateCoach(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	//send welcome email
+	sendWelcomeEmailToCoach(ctx, coach)//TODO could be on a thread
+
 	//construct response
 	var res = &Login{Coach:coach}
 

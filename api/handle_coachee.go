@@ -29,7 +29,7 @@ func HandleCoachees(w http.ResponseWriter, r *http.Request) {
 			//read a coach id
 			coachId, ok := params[":coachId"]
 			if ok {
-				handleUpdateSelectedCoach(w, r, coacheeId, coachId)// PUT /api/coachees/ID/coach/coachId
+				handleUpdateSelectedCoach(w, r, coacheeId, coachId)// PUT /api/coachees/coacheeId/coach/coachId
 				return
 			}
 			//just update coachee
@@ -99,6 +99,9 @@ func handleUpdateCoacheeForId(w http.ResponseWriter, r *http.Request, id string)
 	Respond(ctx, w, r, coachee, http.StatusOK)
 }
 
+/*
+Given coachee ( for coacheeId ) wants to select the given coach ( for coachId )
+*/
 func handleUpdateSelectedCoach(w http.ResponseWriter, r *http.Request, coacheeId string, coachId string) {
 	ctx := appengine.NewContext(r)
 	log.Debugf(ctx, "handleUpdateSelectedCoach %s", coacheeId)
@@ -129,5 +132,12 @@ func handleUpdateSelectedCoach(w http.ResponseWriter, r *http.Request, coacheeId
 	if err != nil {
 		RespondErr(ctx, w, r, err, http.StatusInternalServerError)
 	}
+
+	//send an email to the Coach to notify that he was selected
+	err = sendEmailToSelectedCoach(ctx, coach, &coachee.Coachee)
+	if err != nil {
+		RespondErr(ctx, w, r, err, http.StatusInternalServerError)
+	}
+
 	Respond(ctx, w, r, apiCoachee, http.StatusOK)
 }
