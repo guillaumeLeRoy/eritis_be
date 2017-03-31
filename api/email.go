@@ -7,37 +7,6 @@ import (
 	"golang.org/x/net/context"
 )
 
-//func confirm(w http.ResponseWriter, r *http.Request) {
-//	ctx := appengine.NewContext(r)
-//	//addr := r.FormValue("email")
-//
-//	//addrs := []string{"marcolini.theo@gmail.com", "gleroy78@gmail.com", "jordhan.madec@gmail.com"}
-//	addrs := []string{"gleroy78@gmail.com"}
-//
-//	url := "this is a Url"
-//	//addr := "gleroy78@gmail.com"
-//	//msg := &mail.Message{
-//	//	Sender:  "gleroy78@gmail.com",
-//	//	To:      []string{addr},
-//	//	Subject: "Confirm your registration",
-//	//	Body:    fmt.Sprintf(confirmMessage, url),
-//	//}
-//
-//	msg := &mail.Message{
-//		Sender:  "gleroy78@gmail.com",
-//		To:      addrs,
-//		Subject: "Confirm your registration",
-//		Body:    fmt.Sprintf(confirmMessage, url),
-//	}
-//
-//	if err := mail.Send(ctx, msg); err != nil {
-//		log.Errorf(ctx, "Couldn't send email: %v", err)
-//	}
-//
-//	io.WriteString(w, "Email was sent")
-//
-//}
-
 func sendWelcomeEmailToCoach(ctx context.Context, coach *Coach) error {
 	addrs := []string{coach.Email}
 
