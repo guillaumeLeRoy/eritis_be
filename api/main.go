@@ -48,6 +48,10 @@ func corsHandler(handler func(w http.ResponseWriter, r *http.Request)) http.Hand
 
 		log.Debugf(ctx, "corsHandler start")
 
+		appId := appengine.AppID(ctx)
+		log.Debugf(ctx, "corsHandler appId %s", appId)
+
+
 		//handle preflight in here
 		w.Header().Add("Access-Control-Allow-Origin", "*")
 		w.Header().Add("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS")
@@ -89,7 +93,7 @@ func corsHandler(handler func(w http.ResponseWriter, r *http.Request)) http.Hand
 			log.Debugf(ctx, "corsHandler VERIFY token")
 
 			//app, err := firebase.InitializeApp(&firebase.Options{
-			//	ServiceAccountPath: "eritis-be-97911f39ed2a.json",
+			//	ServiceAccountPath: "eritis-be-live.json",
 			//})
 			//
 			//if err != nil {
@@ -99,7 +103,7 @@ func corsHandler(handler func(w http.ResponseWriter, r *http.Request)) http.Hand
 			//}
 
 			//firebase.InitializeApp(&firebase.Options{
-			//	ServiceAccountPath: "eritis-be-97911f39ed2a.json",
+			//	ServiceAccountPath: "eritis-be-live.json",
 			//})
 			//
 			//log.Debugf(ctx, "corsHandler InitializeApp ok")
@@ -135,6 +139,10 @@ func corsHandler(handler func(w http.ResponseWriter, r *http.Request)) http.Hand
 
 func confirm(w http.ResponseWriter, r *http.Request) {
 	ctx := appengine.NewContext(r)
+
+	appId := appengine.AppID(ctx)
+	log.Debugf(ctx, "confirm appId %s", appId)
+
 	//addr := r.FormValue("email")
 
 	//addrs := []string{"marcolini.theo@gmail.com", "gleroy78@gmail.com", "jordhan.madec@gmail.com"}
