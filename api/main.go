@@ -7,7 +7,7 @@ import (
 	"errors"
 	"strings"
 	"golang.org/x/net/context"
-	"firebase-server-sdk-go"
+	"eritis_be/firebase"
 )
 
 /* ######## HOW TO SERVE DIFFERENT ENVIRONMENTS #######
