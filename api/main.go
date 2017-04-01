@@ -14,10 +14,10 @@ import (
 
 ##### LIVE ENV ######
 serve locally :
-dev_appserver.py -A eritis-150320 dispatch.yaml default/app.yaml api/app.yaml web/app.yaml --enable_sendmail
+dev_appserver.py -A eritis-150320 dispatch.yaml default/app.yaml api/app.yaml web/app.yaml firebase/app.yaml --enable_sendmail
 
 deploy :
-goapp deploy -application eritis-150320 -version 1 default/app.yaml api/app.yaml web/app.yaml
+goapp deploy -application eritis-150320 -version 1 default/app.yaml api/app.yaml web/app.yaml firebase/app.yaml
 appcfg.py -A eritis-150320 update_dispatch .
 appcfg.py update_indexes -A eritis-150320 ./default
 
@@ -25,10 +25,10 @@ appcfg.py update_indexes -A eritis-150320 ./default
 
 ##### DEV ENV ######
 serve locally :
-dev_appserver.py -A eritis-be-dev dispatch.yaml default/app.yaml api/app.yaml web/app.yaml --enable_sendmail
+dev_appserver.py -A eritis-be-dev dispatch.yaml default/app.yaml api/app.yaml web/app.yaml firebase/app.yaml --enable_sendmail
 
 deploy :
-goapp deploy -application eritis-be-dev -version 1 default/app.yaml api/app.yaml web/app.yaml
+goapp deploy -application eritis-be-dev -version 1 default/app.yaml api/app.yaml web/app.yaml firebase/app.yaml
 appcfg.py -A eritis-be-dev update_dispatch .
 appcfg.py update_indexes -A eritis-be-dev ./default
 
@@ -36,15 +36,20 @@ appcfg.py update_indexes -A eritis-be-dev ./default
 
 ##### GLR ENV ######
 serve :
-dev_appserver.py -A eritis-be-glr dispatch.yaml default/app.yaml api/app.yaml web/app.yaml --enable_sendmail
+dev_appserver.py -A eritis-be-glr dispatch.yaml default/app.yaml api/app.yaml web/app.yaml firebase/app.yaml --enable_sendmail
 
 deploy :
-for now there is no glr backend on app engine
-
+goapp deploy -application eritis-be-glr -version 1 default/app.yaml api/app.yaml web/app.yaml firebase/app.yaml
+appcfg.py -A eritis-be-glr update_dispatch .
+appcfg.py update_indexes -A eritis-be-glr ./default
 */
+
 const LIVE_ENV_PROJECT_ID string = "eritis-150320"
 const DEV_ENV_PROJECT_ID string = "eritis-be-dev"
 const GLR_ENV_PROJECT_ID string = "eritis-be-glr"
+
+// keep a ref to init the app only once
+var firebaseApp *firebase.App
 
 func init() {
 
@@ -61,6 +66,7 @@ func init() {
 	http.HandleFunc("/api/coachees/", authHandler(HandleCoachees))
 }
 
+//returns a firebase admin json
 func getFirebaseJsonPath(ctx context.Context) (string, error) {
 	appId := appengine.AppID(ctx)
 	log.Debugf(ctx, "appId %s", appId)
@@ -133,19 +139,22 @@ func authHandler(handler func(w http.ResponseWriter, r *http.Request)) http.Hand
 
 			path, err := getFirebaseJsonPath(ctx)
 			if err != nil {
-				log.Debugf(ctx, "authHandler InitializeApp failed %s", err)
+				log.Debugf(ctx, "authHandler, get json path failed %s", err)
 				RespondErr(ctx, w, r, err, http.StatusUnauthorized)
 				return
 			}
 
-			_, err = firebase.InitializeApp(&firebase.Options{
-				ServiceAccountPath: path,
-			})
-
-			if err != nil {
-				log.Debugf(ctx, "authHandler InitializeApp failed %s", err)
-				RespondErr(ctx, w, r, err, http.StatusUnauthorized)
-				return
+			if firebaseApp == nil {
+				firebaseApp, err = firebase.InitializeApp(&firebase.Options{
+					ServiceAccountPath: path,
+				})
+				if err != nil {
+					log.Debugf(ctx, "authHandler InitializeApp failed %s", err)
+					RespondErr(ctx, w, r, err, http.StatusUnauthorized)
+					return
+				}
+			} else {
+				log.Debugf(ctx, "authHandler, firebaseApp already init")
 			}
 
 			log.Debugf(ctx, "authHandler InitializeApp ok")
