@@ -1,4 +1,3 @@
-application: eritis-150320
 dispatch:
      - url: "*/api/*"
        module: api
