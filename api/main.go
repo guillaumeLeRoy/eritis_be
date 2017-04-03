@@ -8,8 +8,6 @@ import (
 	"strings"
 	"golang.org/x/net/context"
 	"eritis_be/firebase"
-	"fmt"
-	"google.golang.org/appengine/mail"
 )
 
 /* ######## HOW TO SERVE DIFFERENT ENVIRONMENTS #######
@@ -67,8 +65,33 @@ func init() {
 	//coachee
 	http.HandleFunc("/api/coachees/", authHandler(HandleCoachees))
 
-	//coachee
-	http.HandleFunc("/api/email/",sendTestEmail)
+	//contact, no need to be authenticated to send a contact request
+	http.HandleFunc("/api/v1/contact/", nonAuthHandler(handleContact))
+
+	//test email
+	http.HandleFunc("/api/email/", sendTestEmail)
+}
+
+func nonAuthHandler(handler func(w http.ResponseWriter, r *http.Request)) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+
+		ctx := appengine.NewContext(r)
+
+		log.Debugf(ctx, "nonAuthHandler start")
+
+		//check token validity
+
+		if (r.Method == "OPTIONS") {
+			log.Debugf(ctx, "authHandler, handle OPTIONS")
+			//handle preflight in here
+			w.Header().Add("Access-Control-Allow-Origin", "*")
+			w.Header().Add("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS")
+			w.Header().Add("Access-Control-Allow-Headers", "Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With")
+			w.WriteHeader(http.StatusOK)
+		} else {
+			handler(w, r)
+		}
+	}
 }
 
 //returns a firebase admin json
@@ -192,23 +215,6 @@ func authHandler(handler func(w http.ResponseWriter, r *http.Request)) http.Hand
 }
 
 
-func sendTestEmail(w http.ResponseWriter, r *http.Request) {
-	ctx := appengine.NewContext(r)
 
-	addrs := []string{"gleroy78@gmail.com, theo@eritis.co.uk"}
-
-	msg := &mail.Message{
-		Sender:  "diana@eritis.co.uk",
-		To:      addrs,
-		Subject: "Vous avez été sélectionné",
-		Body:    fmt.Sprintf(COACH_WELCOME_MSG),
-	}
-
-	if err := mail.Send(ctx, msg); err != nil {
-		log.Errorf(ctx, "Couldn't send email: %v", err)
-		RespondErr(ctx, w, r, err, http.StatusInternalServerError)
-	}
-	w.WriteHeader(http.StatusOK)
-}
 
 
