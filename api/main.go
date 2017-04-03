@@ -8,6 +8,8 @@ import (
 	"strings"
 	"golang.org/x/net/context"
 	"eritis_be/firebase"
+	"fmt"
+	"google.golang.org/appengine/mail"
 )
 
 /* ######## HOW TO SERVE DIFFERENT ENVIRONMENTS #######
@@ -64,6 +66,9 @@ func init() {
 
 	//coachee
 	http.HandleFunc("/api/coachees/", authHandler(HandleCoachees))
+
+	//coachee
+	http.HandleFunc("/api/email/",sendTestEmail)
 }
 
 //returns a firebase admin json
@@ -185,4 +190,25 @@ func authHandler(handler func(w http.ResponseWriter, r *http.Request)) http.Hand
 		}
 	}
 }
+
+
+func sendTestEmail(w http.ResponseWriter, r *http.Request) {
+	ctx := appengine.NewContext(r)
+
+	addrs := []string{"gleroy78@gmail.com, theo@eritis.co.uk"}
+
+	msg := &mail.Message{
+		Sender:  "diana@eritis.co.uk",
+		To:      addrs,
+		Subject: "Vous avez été sélectionné",
+		Body:    fmt.Sprintf(COACH_WELCOME_MSG),
+	}
+
+	if err := mail.Send(ctx, msg); err != nil {
+		log.Errorf(ctx, "Couldn't send email: %v", err)
+		RespondErr(ctx, w, r, err, http.StatusInternalServerError)
+	}
+	w.WriteHeader(http.StatusOK)
+}
+
 
