@@ -1,52 +1,126 @@
 package api
 
 import (
-	"io"
 	"net/http"
 	"google.golang.org/appengine"
 	"google.golang.org/appengine/log"
 	"errors"
 	"strings"
-	"github.com/wuman/firebase-server-sdk-go"
-	"fmt"
-	"google.golang.org/appengine/mail"
+	"golang.org/x/net/context"
+	"eritis_be/firebase"
 )
+
+/* ######## HOW TO SERVE DIFFERENT ENVIRONMENTS #######
+
+##### LIVE ENV ######
+serve locally :
+dev_appserver.py -A eritis-150320 dispatch.yaml default/app.yaml api/app.yaml web/app.yaml firebase/app.yaml --enable_sendmail
+
+deploy :
+goapp deploy -application eritis-150320 -version 1 default/app.yaml api/app.yaml web/app.yaml firebase/app.yaml
+appcfg.py -A eritis-150320 update_dispatch .
+appcfg.py update_indexes -A eritis-150320 ./default
+
+
+
+##### DEV ENV ######
+serve locally :
+dev_appserver.py -A eritis-be-dev dispatch.yaml default/app.yaml api/app.yaml web/app.yaml firebase/app.yaml --enable_sendmail
+
+deploy :
+goapp deploy -application eritis-be-dev -version 1 default/app.yaml api/app.yaml web/app.yaml firebase/app.yaml
+appcfg.py -A eritis-be-dev update_dispatch .
+appcfg.py update_indexes -A eritis-be-dev ./default
+
+
+
+##### GLR ENV ######
+serve :
+dev_appserver.py -A eritis-be-glr dispatch.yaml default/app.yaml api/app.yaml web/app.yaml firebase/app.yaml --enable_sendmail
+
+deploy :
+goapp deploy -application eritis-be-glr -version 1 default/app.yaml api/app.yaml web/app.yaml firebase/app.yaml
+appcfg.py -A eritis-be-glr update_dispatch .
+appcfg.py update_indexes -A eritis-be-glr ./default
+*/
+
+const LIVE_ENV_PROJECT_ID string = "eritis-150320"
+const DEV_ENV_PROJECT_ID string = "eritis-be-dev"
+const GLR_ENV_PROJECT_ID string = "eritis-be-glr"
+
+// keep a ref to init the app only once
+var firebaseApp *firebase.App
 
 func init() {
 
-	//http.HandleFunc("/", corsHandler(handleHello))
-	http.HandleFunc("/api/login/", corsHandler(HandleLogin))
-	//http.HandleFunc("/api/questions/", corsHandler(handler.HandleQuestions))
-	//http.HandleFunc("/api/answers/", corsHandler(handler.HandleAnswers))
-	//http.HandleFunc("/api/votes/", corsHandler(handler.HandleVotes))
+	http.HandleFunc("/api/login/", authHandler(HandleLogin))
 
 	//meetings
-	http.HandleFunc("/api/meeting/", corsHandler(HandleMeeting))
-	http.HandleFunc("/api/meetings/", corsHandler(HandleMeeting))
+	http.HandleFunc("/api/meeting/", authHandler(HandleMeeting))
+	http.HandleFunc("/api/meetings/", authHandler(HandleMeeting))
 
 	//coach
-	http.HandleFunc("/api/coachs/", corsHandler(HandleCoachs))
+	http.HandleFunc("/api/coachs/", authHandler(HandleCoachs))
 
 	//coachee
-	http.HandleFunc("/api/coachees/", corsHandler(HandleCoachees))
+	http.HandleFunc("/api/coachees/", authHandler(HandleCoachees))
 
-	//send email
-	http.HandleFunc("/api/mail/", confirm)
+	//contact, no need to be authenticated to send a contact request
+	http.HandleFunc("/api/v1/contact/", nonAuthHandler(handleContact))
+
+	//test email
+	http.HandleFunc("/api/email/", sendTestEmail)
 }
 
-func handleHello(w http.ResponseWriter, r *http.Request) {
-	ctx := appengine.NewContext(r)
-	log.Debugf(ctx, "handle hello, for url %s", r.URL.Path)
-
-	io.WriteString(w, "Hello from App Engine")
-}
-
-func corsHandler(handler func(w http.ResponseWriter, r *http.Request)) http.HandlerFunc {
+func nonAuthHandler(handler func(w http.ResponseWriter, r *http.Request)) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
 		ctx := appengine.NewContext(r)
 
-		log.Debugf(ctx, "corsHandler start")
+		log.Debugf(ctx, "nonAuthHandler start")
+
+		//handle preflight in here
+		w.Header().Add("Access-Control-Allow-Origin", "*")
+		w.Header().Add("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS")
+		w.Header().Add("Access-Control-Allow-Headers", "Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With")
+
+		if (r.Method == "OPTIONS") {
+			log.Debugf(ctx, "authHandler, handle OPTIONS")
+			w.WriteHeader(http.StatusOK)
+		} else {
+			handler(w, r)
+		}
+	}
+}
+
+//returns a firebase admin json
+func getFirebaseJsonPath(ctx context.Context) (string, error) {
+	appId := appengine.AppID(ctx)
+	log.Debugf(ctx, "appId %s", appId)
+
+	pathToJson := ""
+
+	if strings.EqualFold(LIVE_ENV_PROJECT_ID, appId) {
+		pathToJson = "firebase_keys/eritis-be-live.json"
+	} else if strings.EqualFold(DEV_ENV_PROJECT_ID, appId) {
+		pathToJson = "firebase_keys/eritis-be-dev.json"
+	} else if strings.EqualFold(GLR_ENV_PROJECT_ID, appId) {
+		pathToJson = "firebase_keys/eritis-be-glr.json"
+	} else {
+		return "", errors.New("AppId doesn't match any environment")
+	}
+
+	log.Debugf(ctx, "getFirebaseJsonPath path %s", pathToJson)
+
+	return pathToJson, nil
+}
+
+func authHandler(handler func(w http.ResponseWriter, r *http.Request)) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+
+		ctx := appengine.NewContext(r)
+
+		log.Debugf(ctx, "authHandler start")
 
 		//handle preflight in here
 		w.Header().Add("Access-Control-Allow-Origin", "*")
@@ -56,14 +130,14 @@ func corsHandler(handler func(w http.ResponseWriter, r *http.Request)) http.Hand
 		//check token validity
 
 		if (r.Method == "OPTIONS") {
-			log.Debugf(ctx, "corsHandler, handle OPTIONS")
+			log.Debugf(ctx, "authHandler, handle OPTIONS")
 
 			w.WriteHeader(http.StatusOK)
 		} else {
-			log.Debugf(ctx, "corsHandler, handle all requests")
+			log.Debugf(ctx, "authHandler, handle all requests")
 
 			token := r.Header.Get("Authorization")
-			log.Debugf(ctx, "corsHandler auth token: %s", token)
+			log.Debugf(ctx, "authHandler auth token: %s", token)
 
 			// If the token is empty...
 			if token == "" {
@@ -77,7 +151,7 @@ func corsHandler(handler func(w http.ResponseWriter, r *http.Request)) http.Hand
 				token = strings.TrimPrefix(token, "Bearer ")
 			}
 
-			log.Debugf(ctx, "corsHandler token: %s", token)
+			log.Debugf(ctx, "authHandler token: %s", token)
 
 			// If the token is empty...
 			if token == "" {
@@ -86,46 +160,52 @@ func corsHandler(handler func(w http.ResponseWriter, r *http.Request)) http.Hand
 				return
 			}
 
-			log.Debugf(ctx, "corsHandler VERIFY token")
+			log.Debugf(ctx, "authHandler VERIFY token")
 
-			//app, err := firebase.InitializeApp(&firebase.Options{
-			//	ServiceAccountPath: "eritis-be-97911f39ed2a.json",
-			//})
-			//
-			//if err != nil {
-			//	log.Debugf(ctx, "corsHandler InitializeApp failed %s", err)
-			//	//RespondErr(ctx, w, r, err, http.StatusUnauthorized)
-			//	//return
-			//}
+			//init Firebase with the correct .json
 
-			//firebase.InitializeApp(&firebase.Options{
-			//	ServiceAccountPath: "eritis-be-97911f39ed2a.json",
-			//})
-			//
-			//log.Debugf(ctx, "corsHandler InitializeApp ok")
-			//
-			////verify token
-			auth, _ := firebase.GetAuth()
-			decodedToken, err := auth.VerifyIDToken(token)
+			path, err := getFirebaseJsonPath(ctx)
 			if err != nil {
-				log.Debugf(ctx, "corsHandler VerifyIDToken failed %s", err)
-				//RespondErr(ctx, w, r, err, http.StatusUnauthorized)
+				log.Debugf(ctx, "authHandler, get json path failed %s", err)
+				RespondErr(ctx, w, r, err, http.StatusUnauthorized)
+				return
+			}
+
+			if firebaseApp == nil {
+				firebaseApp, err = firebase.InitializeApp(&firebase.Options{
+					ServiceAccountPath: path,
+				})
+				if err != nil {
+					log.Debugf(ctx, "authHandler InitializeApp failed %s", err)
+					RespondErr(ctx, w, r, err, http.StatusUnauthorized)
+					return
+				}
+			} else {
+				log.Debugf(ctx, "authHandler, firebaseApp already init")
+			}
+
+			log.Debugf(ctx, "authHandler InitializeApp ok")
+
+			//verify token
+			auth, _ := firebase.GetAuth()
+			decodedToken, err := auth.VerifyIDToken(token, ctx)
+			if err != nil {
+				log.Debugf(ctx, "authHandler VerifyIDToken failed %s", err)
+				RespondErr(ctx, w, r, err, http.StatusUnauthorized)
 				return
 			}
 
 			if err == nil {
 				uid, found := decodedToken.UID()
-				log.Debugf(ctx, "corsHandler decodedToken uid %s, found %s", uid, found)
+				log.Debugf(ctx, "authHandler decodedToken uid %s, found %s", uid, found)
 			}
 
-			//uid, found := decodedToken.UID()
-			//if !found {
-			//	RespondErr(ctx, w, r, errors.New("UID not found"), http.StatusUnauthorized)
-			//}
-			//
-			//log.Debugf(ctx, "corsHandler UID: %s", uid)
-			//
-			//SetCurrentFirebaseId(uid)
+			uid, found := decodedToken.UID()
+			if !found {
+				RespondErr(ctx, w, r, errors.New("UID not found"), http.StatusUnauthorized)
+			}
+
+			log.Debugf(ctx, "authHandler, UID: %s", uid)
 
 			//auth ok, continue
 			handler(w, r)
@@ -133,35 +213,7 @@ func corsHandler(handler func(w http.ResponseWriter, r *http.Request)) http.Hand
 	}
 }
 
-func confirm(w http.ResponseWriter, r *http.Request) {
-	ctx := appengine.NewContext(r)
-	//addr := r.FormValue("email")
 
-	//addrs := []string{"marcolini.theo@gmail.com", "gleroy78@gmail.com", "jordhan.madec@gmail.com"}
-	addrs := []string{"gleroy78@gmail.com"}
 
-	url := "this is a Url"
-	//addr := "gleroy78@gmail.com"
-	//msg := &mail.Message{
-	//	Sender:  "gleroy78@gmail.com",
-	//	To:      []string{addr},
-	//	Subject: "Confirm your registration",
-	//	Body:    fmt.Sprintf(confirmMessage, url),
-	//}
 
-	msg := &mail.Message{
-		Sender:  "gleroy78@gmail.com",
-		To:      addrs,
-		Subject: "Confirm your registration",
-		Body:    fmt.Sprintf(confirmMessage, url),
-	}
 
-	if err := mail.Send(ctx, msg); err != nil {
-		log.Errorf(ctx, "Couldn't send email: %v", err)
-	}
-
-	io.WriteString(w, "Email was sent")
-
-}
-
-const confirmMessage = `this is a test from eritis BE %s`

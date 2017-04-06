@@ -163,6 +163,9 @@ func (c *Coachee)Update(ctx context.Context, displayName string, avatarUrl strin
 	return nil
 }
 
+/**
+ Associate the given coach with this Coachee
+ */
 func (c *Coachee) UpdateSelectedCoach(ctx context.Context, coach *Coach) (*APICoachee, error) {
 	log.Debugf(ctx, "UpdateSelectedCoach : %s", coach)
 
