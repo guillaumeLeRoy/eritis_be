@@ -19,7 +19,7 @@ func handleContact(w http.ResponseWriter, r *http.Request) {
 	log.Debugf(ctx, "handle contact")
 
 	switch r.Method {
-	
+
 	case "POST":
 		//log.Debugf(ctx, "handle contact, body %s", r.Body)
 
@@ -49,18 +49,19 @@ func handleContact(w http.ResponseWriter, r *http.Request) {
 
 //send an email to contact@eritis.co.uk
 func contactEritis(ctx context.Context, name string, email string, message string) error {
-	log.Debugf(ctx, "contactEritis, name %s", name)
-	log.Debugf(ctx, "contactEritis, email %s", email)
-	log.Debugf(ctx, "contactEritis, message %s", message)
-
 	//send an email to ourself
 	addrs := []string{CONTACT_ERITIS}
+
+	subject := fmt.Sprintf("Demande de contact : %s", name)
+	body := fmt.Sprintf("Contact \n name : %s \n email : %s \n content : %s", name, email, message)
+
+	log.Debugf(ctx, "contactEritis, body %s", body)
 
 	msg := &mail.Message{
 		Sender:  CONTACT_ERITIS,
 		To:      addrs,
-		Subject: "Contact TEST",
-		Body:    fmt.Sprintf("Contact \n name : %s \n email : %s \n content : %s", name, email, message),
+		Subject: subject,
+		Body:    body,
 	}
 
 	if err := mail.Send(ctx, msg); err != nil {

@@ -79,14 +79,13 @@ func nonAuthHandler(handler func(w http.ResponseWriter, r *http.Request)) http.H
 
 		log.Debugf(ctx, "nonAuthHandler start")
 
-		//check token validity
+		//handle preflight in here
+		w.Header().Add("Access-Control-Allow-Origin", "*")
+		w.Header().Add("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS")
+		w.Header().Add("Access-Control-Allow-Headers", "Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With")
 
 		if (r.Method == "OPTIONS") {
 			log.Debugf(ctx, "authHandler, handle OPTIONS")
-			//handle preflight in here
-			w.Header().Add("Access-Control-Allow-Origin", "*")
-			w.Header().Add("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS")
-			w.Header().Add("Access-Control-Allow-Headers", "Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With")
 			w.WriteHeader(http.StatusOK)
 		} else {
 			handler(w, r)
