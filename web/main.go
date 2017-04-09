@@ -9,13 +9,13 @@ import (
 )
 
 func init() {
-	tmpl, err := template.ParseGlob("templates/*.tmpl.html")
-	if err != nil {
-		http.Handle("/", errHandler(err.Error(), http.StatusInternalServerError))
-		return
-	}
-	http.Handle("/questions/", templateHandler(tmpl, "question"))
-	http.Handle("/", templateHandler(tmpl, "index"))
+	//tmpl, err := template.ParseGlob("templates/*.tmpl.html")
+	//if err != nil {
+	//	http.Handle("/", errHandler(err.Error(), http.StatusInternalServerError))
+	//	return
+	//}
+	//http.Handle("/questions/", templateHandler(tmpl, "question"))
+	//http.Handle("/", templateHandler(tmpl, "index"))
 }
 
 func templateHandler(tmpl *template.Template, name string) http.Handler {
