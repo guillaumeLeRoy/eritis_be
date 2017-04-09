@@ -7,11 +7,11 @@ handlers:
 #  static_files: index.html
 #  upload: site/index.html
 
-- url: /favicon\.ico
-  static_files: favicon.ico
-  upload: favicon\.ico
+#- url: /favicon\.ico
+#  static_files: favicon.ico
+#  upload: favicon\.ico
 
-- url: /(.*\.(gif|png|jpg|svg|css|js|ttf|woff|woff2|eot)(|\.map))$
+- url: /(.*\.(gif|png|jpg|svg|css|js|ttf|woff|woff2|eot|ico)(|\.map))$
   static_files: dist/\1
   upload: dist/(.*)(|\.map)
 
