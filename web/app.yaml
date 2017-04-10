@@ -3,13 +3,11 @@ module: web
 api_version: go1
 
 handlers:
-#- url: /.*
-#  static_files: index.html
-#  upload: site/index.html
 
-#- url: /favicon\.ico
-#  static_files: favicon.ico
-#  upload: favicon\.ico
+- url: /.well-known/acme-challenge/O2z0ctaboLWUXAe_RB3VRVBxHtWr2OiO3xjO8n1IQOU
+  static_files: acme.txt
+  mime_type: text/plain
+  upload: acme.txt
 
 - url: /(.*\.(gif|png|jpg|svg|css|js|ttf|woff|woff2|eot|ico)(|\.map))$
   static_files: dist/\1
