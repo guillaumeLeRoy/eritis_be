@@ -3,16 +3,22 @@ module: web
 api_version: go1
 
 handlers:
+  - url: /.well-known/acme-challenge/O2z0ctaboLWUXAe_RB3VRVBxHtWr2OiO3xjO8n1IQOU
+    static_files: acme.txt
+    mime_type: text/plain
+    upload: acme.txt
 
-- url: /.well-known/acme-challenge/O2z0ctaboLWUXAe_RB3VRVBxHtWr2OiO3xjO8n1IQOU
-  static_files: acme.txt
-  mime_type: text/plain
-  upload: acme.txt
+  - url: /.well-known/acme-challenge/A36z5_rrXdZYihf9wtWSeuIMWFBr6XtncKKiBxtd9SQ
+    static_files: acme_A36z5.txt
+    mime_type: text/plain
+    upload: acme_A36z5.txt
 
-- url: /(.*\.(gif|png|jpg|svg|css|js|ttf|woff|woff2|eot|ico)(|\.map))$
-  static_files: dist/\1
-  upload: dist/(.*)(|\.map)
+  - url: /(.*\.(gif|png|jpg|svg|css|js|ttf|woff|woff2|eot|ico)(|\.map))$
+    static_files: dist/\1
+    upload: dist/(.*)(|\.map)
+    secure: always
 
-- url: /(.*)
-  static_files: dist/index.html
-  upload: dist/index.html
+  - url: /(.*)
+    static_files: dist/index.html
+    upload: dist/index.html
+    secure: always
