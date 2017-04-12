@@ -16,18 +16,21 @@ type Coachee struct {
 	AvatarURL     string`json:"avatar_url"`
 	StartDate     time.Time `json:"start_date"`
 	SelectedCoach *datastore.Key `json:"-"`
+	PlanId        PlanInt`json:"-"`
 }
 
 /* API struct */
 type APICoachee struct {
 	Coachee
 	SelectedCoach *Coach `json:"selectedCoach"`
+	Plan          *Plan `json:"plan"`
 }
 
-func (c Coachee) toAPI(coach *Coach) APICoachee {
+func (c Coachee) toAPI(coach *Coach, plan *Plan) APICoachee {
 	return APICoachee{
 		Coachee  : c,
 		SelectedCoach: coach,
+		Plan: plan,
 	}
 }
 
@@ -60,7 +63,11 @@ func GetCoachee(ctx context.Context, key *datastore.Key) (*APICoachee, error) {
 	if err != nil {
 		return nil, err
 	}
-	var apiCoachee = coachee.toAPI(coach)
+
+	//get the plan
+	plan := createPlanFromId(coachee.PlanId)
+
+	var apiCoachee = coachee.toAPI(coach, plan)
 	return &apiCoachee, nil
 }
 
@@ -81,7 +88,11 @@ func GetAllCoachees(ctx context.Context) ([]*APICoachee, error) {
 		if err != nil {
 			return nil, err
 		}
-		apiCoachee := coachee.toAPI(coach)
+
+		//get the plan
+		plan := createPlanFromId(coachee.PlanId)
+
+		apiCoachee := coachee.toAPI(coach, plan)
 		response[i] = &apiCoachee
 
 	}
@@ -89,7 +100,7 @@ func GetAllCoachees(ctx context.Context) ([]*APICoachee, error) {
 	return response, nil
 }
 
-func CreateCoacheeFromFirebaseUser(ctx context.Context, fbUser *FirebaseUser) (*APICoachee, error) {
+func createCoacheeFromFirebaseUser(ctx context.Context, fbUser *FirebaseUser, planId PlanInt) (*APICoachee, error) {
 	log.Debugf(ctx, "CoacheeFromFirebaseUser")
 
 	var coachee Coachee
@@ -101,6 +112,7 @@ func CreateCoacheeFromFirebaseUser(ctx context.Context, fbUser *FirebaseUser) (*
 	coachee.DisplayName = fbUser.Email
 	coachee.AvatarURL = gravatarURL(fbUser.Email)
 	coachee.StartDate = time.Now()
+	coachee.PlanId = planId
 
 	//log.Infof(ctx, "saving new user: %s", aeuser.String())
 	log.Debugf(ctx, "saving new user, firebase id  : %s, email : %s ", fbUser.UID, fbUser.Email)
@@ -112,7 +124,7 @@ func CreateCoacheeFromFirebaseUser(ctx context.Context, fbUser *FirebaseUser) (*
 	coachee.Key = key
 
 	//no coach selected now
-	var coacheeForApi = coachee.toAPI(nil)
+	var coacheeForApi = coachee.toAPI(nil, nil)
 	return &coacheeForApi, nil
 }
 
@@ -145,7 +157,11 @@ func getCoacheeFromFirebaseId(ctx context.Context, fbId string) (*APICoachee, er
 	if err != nil {
 		return nil, err
 	}
-	res := coachee.toAPI(coach)
+
+	//get the Plan
+	plan := createPlanFromId(coachee.PlanId)
+	res := coachee.toAPI(coach, plan)
+
 	return &res, nil
 }
 
@@ -176,8 +192,11 @@ func (c *Coachee) UpdateSelectedCoach(ctx context.Context, coach *Coach) (*APICo
 	}
 	c.Key = key
 
+	//get the plan
+	plan := createPlanFromId(c.PlanId)
+
 	//convert to APICoachee
-	apiCoachee := c.toAPI(coach)
+	apiCoachee := c.toAPI(coach, plan)
 
 	return &apiCoachee, nil
 }

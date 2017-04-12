@@ -68,6 +68,9 @@ func init() {
 	//contact, no need to be authenticated to send a contact request
 	http.HandleFunc("/api/v1/contact/", nonAuthHandler(handleContact))
 
+	//get contract plan
+	http.HandleFunc("/api/v1/plans/", nonAuthHandler(handleContractPlan))
+
 	//test email
 	http.HandleFunc("/api/email/", sendTestEmail)
 }
