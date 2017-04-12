@@ -68,14 +68,17 @@ func handleCreateCoachee(w http.ResponseWriter, r *http.Request) {
 	ctx := appengine.NewContext(r)
 	log.Debugf(ctx, "handleCreateCoachee")
 
-	var fbUser FirebaseUser
-	err := Decode(r, &fbUser)
+	var newCoachee struct {
+		FirebaseUser FirebaseUser
+		PlanId       PlanInt `json:"plan_id"`
+	}
+	err := Decode(r, &newCoachee)
 	if err != nil {
 		RespondErr(ctx, w, r, err, http.StatusBadRequest)
 		return
 	}
 
-	coachee, err := fbUser.CreateCoachee(ctx)
+	coachee, err := createCoachee(ctx, &newCoachee.FirebaseUser, newCoachee.PlanId)
 	if err != nil {
 		RespondErr(ctx, w, r, err, http.StatusInternalServerError)
 		return

@@ -52,7 +52,7 @@ func (u *FirebaseUser) CreateCoach(ctx context.Context) (*Coach, error) {
 
 }
 
-func (u *FirebaseUser) CreateCoachee(ctx context.Context) (*APICoachee, error) {
+func createCoachee(ctx context.Context, u *FirebaseUser, planId PlanInt) (*APICoachee, error) {
 	log.Debugf(ctx, "CreateCoachee, create, %s", u)
 
 	coachee, err := getCoacheeFromFirebaseId(ctx, u.UID)
@@ -65,7 +65,7 @@ func (u *FirebaseUser) CreateCoachee(ctx context.Context) (*APICoachee, error) {
 	}
 
 	//create a new coachee
-	coachee, err = CreateCoacheeFromFirebaseUser(ctx, u)
+	coachee, err = createCoacheeFromFirebaseUser(ctx, u, planId)
 	if err != nil {
 		return nil, err
 	}
