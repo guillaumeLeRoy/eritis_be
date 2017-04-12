@@ -18,7 +18,7 @@ type Plan struct {
 	SessionsCount int `json:"sessions_count"`
 }
 
-func createAPlanFromId(id PlanInt) *Plan {
+func createPlanFromId(id PlanInt) *Plan {
 	var p Plan
 	p.PlanId = id
 	p.SessionsCount = getSessionsCount(id)
@@ -50,7 +50,7 @@ func getAllPlans(ctx context.Context) ([]*Plan, error) {
 	log.Debugf(ctx, "getAllPlans")
 
 	plans := make([]*Plan, 0)
-	plans = append(plans, createAPlanFromId(NATIXIS_3_DAYS))
-	plans = append(plans, createAPlanFromId(NATIXIS_6_DAYS))
+	plans = append(plans, createPlanFromId(NATIXIS_3_DAYS))
+	plans = append(plans, createPlanFromId(NATIXIS_6_DAYS))
 	return plans, nil
 }

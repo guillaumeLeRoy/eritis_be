@@ -16,7 +16,7 @@ type Coachee struct {
 	AvatarURL     string`json:"avatar_url"`
 	StartDate     time.Time `json:"start_date"`
 	SelectedCoach *datastore.Key `json:"-"`
-	PlanId        PlanInt`json:"planId"`
+	PlanId        PlanInt`json:"-"`
 }
 
 /* API struct */
@@ -65,7 +65,7 @@ func GetCoachee(ctx context.Context, key *datastore.Key) (*APICoachee, error) {
 	}
 
 	//get the plan
-	plan := createAPlanFromId(coachee.PlanId)
+	plan := createPlanFromId(coachee.PlanId)
 
 	var apiCoachee = coachee.toAPI(coach, plan)
 	return &apiCoachee, nil
@@ -90,7 +90,7 @@ func GetAllCoachees(ctx context.Context) ([]*APICoachee, error) {
 		}
 
 		//get the plan
-		plan := createAPlanFromId(coachee.PlanId)
+		plan := createPlanFromId(coachee.PlanId)
 
 		apiCoachee := coachee.toAPI(coach, plan)
 		response[i] = &apiCoachee
@@ -159,7 +159,7 @@ func getCoacheeFromFirebaseId(ctx context.Context, fbId string) (*APICoachee, er
 	}
 
 	//get the Plan
-	plan := createAPlanFromId(coachee.PlanId)
+	plan := createPlanFromId(coachee.PlanId)
 	res := coachee.toAPI(coach, plan)
 
 	return &res, nil
@@ -193,7 +193,7 @@ func (c *Coachee) UpdateSelectedCoach(ctx context.Context, coach *Coach) (*APICo
 	c.Key = key
 
 	//get the plan
-	plan := createAPlanFromId(c.PlanId)
+	plan := createPlanFromId(c.PlanId)
 
 	//convert to APICoachee
 	apiCoachee := c.toAPI(coach, plan)

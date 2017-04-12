@@ -69,8 +69,8 @@ func handleCreateCoachee(w http.ResponseWriter, r *http.Request) {
 	log.Debugf(ctx, "handleCreateCoachee")
 
 	var newCoachee struct {
-		FirebaseUser FirebaseUser
-		PlanId       PlanInt `json:"plan_id"`
+		FirebaseUser
+		PlanId PlanInt `json:"plan_id"`
 	}
 	err := Decode(r, &newCoachee)
 	if err != nil {
