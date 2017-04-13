@@ -48,8 +48,20 @@ func HandleMeeting(w http.ResponseWriter, r *http.Request) {
 	case "PUT":
 		// update review ?
 
+		//add coach to meeting
+		contains := strings.Contains(r.URL.Path, "coach")
+		if contains {
+			params := PathParams(ctx, r, "/api/meeting/:meetingId/coach/:coachId")
+			meetingId, ok := params[":meetingId"]
+			coachId, ok := params[":coachId"]
+			if ok {
+				setCoachForMeeting(w, r, meetingId, coachId)
+				return
+			}
+		}
+
 		//set meeting hour
-		contains := strings.Contains(r.URL.Path, "potential")
+		contains = strings.Contains(r.URL.Path, "potential")
 		if contains {
 			params := PathParams(ctx, r, "/api/meeting/:meetingId/potential/:potId")
 			meetingId, ok := params[":meetingId"]
@@ -73,6 +85,11 @@ func HandleMeeting(w http.ResponseWriter, r *http.Request) {
 
 		http.NotFound(w, r)
 	case "GET":
+
+
+		/**
+		 GET all meetings for a specific coachee
+		 */
 		contains := strings.Contains(r.URL.Path, "/api/meetings/coachee")
 		if contains {
 			params := PathParams(ctx, r, "/api/meetings/coachee/:uid")
@@ -87,6 +104,9 @@ func HandleMeeting(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 
+		/**
+		 GET all meetings for a specific coach
+		 */
 		contains = strings.Contains(r.URL.Path, "/api/meetings/coach")
 		if contains {
 			params := PathParams(ctx, r, "/api/meetings/coach/:uid")
@@ -101,8 +121,9 @@ func HandleMeeting(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 
-
-		//get potential dates for a meeting
+		/**
+			GET all potential dates
+		*/
 		contains = strings.Contains(r.URL.Path, "potentials")
 		if contains {
 			params := PathParams(ctx, r, "/api/meeting/:meetingId/potentials")
@@ -145,7 +166,6 @@ func handleCreateMeeting(w http.ResponseWriter, r *http.Request) {
 	log.Debugf(ctx, "handleCreateMeeting")
 
 	var newMeeting struct {
-		CoachId   string `json:"coachId"`
 		CoacheeId string `json:"coacheeId"`
 	}
 	err := Decode(r, &newMeeting)
@@ -155,15 +175,6 @@ func handleCreateMeeting(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//todo valid meeting ??
-
-	log.Debugf(ctx, "handleCreateMeeting, coachId ", newMeeting.CoachId)
-
-	coachKey, err := datastore.DecodeKey(newMeeting.CoachId)
-	if err != nil {
-		RespondErr(ctx, w, r, errors.New("invalid coach id"),
-			http.StatusBadRequest)
-		return
-	}
 
 	log.Debugf(ctx, "handleCreateMeeting, coacheeId ", newMeeting.CoacheeId)
 
@@ -176,8 +187,6 @@ func handleCreateMeeting(w http.ResponseWriter, r *http.Request) {
 
 	var meeting = &Meeting{}
 	meeting.CoacheeKey = coacheeKey
-	meeting.CoachKey = coachKey
-
 	err = meeting.Create(ctx)
 	if err != nil {
 		RespondErr(ctx, w, r, err, http.StatusInternalServerError)
@@ -444,5 +453,38 @@ func setPotentialTimeForMeeting(w http.ResponseWriter, r *http.Request, meetingI
 	}
 	Respond(ctx, w, r, meetingApi, http.StatusOK)
 
+}
+
+func setCoachForMeeting(w http.ResponseWriter, r *http.Request, meetingId string, coachId string) {
+	ctx := appengine.NewContext(r)
+	log.Debugf(ctx, "setCoachForMeeting, meetingId %s, coach id : %s", meetingId, coachId)
+
+	meetingKey, err := datastore.DecodeKey(meetingId)
+	if err != nil {
+		RespondErr(ctx, w, r, err, http.StatusBadRequest)
+		return
+	}
+
+	coachKey, err := datastore.DecodeKey(coachId)
+	if err != nil {
+		RespondErr(ctx, w, r, err, http.StatusBadRequest)
+		return
+	}
+
+	//set potential time to meeting
+	meeting, err := GetMeeting(ctx, meetingKey)
+	meeting.setMeetingCoach(ctx, coachKey)
+	if err != nil {
+		RespondErr(ctx, w, r, err, http.StatusBadRequest)
+		return
+	}
+
+	//get API meeting
+	meetingApi, err := meeting.GetAPIMeeting(ctx)
+	if err != nil {
+		RespondErr(ctx, w, r, err, http.StatusBadRequest)
+		return
+	}
+	Respond(ctx, w, r, meetingApi, http.StatusOK)
 }
 
