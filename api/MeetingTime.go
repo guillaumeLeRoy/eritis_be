@@ -53,9 +53,29 @@ func GetMeetingPotentialTimes(ctx context.Context, meetingKey *datastore.Key) ([
 
 	log.Debugf(ctx, "GetMeetingPotentialTimes, potentials count %s", len(times))
 
-
 	for i, time := range times {
 		time.Key = keys[i]
 	}
 	return times, nil
+}
+
+// update potential time
+func (p *MeetingTime)updateeMeetingPotentialTime(ctx context.Context, potentialTimeKey *datastore.Key) (*MeetingTime, error) {
+	log.Debugf(ctx, "updateeMeetingPotentialTime, potential key %s", potentialTimeKey)
+
+	key, err := datastore.Put(ctx, potentialTimeKey)
+	p.Key = key
+
+	return p, err
+
+}
+
+// delete potential time
+func deleteMeetingPotentialTime(ctx context.Context, potentialTimeKey *datastore.Key) (error) {
+	log.Debugf(ctx, "deleteMeetingPotentialTime, potential key %s", potentialTimeKey)
+
+	err := datastore.Delete(ctx, potentialTimeKey)
+
+	return err
+
 }

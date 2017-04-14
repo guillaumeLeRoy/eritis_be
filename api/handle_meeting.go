@@ -21,7 +21,6 @@ func HandleMeeting(w http.ResponseWriter, r *http.Request) {
 	case "POST":
 
 		//create potential meeting time
-
 		if ok := strings.Contains(r.URL.Path, "potential"); ok {
 			params := PathParams(ctx, r, "/api/meeting/:uid/potential")
 			uid, ok := params[":uid"]
@@ -48,14 +47,25 @@ func HandleMeeting(w http.ResponseWriter, r *http.Request) {
 	case "PUT":
 		// update review ?
 
-		//set meeting hour
+		//update potential time
 		contains := strings.Contains(r.URL.Path, "potential")
 		if contains {
-			params := PathParams(ctx, r, "/api/meeting/:meetingId/potential/:potId")
+			params := PathParams(ctx, r, "/api/meeting/potential/:potId")
+			potId, ok := params[":potId"]
+			if ok {
+				updateMeetingPontentialTime(w, r, potId)
+				return
+			}
+		}
+
+		//set meeting hour
+		contains := strings.Contains(r.URL.Path, "date")
+		if contains {
+			params := PathParams(ctx, r, "/api/meeting/:meetingId/date/:potId")
 			meetingId, ok := params[":meetingId"]
 			potId, ok := params[":potId"]
 			if ok {
-				setPotentialTimeForMeeting(w, r, meetingId, potId)
+				setTimeForMeeting(w, r, meetingId, potId)
 				return
 			}
 		}
@@ -135,6 +145,20 @@ func HandleMeeting(w http.ResponseWriter, r *http.Request) {
 
 		http.NotFound(w, r)
 		return
+
+
+	case "DELETE":
+		//get potential dates for a meeting
+		contains := strings.Contains(r.URL.Path, "potentials")
+		if contains {
+			params := PathParams(ctx, r, "/api/meeting/potentials/:potId")
+			potId, ok := params[":potId"]
+			if ok {
+				deletePotentialDate(w, r, potId)
+				return
+			}
+
+		}
 	default:
 		http.NotFound(w, r)
 	}
@@ -412,7 +436,7 @@ func getPotentialsTimeForAMeeting(w http.ResponseWriter, r *http.Request, meetin
 	Respond(ctx, w, r, meetings, http.StatusOK)
 }
 
-func setPotentialTimeForMeeting(w http.ResponseWriter, r *http.Request, meetingId string, potentialId string) {
+func setTimeForMeeting(w http.ResponseWriter, r *http.Request, meetingId string, potentialId string) {
 	ctx := appengine.NewContext(r)
 	log.Debugf(ctx, "setPotentialTimeForMeeting, meetingId %s", meetingId)
 
@@ -443,6 +467,40 @@ func setPotentialTimeForMeeting(w http.ResponseWriter, r *http.Request, meetingI
 		return
 	}
 	Respond(ctx, w, r, meetingApi, http.StatusOK)
+
+}
+
+func deletePotentialDate(w http.ResponseWriter, r *http.Request, potentialId string) {
+	ctx := appengine.NewContext(r)
+	log.Debugf(ctx, "deletePotentialDate, potentialId %s", potentialId)
+
+	potentialDateKey, err := datastore.DecodeKey(potentialId)
+	if err != nil {
+		RespondErr(ctx, w, r, err, http.StatusBadRequest)
+		return
+	}
+
+	deleteMeetingPotentialTime(ctx, potentialDateKey)
+	if err != nil {
+		RespondErr(ctx, w, r, err, http.StatusBadRequest)
+		return
+	}
+
+	Respond(ctx, w, r, nil, http.StatusOK)
+}
+
+func updateMeetingPontentialTime(w http.ResponseWriter, r *http.Request, potentialId string) {
+	ctx := appengine.NewContext(r)
+	log.Debugf(ctx, "updateMeetingPontentialTime, potentialId %s", potentialId)
+
+	potentialDateKey, err := datastore.DecodeKey(potentialId)
+	if err != nil {
+		RespondErr(ctx, w, r, err, http.StatusBadRequest)
+		return
+	}
+
+
+	Respond(ctx, w, r, nil, http.StatusOK)
 
 }
 
