@@ -47,8 +47,20 @@ func HandleMeeting(w http.ResponseWriter, r *http.Request) {
 	case "PUT":
 		// update review ?
 
-		//update potential time
-		contains := strings.Contains(r.URL.Path, "potential")
+		//add coach to meeting
+		contains := strings.Contains(r.URL.Path, "coach")
+		if contains {
+			params := PathParams(ctx, r, "/api/meeting/:meetingId/coach/:coachId")
+			meetingId, ok := params[":meetingId"]
+			coachId, ok := params[":coachId"]
+			if ok {
+				setCoachForMeeting(w, r, meetingId, coachId)
+				return
+			}
+		}
+
+		//set meeting hour
+		contains = strings.Contains(r.URL.Path, "potential")
 		if contains {
 			params := PathParams(ctx, r, "/api/meeting/potential/:potId")
 			potId, ok := params[":potId"]
@@ -83,6 +95,11 @@ func HandleMeeting(w http.ResponseWriter, r *http.Request) {
 
 		http.NotFound(w, r)
 	case "GET":
+
+
+		/**
+		 GET all meetings for a specific coachee
+		 */
 		contains := strings.Contains(r.URL.Path, "/api/meetings/coachee")
 		if contains {
 			params := PathParams(ctx, r, "/api/meetings/coachee/:uid")
@@ -97,6 +114,9 @@ func HandleMeeting(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 
+		/**
+		 GET all meetings for a specific coach
+		 */
 		contains = strings.Contains(r.URL.Path, "/api/meetings/coach")
 		if contains {
 			params := PathParams(ctx, r, "/api/meetings/coach/:uid")
@@ -111,8 +131,9 @@ func HandleMeeting(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 
-
-		//get potential dates for a meeting
+		/**
+			GET all potential dates
+		*/
 		contains = strings.Contains(r.URL.Path, "potentials")
 		if contains {
 			params := PathParams(ctx, r, "/api/meeting/:meetingId/potentials")
@@ -169,7 +190,6 @@ func handleCreateMeeting(w http.ResponseWriter, r *http.Request) {
 	log.Debugf(ctx, "handleCreateMeeting")
 
 	var newMeeting struct {
-		CoachId   string `json:"coachId"`
 		CoacheeId string `json:"coacheeId"`
 	}
 	err := Decode(r, &newMeeting)
@@ -179,15 +199,6 @@ func handleCreateMeeting(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//todo valid meeting ??
-
-	log.Debugf(ctx, "handleCreateMeeting, coachId ", newMeeting.CoachId)
-
-	coachKey, err := datastore.DecodeKey(newMeeting.CoachId)
-	if err != nil {
-		RespondErr(ctx, w, r, errors.New("invalid coach id"),
-			http.StatusBadRequest)
-		return
-	}
 
 	log.Debugf(ctx, "handleCreateMeeting, coacheeId ", newMeeting.CoacheeId)
 
@@ -200,8 +211,6 @@ func handleCreateMeeting(w http.ResponseWriter, r *http.Request) {
 
 	var meeting = &Meeting{}
 	meeting.CoacheeKey = coacheeKey
-	meeting.CoachKey = coachKey
-
 	err = meeting.Create(ctx)
 	if err != nil {
 		RespondErr(ctx, w, r, err, http.StatusInternalServerError)
@@ -470,74 +479,106 @@ func setTimeForMeeting(w http.ResponseWriter, r *http.Request, meetingId string,
 
 }
 
-func deletePotentialDate(w http.ResponseWriter, r *http.Request, potentialId string) {
+func setCoachForMeeting(w http.ResponseWriter, r *http.Request, meetingId string, coachId string) {
 	ctx := appengine.NewContext(r)
-	log.Debugf(ctx, "deletePotentialDate, potentialId %s", potentialId)
+	log.Debugf(ctx, "setCoachForMeeting, meetingId %s, coach id : %s", meetingId, coachId)
 
-	potentialDateKey, err := datastore.DecodeKey(potentialId)
+	meetingKey, err := datastore.DecodeKey(meetingId)
 	if err != nil {
 		RespondErr(ctx, w, r, err, http.StatusBadRequest)
 		return
 	}
 
-	deleteMeetingPotentialTime(ctx, potentialDateKey)
+	coachKey, err := datastore.DecodeKey(coachId)
 	if err != nil {
 		RespondErr(ctx, w, r, err, http.StatusBadRequest)
 		return
 	}
 
-	Respond(ctx, w, r, nil, http.StatusOK)
+	//set potential time to meeting
+	meeting, err := GetMeeting(ctx, meetingKey)
+	meeting.setMeetingCoach(ctx, coachKey)
+	if err != nil {
+		RespondErr(ctx, w, r, err, http.StatusBadRequest)
+		return
+	}
+
+	//get API meeting
+	meetingApi, err := meeting.GetAPIMeeting(ctx)
+	if err != nil {
+		RespondErr(ctx, w, r, err, http.StatusBadRequest)
+		return
+	}
+	Respond(ctx, w, r, meetingApi, http.StatusOK)
+}
+
+func deletePotentialDate(w http.ResponseWriter, r *http.Request, potentialId string) {
+ctx := appengine.NewContext(r)
+log.Debugf(ctx, "deletePotentialDate, potentialId %s", potentialId)
+
+potentialDateKey, err := datastore.DecodeKey(potentialId)
+if err != nil {
+RespondErr(ctx, w, r, err, http.StatusBadRequest)
+return
+}
+
+deleteMeetingPotentialTime(ctx, potentialDateKey)
+if err != nil {
+RespondErr(ctx, w, r, err, http.StatusBadRequest)
+return
+}
+
+Respond(ctx, w, r, nil, http.StatusOK)
 }
 
 func updateMeetingPontentialTime(w http.ResponseWriter, r *http.Request, potentialId string) {
-	ctx := appengine.NewContext(r)
-	log.Debugf(ctx, "updateMeetingPontentialTime, potentialId %s", potentialId)
+ctx := appengine.NewContext(r)
+log.Debugf(ctx, "updateMeetingPontentialTime, potentialId %s", potentialId)
 
-	potentialDateKey, err := datastore.DecodeKey(potentialId)
-	if err != nil {
-		RespondErr(ctx, w, r, err, http.StatusBadRequest)
-		return
-	}
-
-	//load potentialDate
-	meetingTime, err := GetMeetingTime(ctx, potentialDateKey)
-	if err != nil {
-		RespondErr(ctx, w, r, err, http.StatusBadRequest)
-		return
-	}
-
-	//start and end hours are 24 based
-	var potential struct {
-		StartDate string `json:"start_date"`
-		EndDate   string `json:"end_date"`
-	}
-	err = Decode(r, &potential)
-	if err != nil {
-		RespondErr(ctx, w, r, err, http.StatusBadRequest)
-		return
-	}
-
-	//convert String date to time Object
-	StartDateInt, err := strconv.ParseInt(potential.StartDate, 10, 64)
-	if err != nil {
-		RespondErr(ctx, w, r, errors.New("invalid time"), http.StatusBadRequest)
-	}
-	StartDate := time.Unix(StartDateInt, 0)
-	log.Debugf(ctx, "handleCreateMeeting, StartDate : ", StartDate)
-	meetingTime.StartDate = StartDate
-
-	EndDateInt, err := strconv.ParseInt(potential.EndDate, 10, 64)
-	if err != nil {
-		RespondErr(ctx, w, r, errors.New("invalid time"), http.StatusBadRequest)
-	}
-	EndDate := time.Unix(EndDateInt, 0)
-	log.Debugf(ctx, "handleCreateMeeting, EndDate : ", EndDate)
-	meetingTime.EndDate = EndDate
-
-	//update with new values
-	meetingTime.updateMeetingPotentialTime(ctx)
-
-	//return new meetingTime
-	Respond(ctx, w, r, meetingTime, http.StatusOK)
+potentialDateKey, err := datastore.DecodeKey(potentialId)
+if err != nil {
+RespondErr(ctx, w, r, err, http.StatusBadRequest)
+return
 }
 
+//load potentialDate
+meetingTime, err := GetMeetingTime(ctx, potentialDateKey)
+if err != nil {
+RespondErr(ctx, w, r, err, http.StatusBadRequest)
+return
+}
+
+//start and end hours are 24 based
+var potential struct {
+StartDate string `json:"start_date"`
+EndDate   string `json:"end_date"`
+}
+err = Decode(r, &potential)
+if err != nil {
+RespondErr(ctx, w, r, err, http.StatusBadRequest)
+return
+}
+
+//convert String date to time Object
+StartDateInt, err := strconv.ParseInt(potential.StartDate, 10, 64)
+if err != nil {
+RespondErr(ctx, w, r, errors.New("invalid time"), http.StatusBadRequest)
+}
+StartDate := time.Unix(StartDateInt, 0)
+log.Debugf(ctx, "handleCreateMeeting, StartDate : ", StartDate)
+meetingTime.StartDate = StartDate
+
+EndDateInt, err := strconv.ParseInt(potential.EndDate, 10, 64)
+if err != nil {
+RespondErr(ctx, w, r, errors.New("invalid time"), http.StatusBadRequest)
+}
+EndDate := time.Unix(EndDateInt, 0)
+log.Debugf(ctx, "handleCreateMeeting, EndDate : ", EndDate)
+meetingTime.EndDate = EndDate
+
+//update with new values
+meetingTime.updateMeetingPotentialTime(ctx)
+
+//return new meetingTime
+Respond(ctx, w, r, meetingTime, http.StatusOK)
+}

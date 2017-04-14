@@ -113,6 +113,20 @@ func (m *Meeting) SetMeetingTime(ctx context.Context, meetingTimeKey *datastore.
 	return nil
 }
 
+func (m *Meeting) setMeetingCoach(ctx context.Context, coachKey *datastore.Key) error {
+	log.Debugf(ctx, "SetMeetingTime", m)
+
+	m.CoacheeKey = coachKey
+
+	key, err := datastore.Put(ctx, m.Key, m)
+	if err != nil {
+		return err
+	}
+	m.Key = key
+
+	return nil
+}
+
 func GetMeetingsForCoach(ctx context.Context, coachKey *datastore.Key) ([]*ApiMeeting, error) {
 	log.Debugf(ctx, "GetMeetingsForCoach")
 
@@ -165,7 +179,7 @@ func GetMeetingsForCoach(ctx context.Context, coachKey *datastore.Key) ([]*ApiMe
 }
 
 func GetMeetingsForCoachee(ctx context.Context, coacheeKey *datastore.Key) ([]*ApiMeeting, error) {
-	log.Debugf(ctx, "GetMeetingsForCoachee")
+	log.Debugf(ctx, "GetMeetingsForCoachee, coacheeKey %s", coacheeKey)
 
 	var meetings []*Meeting
 	keys, err := datastore.NewQuery("Meeting").Filter("CoacheeKey =", coacheeKey).GetAll(ctx, &meetings)
@@ -192,12 +206,14 @@ func GetMeetingsForCoachee(ctx context.Context, coacheeKey *datastore.Key) ([]*A
 		ApiMeeting.IsOpen = meeting.IsOpen
 		ApiMeeting.Coachee = coachee
 
-		//get coach
-		coach, err := GetCoach(ctx, meeting.CoachKey)
-		if err != nil {
-			return nil, err
+		//get coach if one is set
+		if meeting.CoachKey != nil {
+			coach, err := GetCoach(ctx, meeting.CoachKey)
+			if err != nil {
+				return nil, err
+			}
+			ApiMeeting.Coach = coach
 		}
-		ApiMeeting.Coach = coach
 
 		if meeting.AgreedTime != nil {
 			//get meeting agreed time
