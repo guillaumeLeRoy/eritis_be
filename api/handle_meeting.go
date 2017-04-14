@@ -59,7 +59,7 @@ func HandleMeeting(w http.ResponseWriter, r *http.Request) {
 		}
 
 		//set meeting hour
-		contains := strings.Contains(r.URL.Path, "date")
+		contains = strings.Contains(r.URL.Path, "date")
 		if contains {
 			params := PathParams(ctx, r, "/api/meeting/:meetingId/date/:potId")
 			meetingId, ok := params[":meetingId"]
@@ -499,8 +499,45 @@ func updateMeetingPontentialTime(w http.ResponseWriter, r *http.Request, potenti
 		return
 	}
 
+	//load potentialDate
+	meetingTime, err := GetMeetingTime(ctx, potentialDateKey)
+	if err != nil {
+		RespondErr(ctx, w, r, err, http.StatusBadRequest)
+		return
+	}
 
-	Respond(ctx, w, r, nil, http.StatusOK)
+	//start and end hours are 24 based
+	var potential struct {
+		StartDate string `json:"start_date"`
+		EndDate   string `json:"end_date"`
+	}
+	err = Decode(r, &potential)
+	if err != nil {
+		RespondErr(ctx, w, r, err, http.StatusBadRequest)
+		return
+	}
 
+	//convert String date to time Object
+	StartDateInt, err := strconv.ParseInt(potential.StartDate, 10, 64)
+	if err != nil {
+		RespondErr(ctx, w, r, errors.New("invalid time"), http.StatusBadRequest)
+	}
+	StartDate := time.Unix(StartDateInt, 0)
+	log.Debugf(ctx, "handleCreateMeeting, StartDate : ", StartDate)
+	meetingTime.StartDate = StartDate
+
+	EndDateInt, err := strconv.ParseInt(potential.EndDate, 10, 64)
+	if err != nil {
+		RespondErr(ctx, w, r, errors.New("invalid time"), http.StatusBadRequest)
+	}
+	EndDate := time.Unix(EndDateInt, 0)
+	log.Debugf(ctx, "handleCreateMeeting, EndDate : ", EndDate)
+	meetingTime.EndDate = EndDate
+
+	//update with new values
+	meetingTime.updateMeetingPotentialTime(ctx)
+
+	//return new meetingTime
+	Respond(ctx, w, r, meetingTime, http.StatusOK)
 }
 

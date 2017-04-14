@@ -60,13 +60,13 @@ func GetMeetingPotentialTimes(ctx context.Context, meetingKey *datastore.Key) ([
 }
 
 // update potential time
-func (p *MeetingTime)updateeMeetingPotentialTime(ctx context.Context, potentialTimeKey *datastore.Key) (*MeetingTime, error) {
-	log.Debugf(ctx, "updateeMeetingPotentialTime, potential key %s", potentialTimeKey)
+func (p *MeetingTime)updateMeetingPotentialTime(ctx context.Context) (error) {
+	log.Debugf(ctx, "updateeMeetingPotentialTime, potential key %s", p.Key)
 
-	key, err := datastore.Put(ctx, potentialTimeKey)
+	key, err := datastore.Put(ctx, p.Key, p)
 	p.Key = key
 
-	return p, err
+	return err
 
 }
 
