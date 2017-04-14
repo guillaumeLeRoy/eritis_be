@@ -59,7 +59,7 @@ func HandleMeeting(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 
-		//set meeting hour
+		//update potential date
 		contains = strings.Contains(r.URL.Path, "potential")
 		if contains {
 			params := PathParams(ctx, r, "/api/meeting/potential/:potId")
@@ -513,72 +513,72 @@ func setCoachForMeeting(w http.ResponseWriter, r *http.Request, meetingId string
 }
 
 func deletePotentialDate(w http.ResponseWriter, r *http.Request, potentialId string) {
-ctx := appengine.NewContext(r)
-log.Debugf(ctx, "deletePotentialDate, potentialId %s", potentialId)
+	ctx := appengine.NewContext(r)
+	log.Debugf(ctx, "deletePotentialDate, potentialId %s", potentialId)
 
-potentialDateKey, err := datastore.DecodeKey(potentialId)
-if err != nil {
-RespondErr(ctx, w, r, err, http.StatusBadRequest)
-return
-}
+	potentialDateKey, err := datastore.DecodeKey(potentialId)
+	if err != nil {
+		RespondErr(ctx, w, r, err, http.StatusBadRequest)
+		return
+	}
 
-deleteMeetingPotentialTime(ctx, potentialDateKey)
-if err != nil {
-RespondErr(ctx, w, r, err, http.StatusBadRequest)
-return
-}
+	deleteMeetingPotentialTime(ctx, potentialDateKey)
+	if err != nil {
+		RespondErr(ctx, w, r, err, http.StatusBadRequest)
+		return
+	}
 
-Respond(ctx, w, r, nil, http.StatusOK)
+	Respond(ctx, w, r, nil, http.StatusOK)
 }
 
 func updateMeetingPontentialTime(w http.ResponseWriter, r *http.Request, potentialId string) {
-ctx := appengine.NewContext(r)
-log.Debugf(ctx, "updateMeetingPontentialTime, potentialId %s", potentialId)
+	ctx := appengine.NewContext(r)
+	log.Debugf(ctx, "updateMeetingPontentialTime, potentialId %s", potentialId)
 
-potentialDateKey, err := datastore.DecodeKey(potentialId)
-if err != nil {
-RespondErr(ctx, w, r, err, http.StatusBadRequest)
-return
-}
+	potentialDateKey, err := datastore.DecodeKey(potentialId)
+	if err != nil {
+		RespondErr(ctx, w, r, err, http.StatusBadRequest)
+		return
+	}
 
-//load potentialDate
-meetingTime, err := GetMeetingTime(ctx, potentialDateKey)
-if err != nil {
-RespondErr(ctx, w, r, err, http.StatusBadRequest)
-return
-}
+	//load potentialDate
+	meetingTime, err := GetMeetingTime(ctx, potentialDateKey)
+	if err != nil {
+		RespondErr(ctx, w, r, err, http.StatusBadRequest)
+		return
+	}
 
-//start and end hours are 24 based
-var potential struct {
-StartDate string `json:"start_date"`
-EndDate   string `json:"end_date"`
-}
-err = Decode(r, &potential)
-if err != nil {
-RespondErr(ctx, w, r, err, http.StatusBadRequest)
-return
-}
+	//start and end hours are 24 based
+	var potential struct {
+		StartDate string `json:"start_date"`
+		EndDate   string `json:"end_date"`
+	}
+	err = Decode(r, &potential)
+	if err != nil {
+		RespondErr(ctx, w, r, err, http.StatusBadRequest)
+		return
+	}
 
-//convert String date to time Object
-StartDateInt, err := strconv.ParseInt(potential.StartDate, 10, 64)
-if err != nil {
-RespondErr(ctx, w, r, errors.New("invalid time"), http.StatusBadRequest)
-}
-StartDate := time.Unix(StartDateInt, 0)
-log.Debugf(ctx, "handleCreateMeeting, StartDate : ", StartDate)
-meetingTime.StartDate = StartDate
+	//convert String date to time Object
+	StartDateInt, err := strconv.ParseInt(potential.StartDate, 10, 64)
+	if err != nil {
+		RespondErr(ctx, w, r, errors.New("invalid time"), http.StatusBadRequest)
+	}
+	StartDate := time.Unix(StartDateInt, 0)
+	log.Debugf(ctx, "handleCreateMeeting, StartDate : ", StartDate)
+	meetingTime.StartDate = StartDate
 
-EndDateInt, err := strconv.ParseInt(potential.EndDate, 10, 64)
-if err != nil {
-RespondErr(ctx, w, r, errors.New("invalid time"), http.StatusBadRequest)
-}
-EndDate := time.Unix(EndDateInt, 0)
-log.Debugf(ctx, "handleCreateMeeting, EndDate : ", EndDate)
-meetingTime.EndDate = EndDate
+	EndDateInt, err := strconv.ParseInt(potential.EndDate, 10, 64)
+	if err != nil {
+		RespondErr(ctx, w, r, errors.New("invalid time"), http.StatusBadRequest)
+	}
+	EndDate := time.Unix(EndDateInt, 0)
+	log.Debugf(ctx, "handleCreateMeeting, EndDate : ", EndDate)
+	meetingTime.EndDate = EndDate
 
-//update with new values
-meetingTime.updateMeetingPotentialTime(ctx)
+	//update with new values
+	meetingTime.updateMeetingPotentialTime(ctx)
 
-//return new meetingTime
-Respond(ctx, w, r, meetingTime, http.StatusOK)
+	//return new meetingTime
+	Respond(ctx, w, r, meetingTime, http.StatusOK)
 }
