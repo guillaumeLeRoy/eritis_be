@@ -5,6 +5,8 @@ import (
 	"google.golang.org/appengine/datastore"
 	"golang.org/x/net/context"
 	"google.golang.org/appengine/log"
+	"strings"
+	"errors"
 )
 
 /*
@@ -12,22 +14,36 @@ Origin : from a Coach or a Coachee
 */
 type MeetingReview struct {
 	Key     *datastore.Key `json:"id" datastore:"-"`
-	Date    time.Time `json:"date"`
+	Type    ReviewType `json:"type"`
 	Comment string `json:"comment"`
-	Score   int `json:"score"`
-	Origin  *datastore.Key `json:"score"`
+	Date    time.Time `json:"date"`
 }
 
-func CreateReview(ctx context.Context, parent *Meeting, originUserId *datastore.Key, comment string, score int) (*MeetingReview, error) {
+type ReviewType string
+
+const (
+	SESSION_VALUE ReviewType = "SESSION_VALUE"
+	SESSION_NEXT_STEP ReviewType = "SESSION_NEXT_STEP"
+)
+
+func convertToReviewType(reviewType string) (ReviewType, error) {
+	if strings.Compare(reviewType, string(SESSION_VALUE)) == 0 {
+		return SESSION_VALUE, nil
+	} else if strings.Compare(reviewType, string(SESSION_NEXT_STEP)) == 0 {
+		return SESSION_NEXT_STEP, nil
+	}
+
+	return "", errors.New("can't convert reviewType")
+}
+
+func createReview(ctx context.Context, parent *Meeting, comment string, reviewType ReviewType) (*MeetingReview, error) {
 	log.Debugf(ctx, "Create createReview")
 
 	var review = MeetingReview{}
 
+	review.Type = reviewType
 	review.Comment = comment
-	review.Score = score
 	review.Date = time.Now()
-	review.Origin = originUserId
-
 	review.Key = datastore.NewIncompleteKey(ctx, "MeetingReview", parent.Key)
 
 	key, err := datastore.Put(ctx, review.Key, &review)

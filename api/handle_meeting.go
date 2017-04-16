@@ -96,7 +96,6 @@ func HandleMeeting(w http.ResponseWriter, r *http.Request) {
 		http.NotFound(w, r)
 	case "GET":
 
-
 		/**
 		 GET all meetings for a specific coachee
 		 */
@@ -253,9 +252,6 @@ func getAllMeetingsForCoachee(w http.ResponseWriter, r *http.Request, uid string
 	Respond(ctx, w, r, meetings, http.StatusCreated)
 }
 
-/*
-Suppose this review is created by a Coachee
-*/
 func createReviewForAMeeting(w http.ResponseWriter, r *http.Request, meetingId string) {
 	ctx := appengine.NewContext(r)
 	log.Debugf(ctx, "createReviewForAMeeting, meetingId : ", meetingId)
@@ -271,8 +267,8 @@ func createReviewForAMeeting(w http.ResponseWriter, r *http.Request, meetingId s
 	log.Debugf(ctx, "createReviewForAMeeting, get meeting : ", meeting)
 
 	var review struct {
+		Type    string `json:"type"`
 		Comment string `json:"comment"`
-		Score   int `json:"score"`
 	}
 	err = Decode(r, &review)
 	if err != nil {
@@ -280,7 +276,15 @@ func createReviewForAMeeting(w http.ResponseWriter, r *http.Request, meetingId s
 		return
 	}
 
-	meetingRev, err := CreateReview(ctx, meeting, meeting.CoacheeKey, review.Comment, review.Score)
+	//convert
+	reviewType, err := convertToReviewType(review.Type)
+	if err != nil {
+		RespondErr(ctx, w, r, err, http.StatusBadRequest)
+		return
+	}
+
+	//create review
+	meetingRev, err := createReview(ctx, meeting, review.Comment, reviewType)
 	if err != nil {
 		RespondErr(ctx, w, r, err, http.StatusInternalServerError)
 		return
@@ -326,7 +330,7 @@ func closeMeeting(w http.ResponseWriter, r *http.Request, meetingId string) {
 
 	var review struct {
 		Comment string `json:"comment"`
-		Score   int `json:"score"`
+		Type    string `json:"type"`
 	}
 	err = Decode(r, &review)
 	if err != nil {
@@ -347,7 +351,14 @@ func closeMeeting(w http.ResponseWriter, r *http.Request, meetingId string) {
 
 		log.Debugf(ctx, "closeMeeting, get meeting", meeting)
 
-		meetingRev, err := CreateReview(ctx, meeting, meeting.CoachKey, review.Comment, review.Score)
+		//convert
+		reviewType, err := convertToReviewType(review.Type)
+		if err != nil {
+			return err
+		}
+
+		//create review
+		meetingRev, err := createReview(ctx, meeting, review.Comment, reviewType)
 		if err != nil {
 			return err
 		}
