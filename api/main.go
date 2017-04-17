@@ -189,26 +189,32 @@ func authHandler(handler func(w http.ResponseWriter, r *http.Request)) http.Hand
 
 			log.Debugf(ctx, "authHandler InitializeApp ok")
 
-			////verify token
-			//auth, _ := firebase.GetAuth()
-			//decodedToken, err := auth.VerifyIDToken(token, ctx)
-			//if err != nil {
-			//	log.Debugf(ctx, "authHandler VerifyIDToken failed %s", err)
-			//	RespondErr(ctx, w, r, err, http.StatusUnauthorized)
-			//	return
-			//}
-			//
-			//if err == nil {
-			//	uid, found := decodedToken.UID()
-			//	log.Debugf(ctx, "authHandler decodedToken uid %s, found %s", uid, found)
-			//}
-			//
-			//uid, found := decodedToken.UID()
-			//if !found {
-			//	RespondErr(ctx, w, r, errors.New("UID not found"), http.StatusUnauthorized)
-			//}
-			//
-			//log.Debugf(ctx, "authHandler, UID: %s", uid)
+			log.Debugf(ctx, "IsDevAppServer: %v", appengine.IsDevAppServer())
+
+			if !appengine.IsDevAppServer() {
+				//verify token only in PROD
+				auth, _ := firebase.GetAuth()
+				decodedToken, err := auth.VerifyIDToken(token, ctx)
+				if err != nil {
+					log.Debugf(ctx, "authHandler VerifyIDToken failed %s", err)
+					RespondErr(ctx, w, r, err, http.StatusUnauthorized)
+					return
+				}
+
+				if err == nil {
+					uid, found := decodedToken.UID()
+					log.Debugf(ctx, "authHandler decodedToken uid %s, found %s", uid, found)
+				}
+
+				uid, found := decodedToken.UID()
+				if !found {
+					RespondErr(ctx, w, r, errors.New("UID not found"), http.StatusUnauthorized)
+				}
+
+				log.Debugf(ctx, "authHandler, UID: %s", uid)
+			}
+
+
 
 			//auth ok, continue
 			handler(w, r)

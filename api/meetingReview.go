@@ -22,6 +22,7 @@ type MeetingReview struct {
 type ReviewType string
 
 const (
+	SESSION_CONTEXT ReviewType = "SESSION_CONTEXT"
 	SESSION_VALUE ReviewType = "SESSION_VALUE"
 	SESSION_NEXT_STEP ReviewType = "SESSION_NEXT_STEP"
 )
@@ -31,6 +32,8 @@ func convertToReviewType(reviewType string) (ReviewType, error) {
 		return SESSION_VALUE, nil
 	} else if strings.Compare(reviewType, string(SESSION_NEXT_STEP)) == 0 {
 		return SESSION_NEXT_STEP, nil
+	} else if strings.Compare(reviewType, string(SESSION_CONTEXT)) == 0 {
+		return SESSION_CONTEXT, nil
 	}
 
 	return "", errors.New("can't convert reviewType")
@@ -55,7 +58,7 @@ func createReview(ctx context.Context, parent *Meeting, comment string, reviewTy
 	return &review, nil
 }
 
-func GetReviewsForMeeting(ctx context.Context, parent *Meeting) ([]*MeetingReview, error) {
+func GetAllReviewsForMeeting(ctx context.Context, parent *Meeting) ([]*MeetingReview, error) {
 	log.Debugf(ctx, "getReviewsForMeeting")
 
 	var reviews []*MeetingReview
@@ -71,5 +74,32 @@ func GetReviewsForMeeting(ctx context.Context, parent *Meeting) ([]*MeetingRevie
 	log.Debugf(ctx, "getReviewsForMeeting", reviews)
 
 	return reviews, nil
+}
+
+func getReviewsForMeetingAndForType(ctx context.Context, parent *Meeting, reviewType string) ([]*MeetingReview, error) {
+	log.Debugf(ctx, "getReviewsForMeetingAndForType, reviewType %s", reviewType)
+
+	var reviews []*MeetingReview
+	keys, err := datastore.NewQuery("MeetingReview").Ancestor(parent.Key).Filter("Type =",reviewType).GetAll(ctx, &reviews)
+
+	for i, review := range reviews {
+		review.Key = keys[i]
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	log.Debugf(ctx, "getReviewsForMeeting", reviews)
+
+	return reviews, nil
+}
+
+// delete review
+func deleteMeetingReview(ctx context.Context, reviewKey *datastore.Key) (error) {
+	log.Debugf(ctx, "deleteMeetingReview, reviewKey %s", reviewKey)
+
+	err := datastore.Delete(ctx, reviewKey)
+
+	return err
 
 }

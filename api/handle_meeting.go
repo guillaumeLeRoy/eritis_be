@@ -147,6 +147,20 @@ func HandleMeeting(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 
+		////get all reviews for meeting and type
+		//contains = strings.Contains(r.URL.Path, "/api/meeting/")
+		//if contains {
+		//	params := PathParams(ctx, r, "/api/meeting/:meetingId/reviews/:type")
+		//	//verify url contains meeting
+		//	if _, ok := params["meeting"]; ok {
+		//		//get uid param
+		//		meetingId, ok := params[":meetingId"]
+		//		if ok {
+		//			getAllReviewsForAMeeting(w, r, meetingId)// GET /api/meeting/:meetingId/reviews
+		//			return
+		//		}
+		//	}
+		//}
 
 		//get all reviews for a meeting
 		contains = strings.Contains(r.URL.Path, "/api/meeting/")
@@ -157,7 +171,7 @@ func HandleMeeting(w http.ResponseWriter, r *http.Request) {
 				//get uid param
 				meetingId, ok := params[":meetingId"]
 				if ok {
-					getReviewsForAMeeting(w, r, meetingId)// GET /api/meeting/:meetingId/reviews
+					getAllReviewsForAMeeting(w, r, meetingId, r.URL.Query().Get("type"))// GET /api/meeting/:meetingId/reviews
 					return
 				}
 			}
@@ -168,7 +182,7 @@ func HandleMeeting(w http.ResponseWriter, r *http.Request) {
 
 
 	case "DELETE":
-		//get potential dates for a meeting
+		//delete potential dates for a meeting
 		contains := strings.Contains(r.URL.Path, "potentials")
 		if contains {
 			params := PathParams(ctx, r, "/api/meeting/potentials/:potId")
@@ -177,8 +191,21 @@ func HandleMeeting(w http.ResponseWriter, r *http.Request) {
 				deletePotentialDate(w, r, potId)
 				return
 			}
-
 		}
+
+		//delete review for a meeting
+		contains = strings.Contains(r.URL.Path, "reviews")
+		if contains {
+			params := PathParams(ctx, r, "/api/meeting/reviews/:reviewId")
+			potId, ok := params[":reviewId"]
+			if ok {
+				handleDeleteMeetingReview(w, r, potId)
+				return
+			}
+		}
+
+		http.NotFound(w, r)
+		return
 	default:
 		http.NotFound(w, r)
 	}
@@ -293,7 +320,7 @@ func createReviewForAMeeting(w http.ResponseWriter, r *http.Request, meetingId s
 	Respond(ctx, w, r, meetingRev, http.StatusCreated)
 }
 
-func getReviewsForAMeeting(w http.ResponseWriter, r *http.Request, meetingId string) {
+func getAllReviewsForAMeeting(w http.ResponseWriter, r *http.Request, meetingId string, reviewType string) {
 
 	ctx := appengine.NewContext(r)
 	log.Debugf(ctx, "getReviewsForAMeeting, meetingId : ", meetingId)
@@ -308,7 +335,12 @@ func getReviewsForAMeeting(w http.ResponseWriter, r *http.Request, meetingId str
 
 	log.Debugf(ctx, "getReviewsForAMeeting, get meeting : ", meeting)
 
-	reviews, err := GetReviewsForMeeting(ctx, meeting)
+	var reviews []*MeetingReview
+	if reviewType != "" {
+		reviews, err = getReviewsForMeetingAndForType(ctx, meeting, reviewType)
+	} else {
+		reviews, err = GetAllReviewsForMeeting(ctx, meeting)
+	}
 	if err != nil {
 		RespondErr(ctx, w, r, err, http.StatusInternalServerError)
 		return
@@ -534,6 +566,25 @@ func deletePotentialDate(w http.ResponseWriter, r *http.Request, potentialId str
 	}
 
 	deleteMeetingPotentialTime(ctx, potentialDateKey)
+	if err != nil {
+		RespondErr(ctx, w, r, err, http.StatusBadRequest)
+		return
+	}
+
+	Respond(ctx, w, r, nil, http.StatusOK)
+}
+
+func handleDeleteMeetingReview(w http.ResponseWriter, r *http.Request, reviewId string) {
+	ctx := appengine.NewContext(r)
+	log.Debugf(ctx, "deleteMeetingReview, reviewId %s", reviewId)
+
+	potentialDateKey, err := datastore.DecodeKey(reviewId)
+	if err != nil {
+		RespondErr(ctx, w, r, err, http.StatusBadRequest)
+		return
+	}
+
+	deleteMeetingReview(ctx, potentialDateKey)
 	if err != nil {
 		RespondErr(ctx, w, r, err, http.StatusBadRequest)
 		return
