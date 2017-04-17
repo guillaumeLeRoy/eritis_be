@@ -45,7 +45,16 @@ func HandleMeeting(w http.ResponseWriter, r *http.Request) {
 		handleCreateMeeting(w, r)
 
 	case "PUT":
-		// update review ?
+		// update review
+		/// create new meeting review
+		if ok := strings.Contains(r.URL.Path, "reviews"); ok {
+			params := PathParams(ctx, r, "/api/meeting/reviews/reviewId")
+			uid, ok := params[":reviewId"]
+			if ok {
+				updateMeetingReview(w, r, uid)// PUT /api/meeting/:uid/review
+				return
+			}
+		}
 
 		//add coach to meeting
 		contains := strings.Contains(r.URL.Path, "coach")
@@ -65,7 +74,7 @@ func HandleMeeting(w http.ResponseWriter, r *http.Request) {
 			params := PathParams(ctx, r, "/api/meeting/potential/:potId")
 			potId, ok := params[":potId"]
 			if ok {
-				updateMeetingPontentialTime(w, r, potId)
+				updateMeetingPotentialTime(w, r, potId)
 				return
 			}
 		}
@@ -283,15 +292,11 @@ func createReviewForAMeeting(w http.ResponseWriter, r *http.Request, meetingId s
 	ctx := appengine.NewContext(r)
 	log.Debugf(ctx, "createReviewForAMeeting, meetingId : ", meetingId)
 
-	key, err := datastore.DecodeKey(meetingId)
+	meetingKey, err := datastore.DecodeKey(meetingId)
 	if err != nil {
 		RespondErr(ctx, w, r, err, http.StatusBadRequest)
 		return
 	}
-
-	meeting, err := GetMeeting(ctx, key)
-
-	log.Debugf(ctx, "createReviewForAMeeting, get meeting : ", meeting)
 
 	var review struct {
 		Type    string `json:"type"`
@@ -311,7 +316,7 @@ func createReviewForAMeeting(w http.ResponseWriter, r *http.Request, meetingId s
 	}
 
 	//create review
-	meetingRev, err := createReview(ctx, meeting, review.Comment, reviewType)
+	meetingRev, err := createReview(ctx, meetingKey, review.Comment, reviewType)
 	if err != nil {
 		RespondErr(ctx, w, r, err, http.StatusInternalServerError)
 		return
@@ -320,26 +325,58 @@ func createReviewForAMeeting(w http.ResponseWriter, r *http.Request, meetingId s
 	Respond(ctx, w, r, meetingRev, http.StatusCreated)
 }
 
-func getAllReviewsForAMeeting(w http.ResponseWriter, r *http.Request, meetingId string, reviewType string) {
-
+func updateMeetingReview(w http.ResponseWriter, r *http.Request, reviewId string) {
 	ctx := appengine.NewContext(r)
-	log.Debugf(ctx, "getReviewsForAMeeting, meetingId : ", meetingId)
+	log.Debugf(ctx, "updateMeetingReview, reviewId : ", reviewId)
 
-	key, err := datastore.DecodeKey(meetingId)
+	reviewKey, err := datastore.DecodeKey(reviewId)
 	if err != nil {
 		RespondErr(ctx, w, r, err, http.StatusBadRequest)
 		return
 	}
 
-	meeting, err := GetMeeting(ctx, key)
+	var review MeetingReview
+	err = datastore.Get(ctx, reviewKey, &review)
+	if err != nil {
+		RespondErr(ctx, w, r, err, http.StatusBadRequest)
+		return
+	}
 
-	log.Debugf(ctx, "getReviewsForAMeeting, get meeting : ", meeting)
+	var reviewUpdate struct {
+		Comment string `json:"comment"`
+	}
+	err = Decode(r, &review)
+	if err != nil {
+		RespondErr(ctx, w, r, err, http.StatusBadRequest)
+		return
+	}
+
+	//create review
+	meetingRev, err := review.updateReview(ctx, reviewKey, reviewUpdate.Comment)
+	if err != nil {
+		RespondErr(ctx, w, r, err, http.StatusInternalServerError)
+		return
+	}
+
+	Respond(ctx, w, r, meetingRev, http.StatusOK)
+}
+
+func getAllReviewsForAMeeting(w http.ResponseWriter, r *http.Request, meetingId string, reviewType string) {
+
+	ctx := appengine.NewContext(r)
+	log.Debugf(ctx, "getReviewsForAMeeting, meetingId : ", meetingId)
+
+	meetingKey, err := datastore.DecodeKey(meetingId)
+	if err != nil {
+		RespondErr(ctx, w, r, err, http.StatusBadRequest)
+		return
+	}
 
 	var reviews []*MeetingReview
 	if reviewType != "" {
-		reviews, err = getReviewsForMeetingAndForType(ctx, meeting, reviewType)
+		reviews, err = getReviewsForMeetingAndForType(ctx, meetingKey, reviewType)
 	} else {
-		reviews, err = GetAllReviewsForMeeting(ctx, meeting)
+		reviews, err = getAllReviewsForMeeting(ctx, meetingKey)
 	}
 	if err != nil {
 		RespondErr(ctx, w, r, err, http.StatusInternalServerError)
@@ -390,7 +427,7 @@ func closeMeeting(w http.ResponseWriter, r *http.Request, meetingId string) {
 		}
 
 		//create review
-		meetingRev, err := createReview(ctx, meeting, review.Comment, reviewType)
+		meetingRev, err := createReview(ctx, meeting.Key, review.Comment, reviewType)
 		if err != nil {
 			return err
 		}
@@ -593,7 +630,7 @@ func handleDeleteMeetingReview(w http.ResponseWriter, r *http.Request, reviewId 
 	Respond(ctx, w, r, nil, http.StatusOK)
 }
 
-func updateMeetingPontentialTime(w http.ResponseWriter, r *http.Request, potentialId string) {
+func updateMeetingPotentialTime(w http.ResponseWriter, r *http.Request, potentialId string) {
 	ctx := appengine.NewContext(r)
 	log.Debugf(ctx, "updateMeetingPontentialTime, potentialId %s", potentialId)
 
