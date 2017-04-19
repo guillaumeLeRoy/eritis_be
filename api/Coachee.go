@@ -68,6 +68,9 @@ func GetCoachee(ctx context.Context, key *datastore.Key) (*APICoachee, error) {
 	plan := createPlanFromId(coachee.PlanId)
 
 	var apiCoachee = coachee.toAPI(coach, plan)
+
+	log.Debugf(ctx, "getCoachee, response %s", apiCoachee)
+
 	return &apiCoachee, nil
 }
 
@@ -101,7 +104,7 @@ func GetAllCoachees(ctx context.Context) ([]*APICoachee, error) {
 }
 
 func createCoacheeFromFirebaseUser(ctx context.Context, fbUser *FirebaseUser, planId PlanInt) (*APICoachee, error) {
-	log.Debugf(ctx, "CoacheeFromFirebaseUser")
+	log.Debugf(ctx, "CoacheeFromFirebaseUser, fbUser %s, planId %s", fbUser, planId)
 
 	var coachee Coachee
 	coachee.Key = datastore.NewIncompleteKey(ctx, "Coachee", nil)
@@ -123,8 +126,11 @@ func createCoacheeFromFirebaseUser(ctx context.Context, fbUser *FirebaseUser, pl
 	}
 	coachee.Key = key
 
+	//get the plan
+	plan := createPlanFromId(coachee.PlanId)
+
 	//no coach selected now
-	var coacheeForApi = coachee.toAPI(nil, nil)
+	var coacheeForApi = coachee.toAPI(nil, plan)
 	return &coacheeForApi, nil
 }
 
