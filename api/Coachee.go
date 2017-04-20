@@ -22,15 +22,17 @@ type Coachee struct {
 /* API struct */
 type APICoachee struct {
 	Coachee
-	SelectedCoach *Coach `json:"selectedCoach"`
-	Plan          *Plan `json:"plan"`
+	SelectedCoach     *Coach `json:"selectedCoach"`
+	Plan              *Plan `json:"plan"`
+	AvailableSessions int `json:"available_sessions"`
 }
 
-func (c Coachee) toAPI(coach *Coach, plan *Plan) APICoachee {
+func (c Coachee) toAPI(coach *Coach, plan *Plan, availableSessionsCount int) APICoachee {
 	return APICoachee{
 		Coachee  : c,
 		SelectedCoach: coach,
 		Plan: plan,
+		AvailableSessions:availableSessionsCount,
 	}
 }
 
@@ -67,7 +69,14 @@ func GetCoachee(ctx context.Context, key *datastore.Key) (*APICoachee, error) {
 	//get the plan
 	plan := createPlanFromId(coachee.PlanId)
 
-	var apiCoachee = coachee.toAPI(coach, plan)
+	//calculate sessions count
+	count, err := getMeetingsCountForCoachee(ctx, coachee.Key)
+	if err != nil {
+		return nil, err
+	}
+
+	//convert to API object
+	var apiCoachee = coachee.toAPI(coach, plan, count)
 
 	log.Debugf(ctx, "getCoachee, response %s", apiCoachee)
 
@@ -95,7 +104,13 @@ func GetAllCoachees(ctx context.Context) ([]*APICoachee, error) {
 		//get the plan
 		plan := createPlanFromId(coachee.PlanId)
 
-		apiCoachee := coachee.toAPI(coach, plan)
+		//calculate sessions count
+		count, err := getMeetingsCountForCoachee(ctx, coachee.Key)
+		if err != nil {
+			return nil, err
+		}
+
+		apiCoachee := coachee.toAPI(coach, plan, count)
 		response[i] = &apiCoachee
 
 	}
@@ -129,8 +144,14 @@ func createCoacheeFromFirebaseUser(ctx context.Context, fbUser *FirebaseUser, pl
 	//get the plan
 	plan := createPlanFromId(coachee.PlanId)
 
+	//calculate sessions count
+	count, err := getMeetingsCountForCoachee(ctx, coachee.Key)
+	if err != nil {
+		return nil, err
+	}
+
 	//no coach selected now
-	var coacheeForApi = coachee.toAPI(nil, plan)
+	var coacheeForApi = coachee.toAPI(nil, plan, count)
 	return &coacheeForApi, nil
 }
 
@@ -166,7 +187,13 @@ func getCoacheeFromFirebaseId(ctx context.Context, fbId string) (*APICoachee, er
 
 	//get the Plan
 	plan := createPlanFromId(coachee.PlanId)
-	res := coachee.toAPI(coach, plan)
+
+	//calculate sessions count
+	count, err := getMeetingsCountForCoachee(ctx, coachee.Key)
+	if err != nil {
+		return nil, err
+	}
+	res := coachee.toAPI(coach, plan, count)
 
 	return &res, nil
 }
@@ -201,8 +228,14 @@ func (c *Coachee) UpdateSelectedCoach(ctx context.Context, coach *Coach) (*APICo
 	//get the plan
 	plan := createPlanFromId(c.PlanId)
 
+	//calculate sessions count
+	count, err := getMeetingsCountForCoachee(ctx, c.Key)
+	if err != nil {
+		return nil, err
+	}
+
 	//convert to APICoachee
-	apiCoachee := c.toAPI(coach, plan)
+	apiCoachee := c.toAPI(coach, plan, count)
 
 	return &apiCoachee, nil
 }
