@@ -64,7 +64,7 @@ func handleGetAllCoachees(w http.ResponseWriter, r *http.Request) {
 	ctx := appengine.NewContext(r)
 	log.Debugf(ctx, "handleGetAllCoachees")
 
-	coachs, err := GetAllCoachees(ctx)
+	coachs, err := GetAllAPICoachees(ctx)
 	if err != nil {
 		RespondErr(ctx, w, r, err, http.StatusInternalServerError)
 	}

@@ -71,8 +71,13 @@ func init() {
 	//get contract plan
 	http.HandleFunc("/api/v1/plans/", nonAuthHandler(handleContractPlan))
 
+	//cron
+	http.HandleFunc("/api/v1/cron/", nonAuthHandler(handleCron))
+
 	//test email
 	http.HandleFunc("/api/email/", sendTestEmail)
+
+
 }
 
 func nonAuthHandler(handler func(w http.ResponseWriter, r *http.Request)) http.HandlerFunc {

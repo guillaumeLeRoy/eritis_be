@@ -79,7 +79,17 @@ func GetCoachee(ctx context.Context, key *datastore.Key) (*APICoachee, error) {
 }
 
 //get all coachees
-func GetAllCoachees(ctx context.Context) ([]*APICoachee, error) {
+func getAllCoachees(ctx context.Context) ([]*Coachee, error) {
+	var coachees []*Coachee
+	_, err := datastore.NewQuery("Coachee").GetAll(ctx, &coachees)
+	if err != nil {
+		return nil, err
+	}
+	return coachees, nil
+}
+
+//get all API coachees
+func GetAllAPICoachees(ctx context.Context) ([]*APICoachee, error) {
 	var coachees []*Coachee
 	keys, err := datastore.NewQuery("Coachee").GetAll(ctx, &coachees)
 	if err != nil {
@@ -124,6 +134,7 @@ func createCoacheeFromFirebaseUser(ctx context.Context, fbUser *FirebaseUser, pl
 	//calculate available sessions
 	var count = getSessionsCount(planId)
 	coachee.AvailableSessionsCount = count
+	coachee.UpdateSessionsCountDate = time.Now()
 
 	//log.Infof(ctx, "saving new user: %s", aeuser.String())
 	log.Debugf(ctx, "saving new user, firebase id  : %s, email : %s ", fbUser.UID, fbUser.Email)
@@ -216,12 +227,15 @@ func (c *Coachee) UpdateSelectedCoach(ctx context.Context, coach *Coach) (*APICo
 	return &apiCoachee, nil
 }
 
-func (c *Coachee) setAvailableSessionsCount() {
+func (c *Coachee) refreshAvailableSessionsCount(ctx context.Context) {
 	plan := createPlanFromId(c.PlanId)
 
-	//check current date is the beginning of the month
-	if () {
+	//check if we can refresh
+	if (canResetAvailableSessionsCount(ctx, c)) {
+		//set value
 		c.AvailableSessionsCount = plan.SessionsCount
+		//refresh date
+		c.UpdateSessionsCountDate = time.Now()
 	}
 }
 
@@ -231,18 +245,16 @@ func canResetAvailableSessionsCount(ctx context.Context, c *Coachee) bool {
 	if isDevServer {
 		return true
 	}
-
-	//var canUpdate = isDevServer
-
-	//if !canUpdate {
-	//	return false
-	//}
 	day := time.Now().Day()
+
+	log.Debugf(ctx, "canResetAvailableSessionsCount, last date : %s", c.UpdateSessionsCountDate)
+
 	//reset the "1st" day of each month
 	//reset if 1 month has passed
-	if ( day == 1 && ( c.UpdateSessionsCountDate != nil && (c.UpdateSessionsCountDate.Month() - time.Now().Month() == 1))) {
-		return true
+	if day == 1 {
+		if c.UpdateSessionsCountDate.Month() != time.Now().Month() {
+			return true
+		}
 	}
-
 	return false
 }

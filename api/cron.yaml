@@ -1,0 +1,4 @@
+cron:
+- description: daily job to refresh available sessions count
+  url: /api/v1/cron/refresh_available_sessions
+  schedule: every day 00:00
