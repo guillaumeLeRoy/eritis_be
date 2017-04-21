@@ -8,7 +8,7 @@ import (
 
 func handleCron(w http.ResponseWriter, r *http.Request) {
 	ctx := appengine.NewContext(r)
-	log.Debugf(ctx, "handleContractPlan")
+	log.Debugf(ctx, "handleCron")
 
 	switch r.Method {
 	case "GET":
@@ -24,6 +24,9 @@ func handleCron(w http.ResponseWriter, r *http.Request) {
 func handleRefreshAvailableSessionsCount(w http.ResponseWriter, r *http.Request) {
 	ctx := appengine.NewContext(r)
 
+	log.Debugf(ctx, "handleRefreshAvailableSessionsCount")
+
+
 	//get all coachees
 	coachees, err := getAllCoachees(ctx)
 	if err != nil {
@@ -33,7 +36,11 @@ func handleRefreshAvailableSessionsCount(w http.ResponseWriter, r *http.Request)
 
 	//go through each coachee and try to refresh
 	for _, coachee := range coachees {
-		coachee.refreshAvailableSessionsCount(ctx)
+		err = coachee.refreshAvailableSessionsCount(ctx)
+		if err != nil {
+			RespondErr(ctx, w, r, err, http.StatusInternalServerError)
+			return
+		}
 	}
 
 	//no response but status OK

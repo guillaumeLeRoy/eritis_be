@@ -90,7 +90,7 @@ func (m *Meeting)GetAPIMeeting(ctx context.Context) (*ApiMeeting, error) {
 	}
 	ApiMeeting.Coach = coach
 	//get coachee
-	coachee, err := GetCoachee(ctx, m.CoacheeKey)
+	coachee, err := GetAPICoachee(ctx, m.CoacheeKey)
 	if err != nil {
 		return nil, err
 	}
@@ -165,7 +165,7 @@ func GetMeetingsForCoach(ctx context.Context, coachKey *datastore.Key) ([]*ApiMe
 		ApiMeeting.Coach = coach
 
 		//get coachee
-		coachee, err := GetCoachee(ctx, meeting.CoacheeKey)
+		coachee, err := GetAPICoachee(ctx, meeting.CoacheeKey)
 		if err != nil {
 			return nil, err
 		}
@@ -208,7 +208,7 @@ func GetMeetingsForCoachee(ctx context.Context, coacheeKey *datastore.Key) ([]*A
 	//TODO synchronise call
 
 	//get coachee
-	coachee, err := GetCoachee(ctx, coacheeKey)
+	coachee, err := GetAPICoachee(ctx, coacheeKey)
 	if err != nil {
 		return nil, err
 	}

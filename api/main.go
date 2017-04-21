@@ -21,8 +21,6 @@ goapp deploy -application eritis-150320 -version 1 default/app.yaml api/app.yaml
 appcfg.py -A eritis-150320 update_dispatch .
 appcfg.py update_indexes -A eritis-150320 ./default
 
-
-
 ##### DEV ENV ######
 serve locally :
 dev_appserver.py -A eritis-be-dev dispatch.yaml default/app.yaml api/app.yaml web/app.yaml firebase/app.yaml --enable_sendmail
@@ -42,6 +40,13 @@ deploy :
 goapp deploy -application eritis-be-glr -version 1 default/app.yaml api/app.yaml web/app.yaml firebase/app.yaml
 appcfg.py -A eritis-be-glr update_dispatch .
 appcfg.py update_indexes -A eritis-be-glr ./default
+
+
+
+CRON :
+gcloud app deploy cron.yaml
+
+
 */
 
 const LIVE_ENV_PROJECT_ID string = "eritis-150320"

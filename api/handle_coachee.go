@@ -53,7 +53,7 @@ func handleGetCoacheeForId(w http.ResponseWriter, r *http.Request, id string) {
 		RespondErr(ctx, w, r, err, http.StatusBadRequest)
 	}
 
-	coach, err := GetCoachee(ctx, key)
+	coach, err := GetAPICoachee(ctx, key)
 	if err != nil {
 		RespondErr(ctx, w, r, err, http.StatusInternalServerError)
 	}
@@ -80,7 +80,7 @@ func handleUpdateCoacheeForId(w http.ResponseWriter, r *http.Request, id string)
 		RespondErr(ctx, w, r, err, http.StatusBadRequest)
 	}
 
-	coachee, err := GetCoachee(ctx, key)
+	coachee, err := GetAPICoachee(ctx, key)
 	if err != nil {
 		RespondErr(ctx, w, r, err, http.StatusInternalServerError)
 	}
@@ -94,7 +94,15 @@ func handleUpdateCoacheeForId(w http.ResponseWriter, r *http.Request, id string)
 		RespondErr(ctx, w, r, err, http.StatusBadRequest)
 		return
 	}
-	coachee.Update(ctx, updateCoachee.DisplayName, updateCoachee.AvatarUrl)
+
+	//update
+	coachee.DisplayName = updateCoachee.DisplayName
+	coachee.AvatarURL = updateCoachee.AvatarUrl
+	coachee.update(ctx)
+	if err != nil {
+		RespondErr(ctx, w, r, err, http.StatusInternalServerError)
+		return
+	}
 
 	Respond(ctx, w, r, coachee, http.StatusOK)
 }
@@ -112,7 +120,7 @@ func handleUpdateSelectedCoach(w http.ResponseWriter, r *http.Request, coacheeId
 		RespondErr(ctx, w, r, err, http.StatusBadRequest)
 	}
 
-	coachee, err := GetCoachee(ctx, coacheeKey)
+	coachee, err := GetAPICoachee(ctx, coacheeKey)
 	if err != nil {
 		RespondErr(ctx, w, r, err, http.StatusInternalServerError)
 	}

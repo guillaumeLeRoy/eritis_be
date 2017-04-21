@@ -49,17 +49,22 @@ func (c *Coachee) getSelectedCoach(ctx context.Context) (*Coach, error) {
 	return coach, nil
 }
 
-
-//get Coachee for the given user id
-func GetCoachee(ctx context.Context, key *datastore.Key) (*APICoachee, error) {
-	log.Debugf(ctx, "getCoachee")
-
+func getCoachee(ctx context.Context, key *datastore.Key) (*Coachee, error) {
 	var coachee Coachee
 	err := datastore.Get(ctx, key, &coachee)
 	if err != nil {
 		return nil, err
 	}
 	coachee.Key = key
+	return &coachee, nil
+}
+
+//get Coachee for the given user id
+func GetAPICoachee(ctx context.Context, key *datastore.Key) (*APICoachee, error) {
+	log.Debugf(ctx, "getCoachee")
+
+	//get from Datastore
+	coachee, err := getCoachee(ctx, key)
 
 	//now get selected Coach if any
 	coach, err := coachee.getSelectedCoach(ctx)
@@ -81,10 +86,16 @@ func GetCoachee(ctx context.Context, key *datastore.Key) (*APICoachee, error) {
 //get all coachees
 func getAllCoachees(ctx context.Context) ([]*Coachee, error) {
 	var coachees []*Coachee
-	_, err := datastore.NewQuery("Coachee").GetAll(ctx, &coachees)
+	keys, err := datastore.NewQuery("Coachee").GetAll(ctx, &coachees)
 	if err != nil {
 		return nil, err
 	}
+
+	//get Keys
+	for i, coachee := range coachees {
+		coachee.Key = keys[i]
+	}
+
 	return coachees, nil
 }
 
@@ -191,11 +202,9 @@ func getCoacheeFromFirebaseId(ctx context.Context, fbId string) (*APICoachee, er
 	return &res, nil
 }
 
-func (c *Coachee)Update(ctx context.Context, displayName string, avatarUrl string) (error) {
-	log.Debugf(ctx, "update coachee displayName : %s, avatar Url : %s", displayName, avatarUrl)
+func (c *Coachee)update(ctx context.Context) (error) {
+	log.Debugf(ctx, "update coachee, email : %s, key : %s ", c.Email, c.Key)
 
-	c.DisplayName = displayName
-	c.AvatarURL = avatarUrl
 	key, err := datastore.Put(ctx, c.Key, c)
 	if err != nil {
 		return err
@@ -227,7 +236,7 @@ func (c *Coachee) UpdateSelectedCoach(ctx context.Context, coach *Coach) (*APICo
 	return &apiCoachee, nil
 }
 
-func (c *Coachee) refreshAvailableSessionsCount(ctx context.Context) {
+func (c *Coachee) refreshAvailableSessionsCount(ctx context.Context) (error) {
 	plan := createPlanFromId(c.PlanId)
 
 	//check if we can refresh
@@ -236,7 +245,16 @@ func (c *Coachee) refreshAvailableSessionsCount(ctx context.Context) {
 		c.AvailableSessionsCount = plan.SessionsCount
 		//refresh date
 		c.UpdateSessionsCountDate = time.Now()
+
+		log.Debugf(ctx, "refreshAvailableSessionsCount, for user %s, count %s", c.Email, c.AvailableSessionsCount)
+
+		//save
+		err := c.update(ctx)
+		if err != nil {
+			return err
+		}
 	}
+	return nil
 }
 
 func canResetAvailableSessionsCount(ctx context.Context, c *Coachee) bool {
@@ -257,4 +275,19 @@ func canResetAvailableSessionsCount(ctx context.Context, c *Coachee) bool {
 		}
 	}
 	return false
+}
+
+// decrease number of available sessions and save in datastore
+func (c *Coachee) decreaseAvailableSessionsCount(ctx context.Context) error {
+
+	//decrease of 1
+	c.AvailableSessionsCount = c.AvailableSessionsCount - 1
+
+	//save
+	err := c.update(ctx)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

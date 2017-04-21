@@ -242,6 +242,19 @@ func handleCreateMeeting(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	//decrease number of available sessions
+	coachee, err := getCoachee(ctx, coacheeKey)
+	if err != nil {
+		RespondErr(ctx, w, r, err, http.StatusBadRequest)
+		return
+	}
+	//decrease and save
+	err = coachee.decreaseAvailableSessionsCount(ctx)
+	if err != nil {
+		RespondErr(ctx, w, r, err, http.StatusBadRequest)
+		return
+	}
+
 	Respond(ctx, w, r, meeting, http.StatusCreated)
 }
 
@@ -323,7 +336,7 @@ func createReviewForAMeeting(w http.ResponseWriter, r *http.Request, meetingId s
 			RespondErr(ctx, w, r, err, http.StatusInternalServerError)
 			return
 		}
-	}else{
+	} else {
 		//update review
 		//reviews[0] should be safe to access to
 		meetingRev, err = reviews[0].updateReview(ctx, reviews[0].Key, review.Comment)
