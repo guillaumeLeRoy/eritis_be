@@ -1,0 +1,5 @@
+cron:
+- description: daily job to set available sessions count
+  url: /api/summary
+  target: beta
+  schedule: every 24 hours

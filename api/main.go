@@ -118,6 +118,17 @@ func getFirebaseJsonPath(ctx context.Context) (string, error) {
 	return pathToJson, nil
 }
 
+func isLiveEnvironment(ctx context.Context) bool {
+	appId := appengine.AppID(ctx)
+	log.Debugf(ctx, "isLiveEnvironment, appId : %s", appId)
+
+	if strings.EqualFold(LIVE_ENV_PROJECT_ID, appId) {
+		return true
+	} else {
+		return false
+	}
+}
+
 func authHandler(handler func(w http.ResponseWriter, r *http.Request)) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 

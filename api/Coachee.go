@@ -5,34 +5,35 @@ import (
 	"google.golang.org/appengine/datastore"
 	"golang.org/x/net/context"
 	"google.golang.org/appengine/log"
+	"google.golang.org/appengine"
 )
 
 /* Internal struct */
 type Coachee struct {
-	Key           *datastore.Key `json:"id" datastore:"-"`
-	FirebaseId    string `json:"firebase_id"`
-	Email         string `json:"email"`
-	DisplayName   string `json:"display_name"`
-	AvatarURL     string`json:"avatar_url"`
-	StartDate     time.Time `json:"start_date"`
-	SelectedCoach *datastore.Key `json:"-"`
-	PlanId        PlanInt`json:"-"`
+	Key                     *datastore.Key `json:"id" datastore:"-"`
+	FirebaseId              string `json:"firebase_id"`
+	Email                   string `json:"email"`
+	DisplayName             string `json:"display_name"`
+	AvatarURL               string`json:"avatar_url"`
+	StartDate               time.Time `json:"start_date"`
+	AvailableSessionsCount  int `json:"available_sessions_count"`
+	UpdateSessionsCountDate time.Time `json:"update_sessions_count_date"`
+	SelectedCoach           *datastore.Key `json:"-"`
+	PlanId                  PlanInt`json:"-"`
 }
 
 /* API struct */
 type APICoachee struct {
 	Coachee
-	SelectedCoach     *Coach `json:"selectedCoach"`
-	Plan              *Plan `json:"plan"`
-	AvailableSessions int `json:"available_sessions"`
+	SelectedCoach *Coach `json:"selectedCoach"`
+	Plan          *Plan `json:"plan"`
 }
 
-func (c Coachee) toAPI(coach *Coach, plan *Plan, availableSessionsCount int) APICoachee {
+func (c Coachee) toAPI(coach *Coach, plan *Plan) APICoachee {
 	return APICoachee{
 		Coachee  : c,
 		SelectedCoach: coach,
 		Plan: plan,
-		AvailableSessions:availableSessionsCount,
 	}
 }
 
@@ -69,14 +70,8 @@ func GetCoachee(ctx context.Context, key *datastore.Key) (*APICoachee, error) {
 	//get the plan
 	plan := createPlanFromId(coachee.PlanId)
 
-	//calculate sessions count
-	count, err := getMeetingsCountForCoachee(ctx, coachee.Key)
-	if err != nil {
-		return nil, err
-	}
-
 	//convert to API object
-	var apiCoachee = coachee.toAPI(coach, plan, count)
+	var apiCoachee = coachee.toAPI(coach, plan)
 
 	log.Debugf(ctx, "getCoachee, response %s", apiCoachee)
 
@@ -104,13 +99,7 @@ func GetAllCoachees(ctx context.Context) ([]*APICoachee, error) {
 		//get the plan
 		plan := createPlanFromId(coachee.PlanId)
 
-		//calculate sessions count
-		count, err := getMeetingsCountForCoachee(ctx, coachee.Key)
-		if err != nil {
-			return nil, err
-		}
-
-		apiCoachee := coachee.toAPI(coach, plan, count)
+		apiCoachee := coachee.toAPI(coach, plan)
 		response[i] = &apiCoachee
 
 	}
@@ -132,6 +121,10 @@ func createCoacheeFromFirebaseUser(ctx context.Context, fbUser *FirebaseUser, pl
 	coachee.StartDate = time.Now()
 	coachee.PlanId = planId
 
+	//calculate available sessions
+	var count = getSessionsCount(planId)
+	coachee.AvailableSessionsCount = count
+
 	//log.Infof(ctx, "saving new user: %s", aeuser.String())
 	log.Debugf(ctx, "saving new user, firebase id  : %s, email : %s ", fbUser.UID, fbUser.Email)
 
@@ -144,14 +137,8 @@ func createCoacheeFromFirebaseUser(ctx context.Context, fbUser *FirebaseUser, pl
 	//get the plan
 	plan := createPlanFromId(coachee.PlanId)
 
-	//calculate sessions count
-	count, err := getMeetingsCountForCoachee(ctx, coachee.Key)
-	if err != nil {
-		return nil, err
-	}
-
 	//no coach selected now
-	var coacheeForApi = coachee.toAPI(nil, plan, count)
+	var coacheeForApi = coachee.toAPI(nil, plan)
 	return &coacheeForApi, nil
 }
 
@@ -188,12 +175,7 @@ func getCoacheeFromFirebaseId(ctx context.Context, fbId string) (*APICoachee, er
 	//get the Plan
 	plan := createPlanFromId(coachee.PlanId)
 
-	//calculate sessions count
-	count, err := getMeetingsCountForCoachee(ctx, coachee.Key)
-	if err != nil {
-		return nil, err
-	}
-	res := coachee.toAPI(coach, plan, count)
+	res := coachee.toAPI(coach, plan)
 
 	return &res, nil
 }
@@ -228,14 +210,39 @@ func (c *Coachee) UpdateSelectedCoach(ctx context.Context, coach *Coach) (*APICo
 	//get the plan
 	plan := createPlanFromId(c.PlanId)
 
-	//calculate sessions count
-	count, err := getMeetingsCountForCoachee(ctx, c.Key)
-	if err != nil {
-		return nil, err
-	}
-
 	//convert to APICoachee
-	apiCoachee := c.toAPI(coach, plan, count)
+	apiCoachee := c.toAPI(coach, plan)
 
 	return &apiCoachee, nil
+}
+
+func (c *Coachee) setAvailableSessionsCount() {
+	plan := createPlanFromId(c.PlanId)
+
+	//check current date is the beginning of the month
+	if () {
+		c.AvailableSessionsCount = plan.SessionsCount
+	}
+}
+
+func canResetAvailableSessionsCount(ctx context.Context, c *Coachee) bool {
+	var isDevServer = appengine.IsDevAppServer() && !isLiveEnvironment(ctx)
+
+	if isDevServer {
+		return true
+	}
+
+	//var canUpdate = isDevServer
+
+	//if !canUpdate {
+	//	return false
+	//}
+	day := time.Now().Day()
+	//reset the "1st" day of each month
+	//reset if 1 month has passed
+	if ( day == 1 && ( c.UpdateSessionsCountDate != nil && (c.UpdateSessionsCountDate.Month() - time.Now().Month() == 1))) {
+		return true
+	}
+
+	return false
 }
