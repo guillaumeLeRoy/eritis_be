@@ -233,12 +233,31 @@ func handleCreateMeeting(w http.ResponseWriter, r *http.Request) {
 			http.StatusBadRequest)
 		return
 	}
+	//verify this user can create a new meeting
+	coachee, err := getCoachee(ctx, coacheeKey)
+	if err != nil {
+		RespondErr(ctx, w, r, err, http.StatusBadRequest)
+		return
+	}
+	//check
+	if coachee.AvailableSessionsCount <= 0 {
+		RespondErr(ctx, w, r, errors.New("limit reached"), http.StatusBadRequest)
+		return
+	}
 
+	//create new meeting
 	var meeting = &Meeting{}
 	meeting.CoacheeKey = coacheeKey
 	err = meeting.Create(ctx)
 	if err != nil {
 		RespondErr(ctx, w, r, err, http.StatusInternalServerError)
+		return
+	}
+
+	//decrease number of available sessions and save
+	err = coachee.decreaseAvailableSessionsCount(ctx)
+	if err != nil {
+		RespondErr(ctx, w, r, err, http.StatusBadRequest)
 		return
 	}
 
@@ -323,7 +342,7 @@ func createReviewForAMeeting(w http.ResponseWriter, r *http.Request, meetingId s
 			RespondErr(ctx, w, r, err, http.StatusInternalServerError)
 			return
 		}
-	}else{
+	} else {
 		//update review
 		//reviews[0] should be safe to access to
 		meetingRev, err = reviews[0].updateReview(ctx, reviews[0].Key, review.Comment)

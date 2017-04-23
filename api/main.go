@@ -21,8 +21,6 @@ goapp deploy -application eritis-150320 -version 1 default/app.yaml api/app.yaml
 appcfg.py -A eritis-150320 update_dispatch .
 appcfg.py update_indexes -A eritis-150320 ./default
 
-
-
 ##### DEV ENV ######
 serve locally :
 dev_appserver.py -A eritis-be-dev dispatch.yaml default/app.yaml api/app.yaml web/app.yaml firebase/app.yaml --enable_sendmail
@@ -42,6 +40,13 @@ deploy :
 goapp deploy -application eritis-be-glr -version 1 default/app.yaml api/app.yaml web/app.yaml firebase/app.yaml
 appcfg.py -A eritis-be-glr update_dispatch .
 appcfg.py update_indexes -A eritis-be-glr ./default
+
+
+
+CRON :
+gcloud app deploy cron.yaml
+
+
 */
 
 const LIVE_ENV_PROJECT_ID string = "eritis-150320"
@@ -71,8 +76,12 @@ func init() {
 	//get contract plan
 	http.HandleFunc("/api/v1/plans/", nonAuthHandler(handleContractPlan))
 
+	//cron
+	http.HandleFunc("/api/v1/cron/", nonAuthHandler(handleCron))
+
 	//test email
 	http.HandleFunc("/api/email/", sendTestEmail)
+
 }
 
 func nonAuthHandler(handler func(w http.ResponseWriter, r *http.Request)) http.HandlerFunc {
@@ -118,6 +127,17 @@ func getFirebaseJsonPath(ctx context.Context) (string, error) {
 	return pathToJson, nil
 }
 
+func isLiveEnvironment(ctx context.Context) bool {
+	appId := appengine.AppID(ctx)
+	log.Debugf(ctx, "isLiveEnvironment, appId : %s", appId)
+
+	if strings.EqualFold(LIVE_ENV_PROJECT_ID, appId) {
+		return true
+	} else {
+		return false
+	}
+}
+
 func authHandler(handler func(w http.ResponseWriter, r *http.Request)) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
@@ -139,59 +159,58 @@ func authHandler(handler func(w http.ResponseWriter, r *http.Request)) http.Hand
 		} else {
 			log.Debugf(ctx, "authHandler, handle all requests")
 
-			token := r.Header.Get("Authorization")
-			log.Debugf(ctx, "authHandler auth token: %s", token)
-
-			// If the token is empty...
-			if token == "" {
-				// If we get here, the required token is missing
-				RespondErr(ctx, w, r, errors.New("invalid token"), http.StatusUnauthorized)
-				return
-			}
-
-			//read the Bearer param
-			if len(token) >= 1 {
-				token = strings.TrimPrefix(token, "Bearer ")
-			}
-
-			log.Debugf(ctx, "authHandler token: %s", token)
-
-			// If the token is empty...
-			if token == "" {
-				// If we get here, the required token is missing
-				RespondErr(ctx, w, r, errors.New("invalid token"), http.StatusUnauthorized)
-				return
-			}
-
-			log.Debugf(ctx, "authHandler VERIFY token")
-
-			//init Firebase with the correct .json
-
-			path, err := getFirebaseJsonPath(ctx)
-			if err != nil {
-				log.Debugf(ctx, "authHandler, get json path failed %s", err)
-				RespondErr(ctx, w, r, err, http.StatusUnauthorized)
-				return
-			}
-
-			if firebaseApp == nil {
-				firebaseApp, err = firebase.InitializeApp(&firebase.Options{
-					ServiceAccountPath: path,
-				})
-				if err != nil {
-					log.Debugf(ctx, "authHandler InitializeApp failed %s", err)
-					RespondErr(ctx, w, r, err, http.StatusUnauthorized)
-					return
-				}
-			} else {
-				log.Debugf(ctx, "authHandler, firebaseApp already init")
-			}
-
-			log.Debugf(ctx, "authHandler InitializeApp ok")
-
 			log.Debugf(ctx, "IsDevAppServer: %v", appengine.IsDevAppServer())
 
 			if !appengine.IsDevAppServer() {
+
+				token := r.Header.Get("Authorization")
+				log.Debugf(ctx, "authHandler auth token: %s", token)
+
+				// If the token is empty...
+				if token == "" {
+					// If we get here, the required token is missing
+					RespondErr(ctx, w, r, errors.New("invalid token"), http.StatusUnauthorized)
+					return
+				}
+
+				//read the Bearer param
+				if len(token) >= 1 {
+					token = strings.TrimPrefix(token, "Bearer ")
+				}
+
+				log.Debugf(ctx, "authHandler token: %s", token)
+
+				// If the token is empty...
+				if token == "" {
+					// If we get here, the required token is missing
+					RespondErr(ctx, w, r, errors.New("invalid token"), http.StatusUnauthorized)
+					return
+				}
+
+				log.Debugf(ctx, "authHandler VERIFY token")
+
+				//init Firebase with the correct .json
+
+				path, err := getFirebaseJsonPath(ctx)
+				if err != nil {
+					log.Debugf(ctx, "authHandler, get json path failed %s", err)
+					RespondErr(ctx, w, r, err, http.StatusUnauthorized)
+					return
+				}
+
+				if firebaseApp == nil {
+					firebaseApp, err = firebase.InitializeApp(&firebase.Options{
+						ServiceAccountPath: path,
+					})
+					if err != nil {
+						log.Debugf(ctx, "authHandler InitializeApp failed %s", err)
+						RespondErr(ctx, w, r, err, http.StatusUnauthorized)
+						return
+					}
+				} else {
+					log.Debugf(ctx, "authHandler, firebaseApp already init")
+				}
+
 				//verify token only in PROD
 				auth, _ := firebase.GetAuth()
 				decodedToken, err := auth.VerifyIDToken(token, ctx)
