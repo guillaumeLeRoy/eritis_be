@@ -86,10 +86,10 @@ FirebaseService = __decorate([
  * Created by guillaume on 31/03/2017.
  */ var environment = {
     production: false,
-    BACKEND_BASE_URL: "https://eritis-be-glr.appspot.com/api",
-    firebase_apiKey: "AIzaSyAAszel5d8YQuuGyZ65lX89zYb3V6oqoyA",
-    firebase_authDomain: "eritis-be-glr.firebaseapp.com",
-    firebase_databaseURL: "https://eritis-be-glr.firebaseio.com",
+    BACKEND_BASE_URL: "https://eritis-be-dev.appspot.com/api",
+    firebase_apiKey: "AIzaSyDGJt42caQMGiRJDg8z_0C_sWhy1NFlHJ0",
+    firebase_authDomain: "eritis-be-dev.firebaseapp.com",
+    firebase_databaseURL: "https://eritis-be-dev.firebaseio.com",
 };
 //# sourceMappingURL=/Users/guillaume/angular/eritis_fe/src/environment.js.map
 
@@ -231,6 +231,39 @@ var AuthService = AuthService_1 = (function () {
         }.bind(this));
         console.log("ctr done");
     }
+    /*
+     * Get connected user from backend
+     */
+    AuthService.prototype.refreshConnectedUser = function () {
+        var _this = this;
+        console.log("refreshConnectedUser");
+        if (this.ApiUser != null) {
+            var currentFBtoken_1 = this.ApiUser.firebaseToken;
+            var param = [this.ApiUser.id];
+            if (this.ApiUser instanceof __WEBPACK_IMPORTED_MODULE_7__model_Coach__["a" /* Coach */]) {
+                var obs = this.get(AuthService_1.GET_COACH_FOR_ID, param);
+                return obs.map(function (res) {
+                    console.log("refreshConnectedUser, coach obtained from API, res : ", res);
+                    var coach = _this.parseCoach(res.json());
+                    _this.onAPIuserObtained(coach, currentFBtoken_1);
+                    return coach;
+                });
+            }
+            else if (this.ApiUser instanceof __WEBPACK_IMPORTED_MODULE_8__model_coachee__["a" /* Coachee */]) {
+                var obs = this.get(AuthService_1.GET_COACHEE_FOR_ID, param);
+                return obs.map(function (res) {
+                    console.log("refreshConnectedUser, coachee obtained from API : ", res);
+                    var coachee = _this.parseCoachee(res.json());
+                    _this.onAPIuserObtained(coachee, currentFBtoken_1);
+                    return coachee;
+                });
+            }
+        }
+        else {
+            console.log("refreshConnectedUser, no connected user");
+        }
+        return __WEBPACK_IMPORTED_MODULE_2_rxjs__["Observable"].from(null);
+    };
     AuthService.prototype.getConnectedUser = function () {
         return this.ApiUser;
     };
@@ -459,25 +492,25 @@ var AuthService = AuthService_1 = (function () {
             // start sign up request
             return _this.httpService.post(_this.generatePath(path, params), body, { headers: headers })
                 .map(function (response) {
-                var APIuser = response.json();
-                console.log("signUp, APIuser : ", APIuser);
+                var loginResponse = response.json();
+                console.log("signUp, loginResponse : ", loginResponse);
                 // return json;
                 _this.isSignInOrUp = false;
-                return _this.onAPIuserObtained(_this.parseAPIuser(APIuser), token);
+                return _this.onAPIuserObtained(_this.parseAPIuser(loginResponse), token);
             });
         });
     };
-    AuthService.prototype.parseAPIuser = function (user) {
-        console.log("parseAPIuser, user :", user);
-        if (user.coach) {
-            user = user.coach;
+    AuthService.prototype.parseAPIuser = function (response) {
+        console.log("parseAPIuser, response :", response);
+        if (response.coach) {
+            var coach = response.coach;
             //coach
-            return this.parseCoach(user);
+            return this.parseCoach(coach);
         }
-        else if (user.coachee) {
-            user = user.coachee;
+        else if (response.coachee) {
+            var coachee = response.coachee;
             //coachee
-            return this.parseCoachee(user);
+            return this.parseCoachee(coachee);
         }
         return null;
     };
@@ -499,6 +532,8 @@ var AuthService = AuthService_1 = (function () {
         coachee.start_date = json.start_date;
         coachee.selectedCoach = json.selectedCoach;
         coachee.contractPlan = json.plan;
+        coachee.availableSessionsCount = json.available_sessions_count;
+        coachee.updateAvailableSessionCountDate = json.update_sessions_count_date;
         return coachee;
     };
     AuthService.prototype.signIn = function (user) {
@@ -558,7 +593,7 @@ var AuthService = AuthService_1 = (function () {
      *
      * @param coacheeId
      * @param coachId
-     * @returns {Observable<R>}
+     * @returns {Observable<Coachee>}
      */
     AuthService.prototype.updateCoacheeSelectedCoach = function (coacheeId, coachId) {
         var _this = this;
@@ -570,6 +605,11 @@ var AuthService = AuthService_1 = (function () {
             return _this.parseCoachee(response.json());
         });
     };
+    /**
+     *
+     * @param response
+     * @returns {Coach|Coachee}
+     */
     AuthService.prototype.onUserResponse = function (response) {
         var json = response.json();
         console.log("onUserResponse, response json : ", json);
@@ -1145,9 +1185,21 @@ var MeetingDateComponent = (function () {
     };
     MeetingDateComponent.prototype.modifyPotentialDate = function (potentialDateId) {
         console.log('modifyPotentialDate, potentialDateId', potentialDateId);
+        var startTime = 7;
+        var endTime = 18;
+        for (var _i = 0, _a = this.potentialDatesArray; _i < _a.length; _i++) {
+            var potential = _a[_i];
+            if (potential.id === potentialDateId) {
+                startTime = this.getHours(potential.start_date);
+                endTime = this.getHours(potential.end_date);
+            }
+        }
         this.isEditingPotentialDate = true;
         this.mEditingPotentialTimeId = potentialDateId;
-        this.timeRange = [9, 10];
+        this.timeRange = [startTime, endTime];
+    };
+    MeetingDateComponent.prototype.getHours = function (date) {
+        return (new Date(date)).getHours();
     };
     MeetingDateComponent.prototype.resetValues = function () {
         this.mEditingPotentialTimeId = null;
@@ -1280,21 +1332,25 @@ var MeetingListComponent = (function () {
         this.meetingsService = meetingsService;
         this.authService = authService;
         this.cd = cd;
+        this.hasOpenedMeeting = false;
+        this.hasClosedMeeting = false;
     }
     MeetingListComponent.prototype.ngOnInit = function () {
+        console.log("ngOnInit");
     };
     MeetingListComponent.prototype.ngAfterViewInit = function () {
+        console.log("ngAfterViewInit");
         this.onRefreshRequested();
     };
     MeetingListComponent.prototype.onRefreshRequested = function () {
         var _this = this;
         console.log("onRefreshRequested");
         var user = this.authService.getConnectedUser();
-        console.log("ngAfterViewInit, user : ", user);
+        console.log("onRefreshRequested, user : ", user);
         this.onUserObtained(user);
         if (user == null) {
             this.connectedUserSubscription = this.authService.getConnectedUserObservable().subscribe(function (user) {
-                console.log("getConnectedUser");
+                console.log("onRefreshRequested, getConnectedUser");
                 _this.onUserObtained(user);
             });
         }
@@ -1309,7 +1365,10 @@ var MeetingListComponent = (function () {
         var _this = this;
         this.subscription = this.meetingsService.getAllMeetingsForCoachId(coachId).subscribe(function (meetings) {
             console.log("got meetings for coach", meetings);
+            _this.meetingsArray = meetings;
             _this.meetings = __WEBPACK_IMPORTED_MODULE_2_rxjs__["Observable"].of(meetings);
+            _this.getOpenedMeetings();
+            _this.getClosedMeetings();
             _this.cd.detectChanges();
         });
     };
@@ -1317,7 +1376,10 @@ var MeetingListComponent = (function () {
         var _this = this;
         this.subscription = this.meetingsService.getAllMeetingsForCoacheeId(coacheeId).subscribe(function (meetings) {
             console.log("got meetings for coachee", meetings);
+            _this.meetingsArray = meetings;
             _this.meetings = __WEBPACK_IMPORTED_MODULE_2_rxjs__["Observable"].of(meetings);
+            _this.getOpenedMeetings();
+            _this.getClosedMeetings();
             _this.cd.detectChanges();
         });
     };
@@ -1347,13 +1409,49 @@ var MeetingListComponent = (function () {
                 return;
             }
             // 1) create a new meeting
-            // 2) redirect to our MeetingDateComponent
-            _this.meetingsService.createMeeting(user.id).subscribe(function (meeting) {
+            // 2) refresh our user to have a correct number of available sessions
+            // 3) redirect to our MeetingDateComponent
+            _this.meetingsService.createMeeting(user.id).flatMap(function (meeting) {
+                console.log('goToDate, meeting created');
+                //meeting created, now fetch user
+                return _this.authService.refreshConnectedUser().flatMap(function (user) {
+                    console.log('goToDate, user refreshed');
+                    return __WEBPACK_IMPORTED_MODULE_2_rxjs__["Observable"].of(meeting);
+                });
+            }).subscribe(function (meeting) {
                 // TODO display a loader
-                console.log('meeting created, go to setup dates');
+                console.log('goToDate, go to setup dates');
                 _this.router.navigate(['/date', meeting.id]);
             });
         });
+    };
+    MeetingListComponent.prototype.getOpenedMeetings = function () {
+        console.log('getOpenedMeetings');
+        if (this.meetingsArray != null) {
+            var opened = [];
+            for (var _i = 0, _a = this.meetingsArray; _i < _a.length; _i++) {
+                var meeting = _a[_i];
+                if (meeting.isOpen) {
+                    opened.push(meeting);
+                    this.hasOpenedMeeting = true;
+                }
+            }
+            this.meetingsOpened = __WEBPACK_IMPORTED_MODULE_2_rxjs__["Observable"].of(opened);
+        }
+    };
+    MeetingListComponent.prototype.getClosedMeetings = function () {
+        console.log('getClosedMeetings');
+        if (this.meetingsArray != null) {
+            var closed = [];
+            for (var _i = 0, _a = this.meetingsArray; _i < _a.length; _i++) {
+                var meeting = _a[_i];
+                if (!meeting.isOpen) {
+                    closed.push(meeting);
+                    this.hasClosedMeeting = true;
+                }
+            }
+            this.meetingsClosed = __WEBPACK_IMPORTED_MODULE_2_rxjs__["Observable"].of(closed);
+        }
     };
     MeetingListComponent.prototype.ngOnDestroy = function () {
         if (this.subscription) {
@@ -2486,42 +2584,95 @@ var MeetingItemCoacheeComponent = (function () {
         this.coachCoacheeService = coachCoacheeService;
         this.cd = cd;
         this.potentialDatePosted = new __WEBPACK_IMPORTED_MODULE_0__angular_core__["EventEmitter"]();
+        this.months = ['Jan', 'Feb', 'Mar', 'Avr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     }
     MeetingItemCoacheeComponent.prototype.ngOnInit = function () {
         this.coach = this.meeting.coach;
         console.log("ngOnInit, coach : ", this.coach);
-        this.loadReview();
         this.loadMeetingPotentialTimes();
+        this.getGoal();
+        this.getReview();
     };
     MeetingItemCoacheeComponent.prototype.onPreMeetingReviewPosted = function (meeting) {
         console.log("onPreMeetingReviewPosted");
-        this.loadReview();
+        this.getReview();
     };
     MeetingItemCoacheeComponent.prototype.onPotentialDatePosted = function (date) {
         console.log("onPotentialDatePosted");
         this.potentialDatePosted.emit(date);
     };
-    MeetingItemCoacheeComponent.prototype.loadReview = function () {
-        var _this = this;
-        console.log("loadReview");
-        this.coachCoacheeService.getMeetingReviews(this.meeting.id).subscribe(function (reviews) {
-            console.log("loadReview, reviews obtained");
-            _this.hasSomeReviews = __WEBPACK_IMPORTED_MODULE_3_rxjs__["Observable"].of(reviews != null);
-            _this.reviews = __WEBPACK_IMPORTED_MODULE_3_rxjs__["Observable"].of(reviews);
-            _this.cd.detectChanges();
-        }, function (error) {
-            console.log('loadReview error', error);
-        });
-    };
     MeetingItemCoacheeComponent.prototype.loadMeetingPotentialTimes = function () {
         var _this = this;
+        this.loading = true;
         this.coachCoacheeService.getMeetingPotentialTimes(this.meeting.id).subscribe(function (dates) {
             console.log("potential dates obtained, ", dates);
             _this.potentialDates = __WEBPACK_IMPORTED_MODULE_3_rxjs__["Observable"].of(dates);
             _this.cd.detectChanges();
+            _this.loading = false;
         }, function (error) {
             console.log('get potentials dates error', error);
         });
+    };
+    MeetingItemCoacheeComponent.prototype.getHours = function (date) {
+        return (new Date(date)).getHours();
+    };
+    MeetingItemCoacheeComponent.prototype.getDate = function (date) {
+        return (new Date(date)).getDate() + ' ' + this.months[(new Date(date)).getMonth()];
+    };
+    MeetingItemCoacheeComponent.prototype.getGoal = function () {
+        var _this = this;
+        this.loading = true;
+        this.coachCoacheeService.getMeetingGoal(this.meeting.id).subscribe(function (reviews) {
+            console.log("getMeetingGoal, got goal : ", reviews);
+            if (reviews != null)
+                _this.goal = reviews[0].comment;
+            else
+                _this.goal = null;
+            _this.cd.detectChanges();
+            _this.hasGoal = (_this.goal != null);
+            _this.loading = false;
+        }, function (error) {
+            console.log('getMeetingGoal error', error);
+            //this.displayErrorPostingReview = true;
+        });
+    };
+    MeetingItemCoacheeComponent.prototype.getReviewValue = function () {
+        var _this = this;
+        this.loading = true;
+        this.coachCoacheeService.getMeetingValue(this.meeting.id).subscribe(function (reviews) {
+            console.log("getMeetingValue, got goal : ", reviews);
+            if (reviews != null)
+                _this.reviewValue = reviews[0].comment;
+            else
+                _this.reviewValue = null;
+            _this.cd.detectChanges();
+            _this.hasValue = (_this.reviewValue != null);
+            _this.loading = false;
+        }, function (error) {
+            console.log('getMeetingValue error', error);
+            //this.displayErrorPostingReview = true;
+        });
+    };
+    MeetingItemCoacheeComponent.prototype.getReviewNextStep = function () {
+        var _this = this;
+        this.loading = true;
+        this.coachCoacheeService.getMeetingNextStep(this.meeting.id).subscribe(function (reviews) {
+            console.log("getMeetingNextStep, got goal : ", reviews);
+            if (reviews != null)
+                _this.reviewNextStep = reviews[0].comment;
+            else
+                _this.reviewNextStep = null;
+            _this.cd.detectChanges();
+            _this.hasNextStep = (_this.reviewNextStep != null);
+            _this.loading = false;
+        }, function (error) {
+            console.log('getMeetingNextStep error', error);
+            //this.displayErrorPostingReview = true;
+        });
+    };
+    MeetingItemCoacheeComponent.prototype.getReview = function () {
+        this.getReviewValue();
+        this.getReviewNextStep();
     };
     MeetingItemCoacheeComponent.prototype.goToModifyDate = function (meetingId) {
         this.router.navigate(['/date', meetingId]);
@@ -2687,7 +2838,7 @@ var PostMeetingComponent = (function () {
     PostMeetingComponent.prototype.submitMeetingReview = function () {
         console.log("submitMeetingReview form : ", this.form.value);
         this.submitMeetingValue(this.form.value.session_value);
-        this.submitMeetingValue(this.form.value.next_step);
+        this.submitMeetingNextStep(this.form.value.next_step);
     };
     PostMeetingComponent.prototype.submitMeetingValue = function (comment) {
         var _this = this;
@@ -3067,6 +3218,42 @@ var CoachCoacheeService = (function () {
             return json;
         });
     };
+    //get all MeetingReview for context == SESSION_GOAL
+    CoachCoacheeService.prototype.getMeetingGoal = function (meetingId) {
+        console.log("getMeetingGoal");
+        var searchParams = new __WEBPACK_IMPORTED_MODULE_1__angular_http__["b" /* URLSearchParams */]();
+        searchParams.set('type', __WEBPACK_IMPORTED_MODULE_3__model_MeetingReview__["b" /* MEETING_REVIEW_TYPE_SESSION_GOAL */]);
+        var param = [meetingId];
+        return this.apiService.getWithSearchParams(__WEBPACK_IMPORTED_MODULE_2__auth_service__["a" /* AuthService */].GET_MEETING_REVIEWS, param, searchParams).map(function (response) {
+            var json = response.json();
+            console.log("getMeetingGoal, response json : ", json);
+            return json;
+        });
+    };
+    //get all MeetingReview for context == SESSION_VALUE
+    CoachCoacheeService.prototype.getMeetingValue = function (meetingId) {
+        console.log("getMeetingGoal");
+        var searchParams = new __WEBPACK_IMPORTED_MODULE_1__angular_http__["b" /* URLSearchParams */]();
+        searchParams.set('type', __WEBPACK_IMPORTED_MODULE_3__model_MeetingReview__["c" /* MEETING_REVIEW_TYPE_SESSION_VALUE */]);
+        var param = [meetingId];
+        return this.apiService.getWithSearchParams(__WEBPACK_IMPORTED_MODULE_2__auth_service__["a" /* AuthService */].GET_MEETING_REVIEWS, param, searchParams).map(function (response) {
+            var json = response.json();
+            console.log("getMeetingValue, response json : ", json);
+            return json;
+        });
+    };
+    //get all MeetingReview for context == SESSION_NEXT_STEP
+    CoachCoacheeService.prototype.getMeetingNextStep = function (meetingId) {
+        console.log("getMeetingGoal");
+        var searchParams = new __WEBPACK_IMPORTED_MODULE_1__angular_http__["b" /* URLSearchParams */]();
+        searchParams.set('type', __WEBPACK_IMPORTED_MODULE_3__model_MeetingReview__["d" /* MEETING_REVIEW_TYPE_SESSION_NEXT_STEP */]);
+        var param = [meetingId];
+        return this.apiService.getWithSearchParams(__WEBPACK_IMPORTED_MODULE_2__auth_service__["a" /* AuthService */].GET_MEETING_REVIEWS, param, searchParams).map(function (response) {
+            var json = response.json();
+            console.log("getMeetingNextStep, response json : ", json);
+            return json;
+        });
+    };
     //add review for type SESSION_CONTEXT
     CoachCoacheeService.prototype.addAContextForMeeting = function (meetingId, context) {
         console.log("addAContextToMeeting, meetingId %s, comment : %s", meetingId, context);
@@ -3288,7 +3475,7 @@ exports = module.exports = __webpack_require__(14)();
 
 
 // module
-exports.push([module.i, "/*#main_container {\n  padding:32px;\n}\n\n#form_container {\n  padding: 32px;\n  max-width: 50%;\n}*/\n\nlabel{\n  color: var(--main-white-color);\n  font-size: 20px;\n  font-weight: 300;\n  opacity: .6;\n}\n\ninput[type=\"password\"],\ninput[type=\"password\"]:focus:not([readonly]),\ninput[type=\"email\"],\ninput[type=\"email\"]:focus:not([readonly]),\ntextarea,\ntextarea:focus:not([readonly]){\n  border: none !important;\n  box-shadow: none !important;\n  box-sizing: border-box;\n  background-color: rgba(255, 255, 255, .6);\n  border-radius: 8px;\n  padding: 16px !important;\n}\n\nbutton[type=\"submit\"]{\n  background-color: #46b0ff;\n  border: none;\n  border-radius: 100%;\n  width: 66px;\n  height: 66px;\n  font-size: 24px;\n  font-weight: 300;\n}\n\nbutton[type=\"submit\"]:disabled{\n  opacity: .5;\n}\n", ""]);
+exports.push([module.i, "/*#main_container {\n  padding:32px;\n}\n\n#form_container {\n  padding: 32px;\n  max-width: 50%;\n}*/\n\nlabel{\n  color: var(--main-white-color);\n  font-size: 20px;\n  font-weight: 300;\n  opacity: .6;\n}\n\ninput[type=\"password\"],\ninput[type=\"password\"]:focus:not([readonly]),\ninput[type=\"email\"],\ninput[type=\"email\"]:focus:not([readonly]),\ntextarea,\ntextarea:focus:not([readonly]){\n  border: none !important;\n  box-shadow: none !important;\n  box-sizing: border-box;\n  background-color: rgba(255, 255, 255, .6);\n  border-radius: 8px;\n  padding: 16px !important;\n}\n\nbutton[type=\"submit\"]{\n  background-color: #46b0ff;\n  border: none;\n  border-radius: 100%;\n  width: 66px;\n  height: 66px;\n  font-size: 24px;\n  font-weight: 300;\n}\n\nbutton[type=\"submit\"]:hover{\n  box-shadow: 0 2px 5px 0 rgba(0, 0, 0, 0.16), 0 2px 10px 0 rgba(0, 0, 0, 0.12);\n}\n\nbutton[type=\"submit\"]:disabled{\n  opacity: .5;\n}\n", ""]);
 
 // exports
 
@@ -3360,7 +3547,7 @@ exports = module.exports = __webpack_require__(14)();
 
 
 // module
-exports.push([module.i, ".btn-small{\n  padding: 4px 8px;\n  font-size: 12px;\n  min-width: auto;\n}\n\nbutton{\n  margin: 0;\n}\n\na:hover,\na:focus{\n  color: var(--main-electric-blue) !important;\n}\n\n.card-content, .card-reveal {\n  padding: 0;\n}\n\n.meeting-item{\n  padding: 0;\n  margin: 32px 0;\n}\n\n.meeting-item-header,\n.meeting-item-footer{\n  padding: 16px;\n}\n\n.meeting-item-seance-number{\n  margin: 0;\n  color: #000;\n  font-weight: 600;\n}\n\n.meeting-item-coach{\n  margin-top: 2px;\n  margin-bottom: 0;\n}\n\n.meeting-item-coach-avatar{\n  height: 44px;\n}\n\n.meeting-item-body{\n  display: -webkit-box;\n  display: -ms-flexbox;\n  display: flex;\n  background-color: var(--main-electric-blue);\n  color: #FFF;\n  text-align: center;\n  height: 192px;\n  padding: 0 16px;\n  -ms-flex-line-pack: center;\n      align-content: center;\n  -webkit-box-orient: vertical;\n  -webkit-box-direction: normal;\n      -ms-flex-direction: column;\n          flex-direction: column;\n  -webkit-box-flex: 1;\n      -ms-flex-positive: 1;\n          flex-grow: 1;\n  -webkit-box-pack: center;\n      -ms-flex-pack: center;\n          justify-content: center;\n  -webkit-box-align: center;\n      -ms-flex-align: center;\n          align-items: center;\n}\n\n.closed .meeting-item-body{\n  background-color: var(--main-dark-blue);\n}\n\n.meeting-item-date{\n  margin-top: 0;\n  margin-bottom: 16px;\n}\n\n.meeting-item-hour{\n  margin: 0;\n}\n\n.meeting-item-objectif{\n  min-height: 64px;\n}\n\n.meeting-item-footer-buttons,\n.meeting-item-header{\n  display: -webkit-box;\n  display: -ms-flexbox;\n  display: flex;\n  -webkit-box-orient: horizontal;\n  -webkit-box-direction: normal;\n      -ms-flex-direction: row;\n          flex-direction: row;\n  -webkit-box-flex: 1;\n      -ms-flex-positive: 1;\n          flex-grow: 1;\n  -webkit-box-align: center;\n      -ms-flex-align: center;\n          align-items: center;\n  -webkit-box-pack: justify;\n      -ms-flex-pack: justify;\n          justify-content: space-between;\n  -ms-flex-line-pack: stretch;\n      align-content: stretch;\n}\n\n.meeting-review-body{\n  padding: 16px;\n  padding-top: 0;\n}\n\n.meeting-review-body .btn-green{\n  margin-bottom: 32px;\n  margin-top: 0;\n}\n\n.meeting-review-close-button{\n  position: absolute;\n  bottom: 16px;\n  right: 16px;\n  cursor: pointer;\n  margin: 0;\n}\n", ""]);
+exports.push([module.i, "button{\n  margin: 0;\n}\n\na:hover,\na:focus{\n  color: var(--main-electric-blue) !important;\n}\n\np {\n  margin: 0;\n}\n\n.card-content, .card-reveal {\n  padding: 0;\n}\n\n.meeting-item{\n  margin: 0;\n  padding: 0 !important;\n}\n\n.meeting-item > .row {\n  margin: 0;\n}\n\n.meeting-item-seance-number{\n  margin: 0;\n  color: #000;\n  font-weight: 600;\n}\n\n.meeting-item-coach{\n  margin-top: 2px;\n  margin-bottom: 0;\n}\n\n.meeting-item-coach-avatar{\n  height: 52px;\n  margin-right: 16px;\n}\n\n.meeting-item-date-hour{\n  margin-left: 16px;\n}\n\n.meeting-item-header,\n.meeting-item-body,\n.meeting-item-date{\n  display: -webkit-box;\n  display: -ms-flexbox;\n  display: flex;\n  -webkit-box-orient: horizontal;\n  -webkit-box-direction: normal;\n      -ms-flex-direction: row;\n          flex-direction: row;\n  -webkit-box-flex: 1;\n      -ms-flex-positive: 1;\n          flex-grow: 1;\n  -webkit-box-align: center;\n      -ms-flex-align: center;\n          align-items: center;\n  padding: 8px;\n}\n\n.meeting-item-header {\n  -webkit-box-pack: start;\n      -ms-flex-pack: start;\n          justify-content: flex-start;\n}\n\n.meeting-item-header > div {\n  display: -webkit-box;\n  display: -ms-flexbox;\n  display: flex;\n  -webkit-box-orient: horizontal;\n  -webkit-box-direction: normal;\n      -ms-flex-direction: row;\n          flex-direction: row;\n  -webkit-box-flex: 1;\n      -ms-flex-positive: 1;\n          flex-grow: 1;\n  -webkit-box-align: center;\n      -ms-flex-align: center;\n          align-items: center;\n}\n\n.meeting-item-date{\n  -ms-flex-pack: distribute;\n      justify-content: space-around;\n  font-size: 22px;\n}\n\n.meeting-item-body{\n  -webkit-box-pack: justify;\n      -ms-flex-pack: justify;\n          justify-content: space-between;\n}\n\n.meeting-item-body,\n.meeting-item-date {\n  padding: 24px 0;\n}\n\n.meeting-item.closed .meeting-item-header,\n.meeting-item.closed .meeting-item-body,\n.meeting-item.closed .meeting-item-date{\n  -webkit-box-align: start;\n      -ms-flex-align: start;\n          align-items: flex-start;\n}\n\n.meeting-item.closed .meeting-item-body {\n  -webkit-box-orient: vertical;\n  -webkit-box-direction: normal;\n      -ms-flex-direction: column;\n          flex-direction: column;\n  -webkit-box-pack: start;\n      -ms-flex-pack: start;\n          justify-content: flex-start;\n  -ms-flex-line-pack: start;\n      align-content: flex-start;\n}\n\n.meeting-review {\n  width: 100%;\n}\n\n@media screen and (max-device-width: 1240px) and (min-device-width: 720px) {\n  .meeting-item-date{\n    -webkit-box-pack: end;\n        -ms-flex-pack: end;\n            justify-content: flex-end;\n  }\n}\n\n.preloader-wrapper{\n  left: 50%;\n  margin-left: -30px;\n  margin: 32px 0;\n}\n", ""]);
 
 // exports
 
@@ -3378,7 +3565,7 @@ exports = module.exports = __webpack_require__(14)();
 
 
 // module
-exports.push([module.i, ".nb-seances{\n  color: var(--main-electric-blue);\n}\n\n.add-meeting-btn{\n  background-color: var(--main-electric-blue);\n  margin-left: 16px;\n}\n\n", ""]);
+exports.push([module.i, ".nb-seances{\n  color: var(--main-electric-blue);\n}\n\n.add-meeting-btn{\n  background-color: var(--main-electric-blue);\n  margin-left: 16px;\n}\n\nrb-meeting-item-coachee.collection-item{\n  padding: 0;\n}\n\n.no-meeting {\n  padding: 32px 0;\n}\n", ""]);
 
 // exports
 
@@ -3414,7 +3601,7 @@ exports = module.exports = __webpack_require__(14)();
 
 
 // module
-exports.push([module.i, "", ""]);
+exports.push([module.i, ".btn-basic{\n  margin-top: 0;\n}\n\nform {\n  padding:0 !important;\n}\n", ""]);
 
 // exports
 
@@ -3553,7 +3740,7 @@ module.exports = module.exports.toString();
 /***/ 939:
 /***/ (function(module, exports) {
 
-module.exports = "<!--<rb-header></rb-header>-->\n<!--<div class=\"container\">-->\n  <router-outlet></router-outlet>\n<!--</div>-->\n"
+module.exports = "<router-outlet></router-outlet>\n"
 
 /***/ }),
 
@@ -3595,7 +3782,7 @@ module.exports = "<div id=\"main_container\">\n\n  <div class=\"section\">\n    
 /***/ 945:
 /***/ (function(module, exports) {
 
-module.exports = "<rb-header></rb-header>\n<div class=\"container\">\n\n  <er-pre-meeting [meetingId]=\"meetingId\" (meetingGoal)=\"onGoalValueUpdated($event)\" (meetingContext)=\"onContextValueUpdated($event)\"></er-pre-meeting>\n\n  <h4 class=\"header-date-picker\">Indiquez vos disponiblités grâce au calendrier ci dessous.\n  <br>Cliquez sur terminé lorsque vous avez validé toutes vos plages disponibles.</h4>\n\n  <!--<div class=\"section\" *ngIf=\"(connectedUser | async)?.status == 2\">-->\n\n  <!--Input Date Picker-->\n  <div id=\"input-date-picker\">\n    <div class=\"row text-center\">\n      <div class=\"col-sm-12 col-lg-5\">\n        <!--<input type=\"date\" class=\"datepicker\" placeholder=\"Cliquez ici\">-->\n        <div id=\"datepicker-container\" class=\"z-depth-2\">\n          <ngb-datepicker #dp [(ngModel)]=\"dateModel\"\n                          (navigate)=\"date = $event.next\"\n                          navigation=\"arrows\"\n                          minDate=\"{{ dateModel }}\"\n                          [dayTemplate]=\"customDay\"\n                          [markDisabled]=\"isDisabled\"\n                          [disabled]=\"isEditingPotentialDate\">\n          </ngb-datepicker>\n\n          <template #customDay let-date=\"date\" let-currentMonth=\"currentMonth\" let-selected=\"selected\" let-disabled=\"disabled\">\n            <span class=\"custom-day\"\n                  [class.has-potential-date]=\"hasPotentialDate(date)\"\n                  [class.bg-primary]=\"selected\"\n                  [class.hidden]=\"disabled\"\n                  [class.text-muted]=\"disabled\">\n              {{ date.day }}\n            </span>\n          </template>\n\n          <div id=\"potential-dates\" class=\"text-left\" *ngIf=\"dateModel && hasPotentialDate(dateModel)\">\n            <p>Disponibilités ajoutées</p>\n            <!-- list of potential dates -->\n            <div class=\"potential-date\" *ngFor=\"let date of potentialDates | async\">\n              <div class=\"potential-date-content\" *ngIf=\"compareDates(stringToDate(date.start_date), dateModel)\">\n                <div class=\"blue-point\"></div>\n                <p class=\"potential-date-timeslot\">{{date.start_date | date:'shortTime'}} - {{date.end_date | date:'shortTime'}}</p>\n                <a class=\"modify-timeslot\" (click)=\"modifyPotentialDate(date.id)\"><i class=\"material-icons\">create</i></a>\n                <a class=\"delete-timeslot\" (click)=\"unbookAdate(date.id)\"><i class=\"material-icons\">delete_sweep</i></a>\n              </div><!--end ngIf-->\n            </div><!--end potential-date-->\n          </div><!--end potential-dates-->\n        </div><!--end datepicker-container-->\n\n        <p>Vous pouvez modifier les plages validées ci-dessus</p>\n      </div>\n\n      <div class=\"col-sm-12 col-lg-7\">\n        <!--<ngb-timepicker #tp [(ngModel)]=\"timeModel\" [minuteStep]=\"15\"></ngb-timepicker>-->\n        <div>\n          <h5 *ngIf=\"dateModel\">{{ dateToString(dateModel) }}</h5>\n          <h2 class=\"plage-horaire\">{{timeRange[0]}}:00 - {{timeRange[1]}}:00</h2>\n        </div>\n\n        <p-slider [(ngModel)]=\"timeRange\" [style]=\"{'width':'200px'}\" [range]=\"true\" [min]=\"7\" [max]=\"21\"></p-slider>\n\n        <p>Faites glisser pour sélectionner votre plage disponible, puis validez</p>\n\n        <div class=\"row\">\n          <div class=\"col-lg-12\">\n            <button class=\"btn-basic btn-plain btn-blue\" (click)=\"bookOrUpdateADate()\" [disabled]=\"dateModel==null\" *ngIf=\"!isEditingPotentialDate\">Valider</button>\n            <button class=\"btn-basic btn-plain btn-blue\" (click)=\"bookOrUpdateADate()\" [disabled]=\"dateModel==null\" *ngIf=\"isEditingPotentialDate\">Modifier</button>\n          </div>\n        </div>\n      </div>\n    </div><!--end row-->\n  </div><!--end input-datepicker-->\n\n  <h4 class=\"header-date-picker\">Veuillez renseigner les éléments de votre demande.</h4>\n\n  <div class=\"row\">\n    <div class=\"col-lg-12\">\n      <button class=\"btn-basic btn-blue\" (click)=\"finish()\" [disabled]=\"!canFinish()\" *ngIf=\"!isEditingPotentialDate\">Terminer</button>\n      <button class=\"btn-basic btn-blue\" (click)=\"resetValues()\" [disabled]=\"dateModel==null\" *ngIf=\"isEditingPotentialDate\">Annuler</button>\n    </div>\n  </div>\n\n</div>\n\n<div id=\"card-alert_seance_book\" class=\"card red\" *ngIf=\"displayErrorBookingDate\">\n  <div class=\"card-content white-text\">\n    <p>Impossible de réserver votre séance</p>\n  </div>\n</div>\n"
+module.exports = "<rb-header></rb-header>\n<div class=\"container\">\n\n  <er-pre-meeting [meetingId]=\"meetingId\" (meetingGoal)=\"onGoalValueUpdated($event)\" (meetingContext)=\"onContextValueUpdated($event)\"></er-pre-meeting>\n\n  <h4 class=\"header-date-picker\">Indiquez vos disponiblités grâce au calendrier ci dessous.\n  <br>Cliquez sur terminé lorsque vous avez validé toutes vos plages disponibles.</h4>\n\n  <!--<div class=\"section\" *ngIf=\"(connectedUser | async)?.status == 2\">-->\n\n  <!--Input Date Picker-->\n  <div id=\"input-date-picker\">\n    <div class=\"row text-center\">\n      <div class=\"col-sm-12 col-lg-5\">\n        <!--<input type=\"date\" class=\"datepicker\" placeholder=\"Cliquez ici\">-->\n        <div id=\"datepicker-container\" class=\"z-depth-2\">\n          <ngb-datepicker #dp [(ngModel)]=\"dateModel\"\n                          (navigate)=\"date = $event.next\"\n                          navigation=\"arrows\"\n                          minDate=\"{{ dateModel }}\"\n                          [dayTemplate]=\"customDay\"\n                          [markDisabled]=\"isDisabled\"\n                          [disabled]=\"isEditingPotentialDate\">\n          </ngb-datepicker>\n\n          <template #customDay let-date=\"date\" let-currentMonth=\"currentMonth\" let-selected=\"selected\" let-disabled=\"disabled\">\n            <span class=\"custom-day\"\n                  [class.has-potential-date]=\"hasPotentialDate(date)\"\n                  [class.bg-primary]=\"selected\"\n                  [class.hidden]=\"disabled\"\n                  [class.text-muted]=\"disabled\">\n              {{ date.day }}\n            </span>\n          </template>\n\n          <div id=\"potential-dates\" class=\"text-left\" *ngIf=\"dateModel && hasPotentialDate(dateModel)\">\n            <p>Disponibilités ajoutées</p>\n            <!-- list of potential dates -->\n            <div class=\"potential-date\" *ngFor=\"let date of potentialDates | async\">\n              <div class=\"potential-date-content\" *ngIf=\"compareDates(stringToDate(date.start_date), dateModel)\">\n                <div class=\"blue-point\"></div>\n                <p class=\"potential-date-timeslot\">{{getHours(date.start_date)}}:00 - {{getHours(date.end_date)}}:00</p>\n                <a class=\"modify-timeslot\" (click)=\"modifyPotentialDate(date.id)\"><i class=\"material-icons\">create</i></a>\n                <a class=\"delete-timeslot\" (click)=\"unbookAdate(date.id)\"><i class=\"material-icons\">delete_sweep</i></a>\n              </div><!--end ngIf-->\n            </div><!--end potential-date-->\n          </div><!--end potential-dates-->\n        </div><!--end datepicker-container-->\n\n        <p>Vous pouvez modifier les plages validées ci-dessus</p>\n      </div>\n\n      <div class=\"col-sm-12 col-lg-7\">\n        <!--<ngb-timepicker #tp [(ngModel)]=\"timeModel\" [minuteStep]=\"15\"></ngb-timepicker>-->\n        <div>\n          <h5 *ngIf=\"dateModel\">{{ dateToString(dateModel) }}</h5>\n          <h2 class=\"plage-horaire\">{{timeRange[0]}}:00 - {{timeRange[1]}}:00</h2>\n        </div>\n\n        <p-slider [(ngModel)]=\"timeRange\" [style]=\"{'width':'200px'}\" [range]=\"true\" [min]=\"7\" [max]=\"21\"></p-slider>\n\n        <p>Faites glisser pour sélectionner votre plage disponible, puis validez</p>\n\n        <div class=\"row\">\n          <div class=\"col-lg-12\">\n            <button class=\"btn-basic btn-plain btn-blue\" (click)=\"bookOrUpdateADate()\" [disabled]=\"dateModel==null\" *ngIf=\"!isEditingPotentialDate\">Valider</button>\n            <button class=\"btn-basic btn-plain btn-blue\" (click)=\"bookOrUpdateADate()\" [disabled]=\"dateModel==null\" *ngIf=\"isEditingPotentialDate\">Modifier</button>\n          </div>\n          <div class=\"col-lg-12\">\n            <button class=\"btn-basic btn-blue\" (click)=\"resetValues()\" [disabled]=\"dateModel==null\" *ngIf=\"isEditingPotentialDate\">Annuler</button>\n          </div>\n        </div>\n      </div>\n    </div><!--end row-->\n  </div><!--end input-datepicker-->\n\n  <div class=\"row\">\n    <div class=\"col-lg-12 text-center\">\n      <button class=\"btn-basic btn-blue\" (click)=\"finish()\" [disabled]=\"!canFinish()\" *ngIf=\"!isEditingPotentialDate\">Terminer</button>\n    </div>\n  </div>\n\n</div>\n\n<div id=\"card-alert_seance_book\" class=\"card red\" *ngIf=\"displayErrorBookingDate\">\n  <div class=\"card-content white-text\">\n    <p>Impossible de réserver votre séance</p>\n  </div>\n</div>\n"
 
 /***/ }),
 
@@ -3609,14 +3796,14 @@ module.exports = "<div class=\"card\">\n  <div class=\"card-content\">\n    <spa
 /***/ 947:
 /***/ (function(module, exports) {
 
-module.exports = "<div class=\"meeting-item col-lg-12 card\">\n  <!--<span class=\"card-title\">Vous avez choisi {{ coach.display_name }} pour être votre coach.</span>-->\n\n  <div [class.closed]=\"!meeting.isOpen\" class=\"card-content\">\n    <div class=\"meeting-item-header\">\n      <div>\n        <p class=\"meeting-item-seance-number black-text\">Séance N</p>\n        <p class=\"meeting-item-coach\" *ngIf=\"meeting.coach\">{{ meeting.coach.display_name }}</p>\n        <p class=\"meeting-item-coach\" *ngIf=\"!meeting.coach\">Un coach vous sera bientôt attribué</p>\n      </div>\n\n      <div>\n        <!-- image coach-->\n        <img *ngIf=\"meeting.coach\" class=\"meeting-item-coach-avatar circle img-responsive\" alt=\"coach\" [src]=\"meeting.coach.avatar_url\">\n      </div>\n    </div>\n\n    <div class=\"meeting-item-body\" *ngIf=\"meeting.agreed_date \">\n      <h4 class=\"meeting-item-date\">{{meeting.agreed_date.start_date | date}}</h4>\n      <p class=\"meeting-item-hour\">{{meeting.agreed_date.start_date | date:'shortTime'}}</p>\n    </div>\n\n    <div class=\"meeting-item-body\" *ngIf=\"!meeting.agreed_date\">\n      <button class=\"btn-basic\" (click)=\"goToModifyDate(meeting.id)\">Modifier</button>\n    </div>\n\n    <div class=\"meeting-item-footer\">\n      <div class=\"meeting-item-objectif\">\n        <p><span class=\"black-text bold\">Objectif: </span></p>\n      </div>\n\n      <div class=\"meeting-item-footer-buttons\">\n        <a *ngIf=\"meeting.isOpen\">ANNULER</a>\n        <a *ngIf=\"!meeting.isOpen\" class=\"activator\">CONSULTER</a>\n\n        <button class=\"btn-basic btn-plain btn-red btn-small\" *ngIf=\"meeting.isOpen\" (click)=\"goToModifyDate(meeting.id)\">OBJECTIF</button>\n\n        <button class=\"btn-basic btn-plain btn-blue btn-small\" *ngIf=\"meeting.isOpen\" (click)=\"bookADate()\">LANCER</button>\n      </div>\n    </div>\n\n    <!-- check if you have some reviews-->\n    <!--<div class=\"container\" *ngIf=\"(hasSomeReviews | async)\">-->\n      <!--&lt;!&ndash; list of reviews &ndash;&gt;-->\n      <!--<div *ngFor=\"let review of reviews | async\">-->\n        <!--<div class=\"card\">-->\n          <!--<div class=\"card-content\">-->\n            <!--<span class=\"card-title\">Meeting Review</span>-->\n            <!--<div class=\"list-group-item-text\">at : {{review.date}}</div>-->\n            <!--<div class=\"list-group-item-text\">comment : {{review.comment}}</div>-->\n            <!--<div class=\"list-group-item-text\">score : {{review.score}}</div>-->\n          <!--</div>-->\n        <!--</div>-->\n      <!--</div>-->\n    <!--</div>&lt;!&ndash; end check&ndash;&gt;-->\n  <!--</div>&lt;!&ndash;end meeting open&ndash;&gt;-->\n  <!--&lt;!&ndash; add a pre meeting review &ndash;&gt;-->\n  <!--<div class=\"container\">-->\n  <!--<rb-pre-meeting *ngIf=\"!(hasSomeReviews | async)\" [meeting]=\"meeting\"-->\n  <!--(reviewPosted)=\"onPreMeetingReviewPosted($event)\"-->\n  <!--&gt;</rb-pre-meeting>-->\n  </div><!--end card-content-->\n\n  <div *ngIf=\"!meeting.isOpen\" class=\"card-reveal meeting-review\">\n\n    <div class=\"meeting-item-header\">\n      <div>\n        <p class=\"meeting-item-seance-number\">Séance N</p>\n        <p class=\"meeting-item-coach\" *ngIf=\"meeting.coach\">{{ meeting.coach.display_name }}</p>\n        <p class=\"meeting-item-coach\" *ngIf=\"!meeting.coach\">Un coach vous sera bientôt attribué</p>\n      </div>\n\n      <div>\n        <img *ngIf=\"meeting.coach\" class=\"meeting-item-coach-avatar circle img-responsive\" alt=\"coach\" [src]=\"meeting.coach.avatar_url\">\n      </div>\n    </div>\n\n    <div class=\"meeting-review-body\">\n      <er-post-meeting></er-post-meeting>\n\n      <div>\n        <div class=\"btn-basic btn-plain btn-small btn-green\">FEEDBACK</div>\n\n        <p><span class=\"black-text bold\">Objectif: </span></p>\n        <br>\n        <p><span class=\"black-text bold\">En quoi la séance a-t-elle été utile? </span></p>\n        <br>\n        <p><span class=\"black-text bold\">Avec quoi êtes vous reparti? </span></p>\n      </div>\n    </div>\n\n    <span class=\"meeting-review-close-button card-title\"><i class=\"mdi-navigation-close\"></i></span>\n  </div>\n\n</div><!--end item-->\n\n\n"
+module.exports = "<div class=\"meeting-item col-lg-12\" [class.closed]=\"!meeting.isOpen\">\n  <!--<span class=\"card-title\">Vous avez choisi {{ coach.display_name }} pour être votre coach.</span>-->\n\n  <div class=\"preloader-wrapper active\" *ngIf=\"loading\">\n    <div class=\"spinner-layer spinner-blue-only\">\n      <div class=\"circle-clipper left\">\n        <div class=\"circle\"></div>\n      </div><div class=\"gap-patch\">\n      <div class=\"circle\"></div>\n    </div><div class=\"circle-clipper right\">\n      <div class=\"circle\"></div>\n    </div>\n    </div>\n  </div>\n\n  <div class=\"row\" *ngIf=\"!loading\">\n\n    <!-- COACH -->\n    <div class=\"meeting-item-header col-sm-4 col-md-4 col-lg-2\">\n      <div>\n        <div>\n          <!-- image coach-->\n          <img *ngIf=\"meeting.coach\" class=\"meeting-item-coach-avatar circle img-responsive\" alt=\"coach\" [src]=\"meeting.coach.avatar_url\">\n          <img *ngIf=\"!meeting.coach\" class=\"meeting-item-coach-avatar circle img-responsive\" alt=\"coach\" src=\"https://s-media-cache-ak0.pinimg.com/originals/af/25/49/af25490494d3338afef00869c59fdd37.png\">\n        </div>\n\n        <div>\n          <p class=\"meeting-item-coach\" *ngIf=\"meeting.coach\">{{ meeting.coach.display_name }}</p>\n          <p class=\"meeting-item-coach\" *ngIf=\"!meeting.coach\">Un coach vous sera bientôt attribué</p>\n        </div>\n      </div>\n    </div>\n\n    <!-- DATE -->\n    <div class=\"meeting-item-date col-sm-8 col-lg-3\">\n      <div *ngIf=\"meeting.agreed_date\">\n        <span class=\"meeting-item-date-date\">{{ getDate(meeting.agreed_date.start_date) }}</span>\n        <span class=\"meeting-item-date-hour\">{{ getHours(meeting.agreed_date.start_date) }}:00</span>\n      </div>\n\n      <button *ngIf=\"!meeting.agreed_date\" class=\"btn-basic btn-blue btn-small\" (click)=\"goToModifyDate(meeting.id)\">Modifier</button>\n    </div>\n\n    <!-- GOAL & REVIEW -->\n    <div class=\"meeting-item-body col-md-12 col-lg-7\">\n      <p class=\"meeting-item-goal\">\n        <span class=\"black-text bold\">Objectif: </span>\n        <span *ngIf=\"hasGoal\">{{ goal }}</span>\n        <span *ngIf=\"!hasGoal\" class=\"red-text\">Veuillez définir votre objectif.</span>\n      </p>\n\n      <div *ngIf=\"!meeting.isOpen\" class=\"meeting-review\">\n        <er-post-meeting *ngIf=\"!hasValue || !hasNextStep\" [meeting]=\"meeting\"></er-post-meeting>\n\n        <div *ngIf=\"hasValue && hasNextStep\">\n          <br>\n          <p><span class=\"black-text bold\">En quoi la séance a-t-elle été utile ? </span>{{ reviewValue }}</p>\n          <br>\n          <p><span class=\"black-text bold\">Avec quoi êtes vous reparti ? </span>{{ reviewNextStep }}</p>\n        </div>\n      </div><!--end meeting-review-->\n\n      <!--<a *ngIf=\"meeting.isOpen\">ANNULER</a>\n      <a *ngIf=\"!meeting.isOpen\" class=\"activator\">CONSULTER</a>-->\n      <button class=\"btn-basic btn-plain btn-red btn-small\" *ngIf=\"meeting.isOpen && !hasGoal\" (click)=\"goToModifyDate(meeting.id)\">OBJECTIF</button>\n      <button class=\"btn-basic btn-plain btn-blue btn-small\" *ngIf=\"meeting.isOpen && hasGoal\" (click)=\"null\" [disabled]=\"!meeting.agreed_date\">LANCER</button>\n    </div><!--end meeting-item-body-->\n\n  </div><!--end row-->\n\n</div><!--end meeting-item-->\n\n\n"
 
 /***/ }),
 
 /***/ 948:
 /***/ (function(module, exports) {
 
-module.exports = "<rb-header></rb-header>\n<div class=\"container\">\n  <div class=\"row\">\n    <div class=\"col s12\">\n\n      <div>\n        <h4 class=\"text-right\">Bonjour {{(user | async)?.display_name}}, il vous reste <span class=\"nb-seances\">{{ (meetings | async)?.length }}</span> séances</h4>\n        <p class=\"text-right\" *ngIf=\"isUserACoachee((user | async))\">\n          Planifier une nouvelle séance\n          <a class=\"btn-floating btn-large waves-effect waves-light add-meeting-btn\" (click)=\"goToDate()\">\n            <i class=\"material-icons\">add</i>\n          </a>\n        </p>\n      </div>\n\n      <!-- views for coach -->\n      <div *ngIf=\"isUserACoach((user | async))\">\n        <rb-meeting-item-coach *ngFor=\"let meeting of meetings | async\" [meeting]=\"meeting\"\n                               (meetingUpdated)=\"onRefreshRequested($event)\"></rb-meeting-item-coach>\n      </div>\n\n      <!-- views for coachee -->\n      <div *ngIf=\"isUserACoachee((user | async))\">\n        <div class=\"row\">\n          <rb-meeting-item-coachee class=\"col-lg-3\"\n                                   *ngFor=\"let meeting of meetings | async\"\n                                   [meeting]=\"meeting\"\n                                   (potentialDatePosted)=\"onRefreshRequested($event)\">\n          </rb-meeting-item-coachee>\n        </div>\n      </div>\n    </div>\n  </div>\n</div>\n\n"
+module.exports = "<rb-header></rb-header>\n\n<div class=\"container\">\n  <div class=\"row\">\n    <div class=\"col s12\">\n\n      <!-- welcome message for coachee -->\n      <div *ngIf=\"isUserACoachee((user | async))\">\n        <h4 class=\"text-right\">Il vous reste <span class=\"nb-seances\">{{(user | async)?.availableSessionsCount || 0}}</span> séance<span *ngIf=\"(user | async)?.availableSessionsCount > 1\">s</span></h4>\n        <p class=\"text-right\" *ngIf=\"(user | async)?.availableSessionsCount > 0\">\n          Planifier une nouvelle séance\n          <a class=\"btn-floating btn-large waves-effect waves-light add-meeting-btn\" (click)=\"goToDate()\">\n            <i class=\"material-icons\">add</i>\n          </a>\n        </p>\n      </div>\n\n      <!-- views for coach -->\n      <div *ngIf=\"isUserACoach((user | async))\">\n        <rb-meeting-item-coach *ngFor=\"let meeting of meetings | async\"\n                               [meeting]=\"meeting\"\n                               (meetingUpdated)=\"onRefreshRequested($event)\"></rb-meeting-item-coach>\n      </div>\n\n      <!-- views for coachee -->\n      <div *ngIf=\"isUserACoachee((user | async))\">\n\n        <div class=\"row\">\n          <h4 class=\"col-lg-12 black-text\">A venir</h4>\n          <div class=\"card collection col-lg-12\">\n\n            <div *ngIf=\"hasOpenedMeeting\">\n              <div class=\"collection-item\" *ngFor=\"let meeting of meetingsOpened | async\">\n                <rb-meeting-item-coachee *ngIf=\"meeting.isOpen\"\n                                         [meeting]=\"meeting\"\n                                         (potentialDatePosted)=\"onRefreshRequested($event)\">\n                </rb-meeting-item-coachee>\n              </div>\n            </div>\n\n            <div *ngIf=\"!hasOpenedMeeting\" class=\"collection-item text-center\">\n              <h5 class=\"no-meeting\">Vos séances à venir apparaîtront ici</h5>\n            </div>\n\n          </div><!--end card-->\n        </div>\n\n        <div class=\"row\">\n          <h4 class=\"col-lg-12 black-text\">Complétées</h4>\n          <div class=\"card collection col-lg-12\">\n\n            <div *ngIf=\"hasClosedMeeting\">\n              <div class=\"collection-item\" *ngFor=\"let meeting of meetingsClosed | async\">\n                <rb-meeting-item-coachee *ngIf=\"!meeting.isOpen\"\n                                         [meeting]=\"meeting\"\n                                         (potentialDatePosted)=\"onRefreshRequested($event)\">\n                </rb-meeting-item-coachee>\n              </div>\n            </div>\n\n            <div *ngIf=\"!hasClosedMeeting\" class=\"collection-item text-center\">\n              <h5 class=\"no-meeting\">Vos séances complétées apparaîtront ici</h5>\n            </div>\n\n          </div><!--end card-->\n        </div>\n\n      </div><!--end ngif-->\n    </div><!--end row-->\n  </div><!--end container-->\n</div>\n\n"
 
 /***/ }),
 
@@ -3630,7 +3817,7 @@ module.exports = "<h4 class=\"card-title\">Veuillez renseigner les éléments de
 /***/ 950:
 /***/ (function(module, exports) {
 
-module.exports = "\n\n<div id=\"card-alert_seance_book\" class=\"card red\" *ngIf=\"displayErrorReview\">\n  <div class=\"card-content white-text\">\n    <p>Impossible d'enregistrer votre commentaire</p>\n  </div>\n</div>\n\n<div class=\"card\">\n\n  <div class=\"card-content\">\n\n    <span class=\"card-title\">Ajouter des explications</span>\n\n    <form class=\"col s12\" [formGroup]=\"form\" (ngSubmit)=\"submitMeetingReview()\">\n      <div class=\"row\">\n        <div class=\"input-field col s12\">\n          <input id=\"session_value\" type=\"text\" formControlName=\"session_value\">\n          <label for=\"session_value\">En quoi la séance a-t-elle été utile ?</label>\n        </div>\n      </div>\n\n      <div class=\"row\">\n        <div class=\"input-field col s12\">\n          <input id=\"next_step\" type=\"text\" formControlName=\"next_step\">\n          <label for=\"next_step\">Avec quoi êtes-vous repartis ?</label>\n        </div>\n      </div>\n\n      <!-- submit btn -->\n      <div class=\"row\">\n        <div class=\"input-field col s12\">\n          <!--<button class=\"btn cyan waves-effect waves-light right\" type=\"submit\" name=\"action\" [disabled]=\"!form.valid\">-->\n          <!--Envoyer-->\n          <!--<i class=\"mdi-content-send right\"></i>-->\n          <!--</button>-->\n\n          <button class=\"btn cyan waves-effect waves-light right\" type=\"submit\" name=\"action\">\n            Envoyer\n            <i class=\"mdi-content-send right\"></i>\n          </button>\n        </div>\n      </div>\n\n    </form>\n\n  </div>\n</div>\n"
+module.exports = "\n\n<div id=\"card-alert_seance_book\" class=\"card red\" *ngIf=\"displayErrorReview\">\n  <div class=\"card-content white-text\">\n    <p>Impossible d'enregistrer votre commentaire</p>\n  </div>\n</div>\n\n<div>\n  <form class=\"col s12\" [formGroup]=\"form\" (ngSubmit)=\"submitMeetingReview()\">\n    <div class=\"row\">\n      <div class=\"input-field col s12\">\n        <input id=\"session_value\" type=\"text\" formControlName=\"session_value\">\n        <label for=\"session_value\">En quoi la séance a-t-elle été utile ?</label>\n      </div>\n    </div>\n\n    <div class=\"row\">\n      <div class=\"input-field col s12\">\n        <input id=\"next_step\" type=\"text\" formControlName=\"next_step\">\n        <label for=\"next_step\">Avec quoi êtes-vous repartis ?</label>\n      </div>\n    </div>\n\n    <!-- submit btn -->\n    <div class=\"row\">\n      <div class=\"input-field col s12\">\n        <!--<button class=\"btn cyan waves-effect waves-light right\" type=\"submit\" name=\"action\" [disabled]=\"!form.valid\">-->\n        <!--Envoyer-->\n        <!--<i class=\"mdi-content-send right\"></i>-->\n        <!--</button>-->\n\n        <button class=\"btn-basic btn-blue btn-small\" type=\"submit\" name=\"action\">Envoyer</button>\n      </div>\n    </div>\n  </form>\n</div>\n"
 
 /***/ }),
 
