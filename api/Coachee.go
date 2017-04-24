@@ -101,6 +101,8 @@ func getAllCoachees(ctx context.Context) ([]*Coachee, error) {
 
 //get all API coachees
 func GetAllAPICoachees(ctx context.Context) ([]*APICoachee, error) {
+	log.Debugf(ctx, "GetAllAPICoachees")
+
 	var coachees []*Coachee
 	keys, err := datastore.NewQuery("Coachee").GetAll(ctx, &coachees)
 	if err != nil {

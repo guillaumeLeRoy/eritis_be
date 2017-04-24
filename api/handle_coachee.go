@@ -51,11 +51,13 @@ func handleGetCoacheeForId(w http.ResponseWriter, r *http.Request, id string) {
 	key, err := datastore.DecodeKey(id)
 	if err != nil {
 		RespondErr(ctx, w, r, err, http.StatusBadRequest)
+		return
 	}
 
 	coach, err := GetAPICoachee(ctx, key)
 	if err != nil {
 		RespondErr(ctx, w, r, err, http.StatusInternalServerError)
+		return
 	}
 	Respond(ctx, w, r, coach, http.StatusOK)
 }
@@ -67,6 +69,7 @@ func handleGetAllCoachees(w http.ResponseWriter, r *http.Request) {
 	coachs, err := GetAllAPICoachees(ctx)
 	if err != nil {
 		RespondErr(ctx, w, r, err, http.StatusInternalServerError)
+		return
 	}
 	Respond(ctx, w, r, coachs, http.StatusOK)
 }
@@ -78,11 +81,13 @@ func handleUpdateCoacheeForId(w http.ResponseWriter, r *http.Request, id string)
 	key, err := datastore.DecodeKey(id)
 	if err != nil {
 		RespondErr(ctx, w, r, err, http.StatusBadRequest)
+		return
 	}
 
 	coachee, err := GetAPICoachee(ctx, key)
 	if err != nil {
 		RespondErr(ctx, w, r, err, http.StatusInternalServerError)
+		return
 	}
 
 	var updateCoachee struct {
@@ -118,33 +123,39 @@ func handleUpdateSelectedCoach(w http.ResponseWriter, r *http.Request, coacheeId
 	coacheeKey, err := datastore.DecodeKey(coacheeId)
 	if err != nil {
 		RespondErr(ctx, w, r, err, http.StatusBadRequest)
+		return
 	}
 
 	coachee, err := GetAPICoachee(ctx, coacheeKey)
 	if err != nil {
 		RespondErr(ctx, w, r, err, http.StatusInternalServerError)
+		return
 	}
 
 	//get coach
 	coachKey, err := datastore.DecodeKey(coachId)
 	if err != nil {
 		RespondErr(ctx, w, r, err, http.StatusBadRequest)
+		return
 	}
 	coach, err := GetCoach(ctx, coachKey)
 	if err != nil {
 		RespondErr(ctx, w, r, err, http.StatusInternalServerError)
+		return
 	}
 
 	//update Coachee selected coach
 	apiCoachee, err := coachee.UpdateSelectedCoach(ctx, coach)
 	if err != nil {
 		RespondErr(ctx, w, r, err, http.StatusInternalServerError)
+		return
 	}
 
 	//send an email to the Coach to notify that he was selected
 	err = sendEmailToSelectedCoach(ctx, coach, &coachee.Coachee)
 	if err != nil {
 		RespondErr(ctx, w, r, err, http.StatusInternalServerError)
+		return
 	}
 
 	Respond(ctx, w, r, apiCoachee, http.StatusOK)
