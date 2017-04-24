@@ -38,8 +38,10 @@ func (c Coachee) toAPI(coach *Coach, plan *Plan) APICoachee {
 }
 
 func (c *Coachee) getSelectedCoach(ctx context.Context) (*Coach, error) {
+	log.Debugf(ctx, "getSelectedCoach")
+
 	var coach *Coach
-	if (c.SelectedCoach != nil) {
+	if c.SelectedCoach != nil {
 		var err error
 		coach, err = GetCoach(ctx, c.SelectedCoach)
 		if err != nil {
@@ -109,8 +111,10 @@ func GetAllAPICoachees(ctx context.Context) ([]*APICoachee, error) {
 		return nil, err
 	}
 
-	var response []*APICoachee
+	var response []*APICoachee = make([]*APICoachee, len(coachees))
 	for i, coachee := range coachees {
+		log.Debugf(ctx, "GetAllAPICoachees, coachee %s, index %s", coachee, i)
+
 		coachee.Key = keys[i]
 		//get coach
 		//now get selected Coach if any
@@ -119,12 +123,18 @@ func GetAllAPICoachees(ctx context.Context) ([]*APICoachee, error) {
 			return nil, err
 		}
 
+		log.Debugf(ctx, "GetAllAPICoachees, selected coach %s", coach)
+
 		//get the plan
 		plan := createPlanFromId(coachee.PlanId)
 
-		apiCoachee := coachee.toAPI(coach, plan)
-		response[i] = &apiCoachee
+		log.Debugf(ctx, "GetAllAPICoachees, plan %s", plan)
 
+		apiCoachee := coachee.toAPI(coach, plan)
+
+		log.Debugf(ctx, "GetAllAPICoachees, apiCoachee %s", apiCoachee)
+
+		response[i] = &apiCoachee
 	}
 
 	return response, nil

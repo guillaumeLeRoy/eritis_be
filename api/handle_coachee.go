@@ -66,12 +66,12 @@ func handleGetAllCoachees(w http.ResponseWriter, r *http.Request) {
 	ctx := appengine.NewContext(r)
 	log.Debugf(ctx, "handleGetAllCoachees")
 
-	coachs, err := GetAllAPICoachees(ctx)
+	coachees, err := GetAllAPICoachees(ctx)
 	if err != nil {
 		RespondErr(ctx, w, r, err, http.StatusInternalServerError)
 		return
 	}
-	Respond(ctx, w, r, coachs, http.StatusOK)
+	Respond(ctx, w, r, coachees, http.StatusOK)
 }
 
 func handleUpdateCoacheeForId(w http.ResponseWriter, r *http.Request, id string) {

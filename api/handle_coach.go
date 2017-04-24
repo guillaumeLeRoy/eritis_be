@@ -40,6 +40,7 @@ func handleGetAllCoachs(w http.ResponseWriter, r *http.Request) {
 	coachs, err := GetAllCoach(ctx)
 	if err != nil {
 		RespondErr(ctx, w, r, err, http.StatusInternalServerError)
+		return
 	}
 	Respond(ctx, w, r, coachs, http.StatusOK)
 }
@@ -51,11 +52,13 @@ func handleGetCoachForId(w http.ResponseWriter, r *http.Request, id string) {
 	key, err := datastore.DecodeKey(id)
 	if err != nil {
 		RespondErr(ctx, w, r, err, http.StatusBadRequest)
+		return
 	}
 
 	coach, err := GetCoach(ctx, key)
 	if err != nil {
 		RespondErr(ctx, w, r, err, http.StatusInternalServerError)
+		return
 	}
 	Respond(ctx, w, r, coach, http.StatusOK)
 }
@@ -67,11 +70,13 @@ func handleUpdateCoachForId(w http.ResponseWriter, r *http.Request, id string) {
 	key, err := datastore.DecodeKey(id)
 	if err != nil {
 		RespondErr(ctx, w, r, err, http.StatusBadRequest)
+		return
 	}
 
 	coach, err := GetCoach(ctx, key)
 	if err != nil {
 		RespondErr(ctx, w, r, err, http.StatusInternalServerError)
+		return
 	}
 
 	var updateCoach struct {

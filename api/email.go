@@ -104,6 +104,7 @@ func sendTestEmail(w http.ResponseWriter, r *http.Request) {
 	if err := mail.Send(ctx, msg); err != nil {
 		log.Errorf(ctx, "Couldn't send email: %v", err)
 		RespondErr(ctx, w, r, err, http.StatusInternalServerError)
+		return
 	}
 	w.WriteHeader(http.StatusOK)
 }

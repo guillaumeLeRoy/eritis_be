@@ -26,6 +26,7 @@ func handleGetAllPlans(w http.ResponseWriter, r *http.Request) {
 	plans, err := getAllPlans(ctx)
 	if err != nil {
 		RespondErr(ctx, w, r, err, http.StatusInternalServerError)
+		return
 	}
 	Respond(ctx, w, r, plans, http.StatusOK)
 }
