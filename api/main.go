@@ -82,6 +82,9 @@ func init() {
 	//test email
 	http.HandleFunc("/api/email/", sendTestEmail)
 
+	//update Service Account file to datastore
+	http.HandleFunc("/api/upload_service_account/", handleUpload)
+
 }
 
 func nonAuthHandler(handler func(w http.ResponseWriter, r *http.Request)) http.HandlerFunc {
