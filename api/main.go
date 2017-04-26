@@ -11,6 +11,8 @@ import (
 	"path/filepath"
 	"html/template"
 	"cloud.google.com/go/storage"
+	"fmt"
+	"google.golang.org/appengine/user"
 )
 
 /* ######## HOW TO SERVE DIFFERENT ENVIRONMENTS #######
@@ -89,6 +91,25 @@ func init() {
 	http.Handle("/api/upload_service_account/", &templateHandler{filename: "upload.html"})
 	http.HandleFunc("/api/upload_service_account/uploader", serviceAccountUploaderHandler)
 	http.HandleFunc("/api/read_service_account/", serviceAccountGetHandler)
+
+	http.HandleFunc("/api/welcome/", welcome)
+}
+
+func welcome(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-type", "text/html; charset=utf-8")
+	ctx := appengine.NewContext(r)
+	log.Debugf(ctx, "welcome")
+
+	u := user.Current(ctx)
+	if u == nil {
+		url, _ := user.LoginURL(ctx, "/")
+		fmt.Fprintf(w, `<a href="%s">Sign in or register</a>`, url)
+		log.Debugf(ctx, "welcome, redirect to login")
+		return
+	}
+	url, _ := user.LogoutURL(ctx, "/")
+	fmt.Fprintf(w, `Welcome, %s! (<a href="%s">sign out</a>)`, u, url)
+	log.Debugf(ctx, "welcome, redirect to logout")
 
 }
 
