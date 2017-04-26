@@ -7,8 +7,7 @@ import (
 	"io/ioutil"
 	"cloud.google.com/go/storage"
 	"google.golang.org/appengine/file"
-	"io"
-	"os"
+	"golang.org/x/net/context"
 )
 
 func serviceAccountUploaderHandler(w http.ResponseWriter, r *http.Request) {
@@ -82,38 +81,57 @@ func serviceAccountGetHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := appengine.NewContext(r)
 	log.Debugf(ctx, "handle read service account")
 
-	bucketName, err := file.DefaultBucketName(ctx)
+	reader, err := getReaderFromBucket(ctx, "eritis-be-glr-firebase.json")
 	if err != nil {
 		RespondErr(ctx, w, r, err, http.StatusInternalServerError)
 		return
+	}
+	log.Debugf(ctx, "handle read, reader created")
+
+	defer reader.Close()
+	//if _, err := io.Copy(os.Stdout, reader); err != nil {
+	//	RespondErr(ctx, w, r, err, http.StatusInternalServerError)
+	//	return
+	//}
+	// Prints "This object contains text."
+
+	log.Debugf(ctx, "handle read, DONE")
+
+	Respond(ctx, w, r, nil, http.StatusOK)
+}
+
+func getReaderFromBucket(ctx context.Context, fileName string) (*storage.Reader, error) {
+	bucketName, err := file.DefaultBucketName(ctx)
+	if err != nil {
+		return nil, err
 	}
 
 	log.Debugf(ctx, "handle read, bucket name %s", bucketName)
 
 	client, err := storage.NewClient(ctx)
 	if err != nil {
-		RespondErr(ctx, w, r, err, http.StatusInternalServerError)
-		return
+		return nil, err
 	}
 
 	log.Debugf(ctx, "handle read, storage client created")
 
 	bucketHandler := client.Bucket(bucketName)
 
-	obj := bucketHandler.Object("eritis-be-glr-firebase")
+	obj := bucketHandler.Object(fileName)
+
+	log.Debugf(ctx, "handle read, obj created")
 
 	reader, err := obj.NewReader(ctx)
 	if err != nil {
-		RespondErr(ctx, w, r, err, http.StatusInternalServerError)
-		return
+		return nil, err
 	}
-	defer reader.Close()
-	if _, err := io.Copy(os.Stdout, reader); err != nil {
-		RespondErr(ctx, w, r, err, http.StatusInternalServerError)
-		return
-	}
-	// Prints "This object contains text."
 
-	Respond(ctx, w, r, nil, http.StatusOK)
+	log.Debugf(ctx, "handle read, reader created")
 
+	//defer reader.Close()
+	//if _, err := io.Copy(os.Stdout, reader); err != nil {
+	//	return
+	//}
+
+	return reader, nil
 }

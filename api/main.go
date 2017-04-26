@@ -10,6 +10,7 @@ import (
 	"eritis_be/firebase"
 	"path/filepath"
 	"html/template"
+	"cloud.google.com/go/storage"
 )
 
 /* ######## HOW TO SERVE DIFFERENT ENVIRONMENTS #######
@@ -87,7 +88,7 @@ func init() {
 	//update Service Account file to datastore
 	http.Handle("/api/upload_service_account/", &templateHandler{filename: "upload.html"})
 	http.HandleFunc("/api/upload_service_account/uploader", serviceAccountUploaderHandler)
-	http.HandleFunc("/api/read_service_account", serviceAccountGetHandler)
+	http.HandleFunc("/api/read_service_account/", serviceAccountGetHandler)
 
 }
 
@@ -120,11 +121,11 @@ func getFirebaseJsonPath(ctx context.Context) (string, error) {
 	pathToJson := ""
 
 	if strings.EqualFold(LIVE_ENV_PROJECT_ID, appId) {
-		pathToJson = "firebase_keys/eritis-be-live.json"
+		pathToJson = "eritis-be-live-firebase.json"
 	} else if strings.EqualFold(DEV_ENV_PROJECT_ID, appId) {
-		pathToJson = "firebase_keys/eritis-be-dev.json"
+		pathToJson = "eritis-be-dev-firebase.json"
 	} else if strings.EqualFold(GLR_ENV_PROJECT_ID, appId) {
-		pathToJson = "firebase_keys/eritis-be-glr.json"
+		pathToJson = "eritis-be-glr-firebase.json"
 	} else {
 		return "", errors.New("AppId doesn't match any environment")
 	}
@@ -132,6 +133,23 @@ func getFirebaseJsonPath(ctx context.Context) (string, error) {
 	log.Debugf(ctx, "getFirebaseJsonPath path %s", pathToJson)
 
 	return pathToJson, nil
+}
+
+
+//returns a firebase admin json
+func getFirebaseJsonReader(ctx context.Context) (*storage.Reader, error) {
+	appId := appengine.AppID(ctx)
+	log.Debugf(ctx, "appId %s", appId)
+
+	pathToJson, err := getFirebaseJsonPath(ctx)
+	if err != nil {
+		return nil, err
+	}
+	rdr, err := getReaderFromBucket(ctx, pathToJson)
+	if err != nil {
+		return nil, err
+	}
+	return rdr, nil
 }
 
 func isLiveEnvironment(ctx context.Context) bool {
@@ -198,7 +216,7 @@ func authHandler(handler func(w http.ResponseWriter, r *http.Request)) http.Hand
 
 				//init Firebase with the correct .json
 
-				path, err := getFirebaseJsonPath(ctx)
+				reader, err := getFirebaseJsonReader(ctx)
 				if err != nil {
 					log.Debugf(ctx, "authHandler, get json path failed %s", err)
 					RespondErr(ctx, w, r, err, http.StatusUnauthorized)
@@ -207,7 +225,7 @@ func authHandler(handler func(w http.ResponseWriter, r *http.Request)) http.Hand
 
 				if firebaseApp == nil {
 					firebaseApp, err = firebase.InitializeApp(&firebase.Options{
-						ServiceAccountPath: path,
+						ServiceAccountReader: reader,
 					})
 					if err != nil {
 						log.Debugf(ctx, "authHandler InitializeApp failed %s", err)
