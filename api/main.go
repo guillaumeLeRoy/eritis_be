@@ -8,13 +8,15 @@ import (
 	"strings"
 	"golang.org/x/net/context"
 	"eritis_be/firebase"
+	"path/filepath"
+	"html/template"
 )
 
 /* ######## HOW TO SERVE DIFFERENT ENVIRONMENTS #######
 
 ##### LIVE ENV ######
 serve locally :
-dev_appserver.py -A eritis-150320 dispatch.yaml default/app.yaml api/app.yaml web/app.yaml firebase/app.yaml --enable_sendmail
+dev_appserver.py -A eritis-150320 dispatch.yaml default/app.yaml api/app.yaml web/app.yaml firebase/app.yaml --enable_sendmail --default_gcs_bucket_name eritis-be-glr.appspot.com
 
 deploy :
 goapp deploy -application eritis-150320 -version 1 default/app.yaml api/app.yaml web/app.yaml firebase/app.yaml
@@ -83,7 +85,9 @@ func init() {
 	http.HandleFunc("/api/email/", sendTestEmail)
 
 	//update Service Account file to datastore
-	http.HandleFunc("/api/upload_service_account/", handleUpload)
+	http.Handle("/api/upload_service_account/", &templateHandler{filename: "upload.html"})
+	http.HandleFunc("/api/upload_service_account/uploader", serviceAccountUploaderHandler)
+	http.HandleFunc("/api/read_service_account", serviceAccountGetHandler)
 
 }
 
@@ -244,6 +248,25 @@ func authHandler(handler func(w http.ResponseWriter, r *http.Request)) http.Hand
 	}
 }
 
+
+// templ represents a single template
+type templateHandler struct {
+	filename string
+	templ    *template.Template
+}
+
+// ServeHTTP handles the HTTP request.
+func (t *templateHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	if t.templ == nil {
+		t.templ = template.Must(template.ParseFiles(filepath.Join("templates", t.filename)))
+	}
+
+	data := map[string]interface{}{
+		"Host": r.Host,
+	}
+
+	t.templ.Execute(w, data)
+}
 
 
 
