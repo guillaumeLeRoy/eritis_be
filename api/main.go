@@ -92,25 +92,57 @@ func init() {
 	http.HandleFunc("/api/upload_service_account/uploader", serviceAccountUploaderHandler)
 	http.HandleFunc("/api/read_service_account/", serviceAccountGetHandler)
 
-	http.HandleFunc("/api/welcome/", welcome)
+	http.HandleFunc("/api/v1/admin/login/", adminLoginHandler)
+	http.HandleFunc("/api/v1/admin/home/", adminHomeHandler)
+	http.HandleFunc("/api/v1/admin/restricted/", adminRestrictedHandler)
 }
 
-func welcome(w http.ResponseWriter, r *http.Request) {
+func adminLoginHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-type", "text/html; charset=utf-8")
 	ctx := appengine.NewContext(r)
-	log.Debugf(ctx, "welcome")
+	log.Debugf(ctx, "adminLoginHandler")
 
 	u := user.Current(ctx)
 	if u == nil {
-		url, _ := user.LoginURL(ctx, "/")
+		url, _ := user.LoginURL(ctx, "/api/v1/admin/home/")
 		fmt.Fprintf(w, `<a href="%s">Sign in or register</a>`, url)
-		log.Debugf(ctx, "welcome, redirect to login")
+		log.Debugf(ctx, "adminLoginHandler, redirect to login")
 		return
 	}
 	url, _ := user.LogoutURL(ctx, "/")
 	fmt.Fprintf(w, `Welcome, %s! (<a href="%s">sign out</a>)`, u, url)
-	log.Debugf(ctx, "welcome, redirect to logout")
+	log.Debugf(ctx, "adminLoginHandler, redirect to logout")
 
+}
+
+func adminHomeHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-type", "text/html; charset=utf-8")
+	ctx := appengine.NewContext(r)
+	log.Debugf(ctx, "adminHomeHandler")
+
+	u := user.Current(ctx)
+	if u == nil {
+		log.Debugf(ctx, "welcome, redirect to login")
+		http.Redirect(w, r, "/api/v1/admin/login/", http.StatusSeeOther)
+		return
+	}
+	url, _ := user.LogoutURL(ctx, "/")
+
+	if u.Admin {
+		log.Debugf(ctx, "adminHomeHandler, user is admin")
+		fmt.Fprintf(w, `Welcome, %s! (<a href="%s">sign out</a>). You are admin`, u, url)
+	} else {
+		log.Debugf(ctx, "adminHomeHandler, user is NOT an admin")
+		http.Redirect(w, r, "/api/v1/admin/restricted/", http.StatusSeeOther)
+	}
+}
+
+func adminRestrictedHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-type", "text/html; charset=utf-8")
+	ctx := appengine.NewContext(r)
+	log.Debugf(ctx, "adminRestrictedHandler")
+
+	fmt.Fprintf(w, `<h1>This is a restricted area</h1>`)
 }
 
 func nonAuthHandler(handler func(w http.ResponseWriter, r *http.Request)) http.HandlerFunc {
