@@ -1,5 +1,7 @@
 dispatch:
      - url: "*/api/*"
        module: api
+     - url: "*/admin/*"
+       module: admin
      - url: "*/*"
        module: web

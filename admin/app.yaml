@@ -1,0 +1,16 @@
+runtime: go
+module: web
+api_version: go1
+
+handlers:
+  - url: /(.*\.(gif|png|jpg|svg|css|js|ttf|woff|woff2|eot|ico)(|\.map))$
+    static_files: dist/\1
+    upload: dist/(.*)(|\.map)
+    login: admin
+
+
+  - url: /(.*)
+    static_files: dist/index.html
+    upload: dist/index.html
+    login: admin
+
