@@ -39,7 +39,7 @@ appcfg.py update_indexes -A eritis-be-dev ./default
 
 ##### GLR ENV ######
 serve :
-dev_appserver.py -A eritis-be-glr dispatch.yaml default/app.yaml api/app.yaml web/app.yaml firebase/app.yaml --enable_sendmail
+dev_appserver.py -A eritis-be-glr dispatch.yaml default/app.yaml api/app.yaml web/app.yaml firebase/app.yaml admin/app.yaml --enable_sendmail
 
 deploy :
 goapp deploy -application eritis-be-glr -version 1 default/app.yaml api/app.yaml web/app.yaml firebase/app.yaml
@@ -92,9 +92,11 @@ func init() {
 	http.HandleFunc("/api/upload_service_account/uploader", serviceAccountUploaderHandler)
 	http.HandleFunc("/api/read_service_account/", serviceAccountGetHandler)
 
-	http.HandleFunc("/api/v1/admin/login/", adminLoginHandler)
-	http.HandleFunc("/api/v1/admin/home/", adminHomeHandler)
-	http.HandleFunc("/api/v1/admin/restricted/", adminRestrictedHandler)
+	http.HandleFunc("/admin/", adminLoginHandler)
+
+	//http.HandleFunc("/api/v1/admin/login/", adminLoginHandler)
+	//http.HandleFunc("/api/v1/admin/home/", adminHomeHandler)
+	//http.HandleFunc("/api/v1/admin/restricted/", adminRestrictedHandler)
 }
 
 func adminLoginHandler(w http.ResponseWriter, r *http.Request) {
@@ -110,9 +112,18 @@ func adminLoginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	url, _ := user.LogoutURL(ctx, "/")
-	fmt.Fprintf(w, `Welcome, %s! (<a href="%s">sign out</a>)`, u, url)
-	log.Debugf(ctx, "adminLoginHandler, redirect to logout")
+	//fmt.Fprintf(w, `Welcome, %s! (<a href="%s">sign out</a>)`, u, url)
+	//log.Debugf(ctx, "adminLoginHandler, redirect to logout")
 
+	if u.Admin {
+		log.Debugf(ctx, "adminHomeHandler, user is admin")
+		fmt.Fprintf(w, `Welcome, %s! (<a href="%s">sign out</a>). You are admin`, u, url)
+		http.Redirect(w, r, "/api/dist/", http.StatusTemporaryRedirect)
+
+	} else {
+		log.Debugf(ctx, "adminHomeHandler, user is NOT an admin")
+		http.Redirect(w, r, "/api/v1/admin/restricted/", http.StatusTemporaryRedirect)
+	}
 }
 
 func adminHomeHandler(w http.ResponseWriter, r *http.Request) {
@@ -218,7 +229,6 @@ func isLiveEnvironment(ctx context.Context) bool {
 
 func authHandler(handler func(w http.ResponseWriter, r *http.Request)) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-
 		ctx := appengine.NewContext(r)
 
 		log.Debugf(ctx, "authHandler start")
@@ -239,79 +249,23 @@ func authHandler(handler func(w http.ResponseWriter, r *http.Request)) http.Hand
 
 			log.Debugf(ctx, "IsDevAppServer: %v", appengine.IsDevAppServer())
 
-			if !appengine.IsDevAppServer() {
+			u := user.Current(ctx)
+			log.Debugf(ctx, "authHandler, user %s", u)
+			log.Debugf(ctx, "authHandler, header %s", r.Header)
+			log.Debugf(ctx, "authHandler, host %s", r.Host)
 
-				token := r.Header.Get("Authorization")
-				log.Debugf(ctx, "authHandler auth token: %s", token)
-
-				// If the token is empty...
-				if token == "" {
-					// If we get here, the required token is missing
-					RespondErr(ctx, w, r, errors.New("invalid token"), http.StatusUnauthorized)
-					return
-				}
-
-				//read the Bearer param
-				if len(token) >= 1 {
-					token = strings.TrimPrefix(token, "Bearer ")
-				}
-
-				log.Debugf(ctx, "authHandler token: %s", token)
-
-				// If the token is empty...
-				if token == "" {
-					// If we get here, the required token is missing
-					RespondErr(ctx, w, r, errors.New("invalid token"), http.StatusUnauthorized)
-					return
-				}
-
-				log.Debugf(ctx, "authHandler VERIFY token")
-
-				//init Firebase with the correct .json
-
-				reader, err := getFirebaseJsonReader(ctx)
-				if err != nil {
-					log.Debugf(ctx, "authHandler, get json path failed %s", err)
-					RespondErr(ctx, w, r, err, http.StatusUnauthorized)
-					return
-				}
-
-				if firebaseApp == nil {
-					firebaseApp, err = firebase.InitializeApp(&firebase.Options{
-						ServiceAccountReader: reader,
-					})
-					if err != nil {
-						log.Debugf(ctx, "authHandler InitializeApp failed %s", err)
-						RespondErr(ctx, w, r, err, http.StatusUnauthorized)
-						return
-					}
-				} else {
-					log.Debugf(ctx, "authHandler, firebaseApp already init")
-				}
-
-				//verify token only in PROD
-				auth, _ := firebase.GetAuth()
-				decodedToken, err := auth.VerifyIDToken(token, ctx)
-				if err != nil {
-					log.Debugf(ctx, "authHandler VerifyIDToken failed %s", err)
-					RespondErr(ctx, w, r, err, http.StatusUnauthorized)
-					return
-				}
-
-				if err == nil {
-					uid, found := decodedToken.UID()
-					log.Debugf(ctx, "authHandler decodedToken uid %s, found %s", uid, found)
-				}
-
-				uid, found := decodedToken.UID()
-				if !found {
-					RespondErr(ctx, w, r, errors.New("UID not found"), http.StatusUnauthorized)
-				}
-
-				log.Debugf(ctx, "authHandler, UID: %s", uid)
+			if u != nil {
+				log.Debugf(ctx, "authHandler, is admin ? %s, email %s", u.Admin, u.Email)
 			}
 
+			if !appengine.IsDevAppServer() {
 
+				err := verifyFirebaseAuth(ctx, w, r)
+				if err != nil {
+					RespondErr(ctx, w, r, err, http.StatusUnauthorized)
+					return
+				}
+			}
 
 			//auth ok, continue
 			handler(w, r)
@@ -319,6 +273,74 @@ func authHandler(handler func(w http.ResponseWriter, r *http.Request)) http.Hand
 	}
 }
 
+func verifyFirebaseAuth(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
+	token := r.Header.Get("Authorization")
+	log.Debugf(ctx, "authHandler auth token: %s", token)
+
+	// If the token is empty...
+	if token == "" {
+		// If we get here, the required token is missing
+		return errors.New("invalid token")
+	}
+
+	//read the Bearer param
+	if len(token) >= 1 {
+		token = strings.TrimPrefix(token, "Bearer ")
+	}
+
+	log.Debugf(ctx, "authHandler token: %s", token)
+
+	// If the token is empty...
+	if token == "" {
+		// If we get here, the required token is missing
+		return errors.New("invalid token")
+	}
+
+	log.Debugf(ctx, "authHandler VERIFY token")
+
+	//init Firebase with the correct .json
+
+	reader, err := getFirebaseJsonReader(ctx)
+	if err != nil {
+		log.Debugf(ctx, "authHandler, get json path failed %s", err)
+		return err
+	}
+
+	if firebaseApp == nil {
+		firebaseApp, err = firebase.InitializeApp(&firebase.Options{
+			ServiceAccountReader: reader,
+		})
+		if err != nil {
+			log.Debugf(ctx, "authHandler InitializeApp failed %s", err)
+			return err
+
+		}
+	} else {
+		log.Debugf(ctx, "authHandler, firebaseApp already init")
+	}
+
+	//verify token only in PROD
+	auth, _ := firebase.GetAuth()
+	decodedToken, err := auth.VerifyIDToken(token, ctx)
+	if err != nil {
+		log.Debugf(ctx, "authHandler VerifyIDToken failed %s", err)
+		return err
+	}
+
+	if err == nil {
+		uid, found := decodedToken.UID()
+		log.Debugf(ctx, "authHandler decodedToken uid %s, found %s", uid, found)
+	}
+
+	uid, found := decodedToken.UID()
+	if !found {
+		return errors.New("UID not found")
+	}
+
+	log.Debugf(ctx, "authHandler, UID: %s", uid)
+
+	return nil
+}
 
 // templ represents a single template
 type templateHandler struct {
