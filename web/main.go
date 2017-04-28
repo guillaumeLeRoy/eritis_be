@@ -6,6 +6,8 @@ import (
 	"golang.org/x/net/context"
 	"google.golang.org/appengine"
 	"google.golang.org/appengine/user"
+	"google.golang.org/appengine/log"
+	"fmt"
 )
 
 func init() {
@@ -16,6 +18,31 @@ func init() {
 	//}
 	//http.Handle("/questions/", templateHandler(tmpl, "question"))
 	//http.Handle("/", templateHandler(tmpl, "index"))
+
+	http.Handle("/", staticAdminHandler(http.FileServer(http.Dir("dist/index.html"))));
+}
+
+// remember that http.HandlerFunc is a valid http.Handler too
+func staticAdminHandler(handler http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ctx := appengine.NewContext(r)
+		log.Debugf(ctx, "staticAdminHandler, url %s", r.URL.Path)
+
+		u := user.Current(ctx)
+
+		if u != nil {
+			log.Debugf(ctx, "authHandler, is admin ? %s, email %s", u.Admin, u.Email)
+		} else {
+			log.Debugf(ctx, "authHandler, no user")
+			url, _ := user.LoginURL(ctx, "dist/index.html")
+			fmt.Fprintf(w, `<a href="%s">Sign in or register</a>`, url)
+			return
+		}
+
+		http.ServeFile(w, r, "dist/index.html")
+		//handler.ServeHTTP(w, r)
+	})
+
 }
 
 func templateHandler(tmpl *template.Template, name string) http.Handler {

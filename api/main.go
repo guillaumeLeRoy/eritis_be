@@ -92,11 +92,33 @@ func init() {
 	http.HandleFunc("/api/upload_service_account/uploader", serviceAccountUploaderHandler)
 	http.HandleFunc("/api/read_service_account/", serviceAccountGetHandler)
 
-	http.HandleFunc("/admin/", adminLoginHandler)
+	//http.HandleFunc("/admin/", adminLoginHandler)
+
+	//http.HandleFunc("/admin/(.*)", staticAdminHandler);
+	//http.HandleFunc("/admin/", staticAdminHandler);
+	//http.Handle("api/admin", staticAdminHandler(http.FileServer(http.Dir("dist"))));
 
 	//http.HandleFunc("/api/v1/admin/login/", adminLoginHandler)
 	//http.HandleFunc("/api/v1/admin/home/", adminHomeHandler)
 	//http.HandleFunc("/api/v1/admin/restricted/", adminRestrictedHandler)
+}
+
+// remember that http.HandlerFunc is a valid http.Handler too
+func staticAdminHandler(handler http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ctx := appengine.NewContext(r)
+		log.Debugf(ctx, "staticAdminHandler")
+
+		u := user.Current(ctx)
+
+		if u != nil {
+			log.Debugf(ctx, "authHandler, is admin ? %s, email %s", u.Admin, u.Email)
+		}
+
+		handler.ServeHTTP(w, r)
+
+	})
+
 }
 
 func adminLoginHandler(w http.ResponseWriter, r *http.Request) {
@@ -251,15 +273,20 @@ func authHandler(handler func(w http.ResponseWriter, r *http.Request)) http.Hand
 
 			u := user.Current(ctx)
 			log.Debugf(ctx, "authHandler, user %s", u)
-			log.Debugf(ctx, "authHandler, header %s", r.Header)
-			log.Debugf(ctx, "authHandler, host %s", r.Host)
-
 			if u != nil {
 				log.Debugf(ctx, "authHandler, is admin ? %s, email %s", u.Admin, u.Email)
+				if u.Admin {
+					//no auth needed
+					handler(w, r)
+					return
+				} else {
+					RespondErr(ctx, w, r, errors.New("Need to be an admin"), http.StatusUnauthorized)
+					return
+				}
 			}
 
+			//only very Firebase Token if we are on a server and NOT an admin
 			if !appengine.IsDevAppServer() {
-
 				err := verifyFirebaseAuth(ctx, w, r)
 				if err != nil {
 					RespondErr(ctx, w, r, err, http.StatusUnauthorized)
