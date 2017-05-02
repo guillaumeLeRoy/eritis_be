@@ -116,9 +116,7 @@ func staticAdminHandler(handler http.Handler) http.Handler {
 		}
 
 		handler.ServeHTTP(w, r)
-
 	})
-
 }
 
 func adminLoginHandler(w http.ResponseWriter, r *http.Request) {
