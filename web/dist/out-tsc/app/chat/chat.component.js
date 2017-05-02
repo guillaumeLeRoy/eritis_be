@@ -41,12 +41,6 @@ var ChatComponent = (function () {
                 // Hide sign-in button.
                 // We load currently existing chat messages.
                 _this.loadMessages();
-                //load top questions
-                // this.recipeService.getTopQuestions().subscribe(
-                //   response => {
-                //     console.log("top questions response : ", response)
-                //   }
-                // )
             }
             else {
                 console.log("user is NOT authent");
@@ -114,4 +108,4 @@ ChatComponent = __decorate([
     __metadata("design:paramtypes", [FirebaseService, AuthService, ChangeDetectorRef, ElementRef])
 ], ChatComponent);
 export { ChatComponent };
-//# sourceMappingURL=/Users/guillaume/git/eritis_fe/src/app/chat/chat.component.js.map
+//# sourceMappingURL=/Users/guillaume/angular/eritis_fe/src/app/chat/chat.component.js.map

@@ -60,4 +60,4 @@ WelcomeComponent = __decorate([
     __metadata("design:paramtypes", [AuthService, FormBuilder])
 ], WelcomeComponent);
 export { WelcomeComponent };
-//# sourceMappingURL=/Users/guillaume/git/eritis_fe/src/app/welcome/welcome.component.js.map
+//# sourceMappingURL=/Users/guillaume/angular/eritis_fe/src/app/welcome/welcome.component.js.map

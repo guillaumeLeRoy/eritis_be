@@ -73,4 +73,4 @@ ProfileCoacheeComponent = __decorate([
     __metadata("design:paramtypes", [AuthService, FormBuilder, ChangeDetectorRef])
 ], ProfileCoacheeComponent);
 export { ProfileCoacheeComponent };
-//# sourceMappingURL=/Users/guillaume/git/eritis_fe/src/app/user/profile/coachee/profile-coachee.component.js.map
+//# sourceMappingURL=/Users/guillaume/angular/eritis_fe/src/app/user/profile/coachee/profile-coachee.component.js.map

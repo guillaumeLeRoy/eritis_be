@@ -66,7 +66,6 @@ var CoachListComponent = (function () {
         this.coachee = Observable.of(coachee);
         if (coachee.selectedCoach) {
             console.log('onUserObtained, we have a selected coach');
-            // this.selectedCoach = coachee.selectedCoach;
         }
         else {
             // if not coach selected, display possible coachs
@@ -94,4 +93,4 @@ CoachListComponent = __decorate([
     __metadata("design:paramtypes", [CoachCoacheeService, AuthService, ChangeDetectorRef])
 ], CoachListComponent);
 export { CoachListComponent };
-//# sourceMappingURL=/Users/guillaume/git/eritis_fe/src/app/user/coach-list/coach-list.component.js.map
+//# sourceMappingURL=/Users/guillaume/angular/eritis_fe/src/app/user/coach-list/coach-list.component.js.map

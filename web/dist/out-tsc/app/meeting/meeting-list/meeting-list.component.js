@@ -160,4 +160,4 @@ MeetingListComponent = __decorate([
     __metadata("design:paramtypes", [Router, MeetingsService, AuthService, ChangeDetectorRef])
 ], MeetingListComponent);
 export { MeetingListComponent };
-//# sourceMappingURL=/Users/guillaume/git/eritis_fe/src/app/meeting/meeting-list/meeting-list.component.js.map
+//# sourceMappingURL=/Users/guillaume/angular/eritis_fe/src/app/meeting/meeting-list/meeting-list.component.js.map

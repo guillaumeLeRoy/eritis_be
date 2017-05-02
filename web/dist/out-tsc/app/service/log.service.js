@@ -7,4 +7,4 @@ var LogService = (function () {
     return LogService;
 }());
 export { LogService };
-//# sourceMappingURL=/Users/guillaume/git/eritis_fe/src/app/service/log.service.js.map
+//# sourceMappingURL=/Users/guillaume/angular/eritis_fe/src/app/service/log.service.js.map

@@ -8,4 +8,4 @@ var MeetingDate = (function () {
     return MeetingDate;
 }());
 export { MeetingDate };
-//# sourceMappingURL=/Users/guillaume/git/eritis_fe/src/app/model/MeetingDate.js.map
+//# sourceMappingURL=/Users/guillaume/angular/eritis_fe/src/app/model/MeetingDate.js.map

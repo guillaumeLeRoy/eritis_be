@@ -39,7 +39,7 @@ appcfg.py update_indexes -A eritis-be-dev ./default
 
 ##### GLR ENV ######
 serve :
-dev_appserver.py -A eritis-be-glr dispatch.yaml default/app.yaml api/app.yaml web/app.yaml firebase/app.yaml admin/app.yaml --enable_sendmail
+dev_appserver.py -A eritis-be-glr dispatch.yaml default/app.yaml api/app.yaml web/app.yaml firebase/app.yaml --enable_sendmail
 
 deploy :
 goapp deploy -application eritis-be-glr -version 1 default/app.yaml api/app.yaml web/app.yaml firebase/app.yaml

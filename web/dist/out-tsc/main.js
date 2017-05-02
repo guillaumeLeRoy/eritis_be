@@ -7,4 +7,4 @@ if (environment.production) {
     enableProdMode();
 }
 platformBrowserDynamic().bootstrapModule(AppModule);
-//# sourceMappingURL=/Users/guillaume/git/eritis_fe/src/main.js.map
+//# sourceMappingURL=/Users/guillaume/angular/eritis_fe/src/main.js.map

@@ -29,4 +29,4 @@ ProfileCoachSummaryComponent = __decorate([
     __metadata("design:paramtypes", [])
 ], ProfileCoachSummaryComponent);
 export { ProfileCoachSummaryComponent };
-//# sourceMappingURL=/Users/guillaume/git/eritis_fe/src/app/user/profile/coach/profile-coach-summary.component.js.map
+//# sourceMappingURL=/Users/guillaume/angular/eritis_fe/src/app/user/profile/coach/profile-coach-summary.component.js.map

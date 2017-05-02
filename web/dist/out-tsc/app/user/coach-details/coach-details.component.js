@@ -92,4 +92,4 @@ CoachDetailsComponent = __decorate([
     __metadata("design:paramtypes", [Router, AuthService, ChangeDetectorRef, MeetingsService])
 ], CoachDetailsComponent);
 export { CoachDetailsComponent };
-//# sourceMappingURL=/Users/guillaume/git/eritis_fe/src/app/user/coach-details/coach-details.component.js.map
+//# sourceMappingURL=/Users/guillaume/angular/eritis_fe/src/app/user/coach-details/coach-details.component.js.map

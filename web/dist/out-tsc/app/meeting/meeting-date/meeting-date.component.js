@@ -223,4 +223,4 @@ MeetingDateComponent = __decorate([
     __metadata("design:paramtypes", [Router, ActivatedRoute, CoachCoacheeService, AuthService, ChangeDetectorRef])
 ], MeetingDateComponent);
 export { MeetingDateComponent };
-//# sourceMappingURL=/Users/guillaume/git/eritis_fe/src/app/meeting/meeting-date/meeting-date.component.js.map
+//# sourceMappingURL=/Users/guillaume/angular/eritis_fe/src/app/meeting/meeting-date/meeting-date.component.js.map

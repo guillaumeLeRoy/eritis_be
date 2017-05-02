@@ -26,4 +26,4 @@ AppComponent = __decorate([
     __metadata("design:paramtypes", [FirebaseService])
 ], AppComponent);
 export { AppComponent };
-//# sourceMappingURL=/Users/guillaume/git/eritis_fe/src/app/app.component.js.map
+//# sourceMappingURL=/Users/guillaume/angular/eritis_fe/src/app/app.component.js.map

@@ -105,4 +105,4 @@ HeaderComponent = __decorate([
     __metadata("design:paramtypes", [Router, AuthService, ChangeDetectorRef])
 ], HeaderComponent);
 export { HeaderComponent };
-//# sourceMappingURL=/Users/guillaume/git/eritis_fe/src/app/header/header.component.js.map
+//# sourceMappingURL=/Users/guillaume/angular/eritis_fe/src/app/header/header.component.js.map

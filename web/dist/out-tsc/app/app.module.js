@@ -41,6 +41,7 @@ import { SliderModule } from 'primeng/components/slider/slider';
 import { Ng2PageScrollModule } from 'ng2-page-scroll';
 import { PostMeetingComponent } from './meeting/review/post-meeting.component';
 import { CoachSelectorComponent } from './user/coach-selector/coach-selector.component';
+import { AdminAPIService } from "./service/adminAPI.service";
 var AppModule = (function () {
     function AppModule() {
     }
@@ -82,9 +83,9 @@ AppModule = __decorate([
             SliderModule,
             Ng2PageScrollModule.forRoot()
         ],
-        providers: [DataService, LogService, AuthService, AuthGuard, CoachCoacheeService, MeetingsService, FirebaseService],
+        providers: [DataService, LogService, AuthService, AuthGuard, CoachCoacheeService, MeetingsService, FirebaseService, AdminAPIService],
         bootstrap: [AppComponent]
     })
 ], AppModule);
 export { AppModule };
-//# sourceMappingURL=/Users/guillaume/git/eritis_fe/src/app/app.module.js.map
+//# sourceMappingURL=/Users/guillaume/angular/eritis_fe/src/app/app.module.js.map

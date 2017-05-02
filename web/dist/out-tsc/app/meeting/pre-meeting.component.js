@@ -84,4 +84,4 @@ PreMeetingComponent = __decorate([
     __metadata("design:paramtypes", [CoachCoacheeService])
 ], PreMeetingComponent);
 export { PreMeetingComponent };
-//# sourceMappingURL=/Users/guillaume/git/eritis_fe/src/app/meeting/pre-meeting.component.js.map
+//# sourceMappingURL=/Users/guillaume/angular/eritis_fe/src/app/meeting/pre-meeting.component.js.map

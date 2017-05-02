@@ -8,4 +8,4 @@ var Message = (function () {
     return Message;
 }());
 export { Message };
-//# sourceMappingURL=/Users/guillaume/git/eritis_fe/src/app/chat/message.js.map
+//# sourceMappingURL=/Users/guillaume/angular/eritis_fe/src/app/chat/message.js.map

@@ -19,7 +19,7 @@ func init() {
 	//http.Handle("/questions/", templateHandler(tmpl, "question"))
 	//http.Handle("/", templateHandler(tmpl, "index"))
 
-	http.Handle("/", staticAdminHandler(http.FileServer(http.Dir("dist/index.html"))));
+	http.Handle("/", staticAdminHandler(http.FileServer(http.Dir("dist"))));
 }
 
 // remember that http.HandlerFunc is a valid http.Handler too
@@ -34,7 +34,8 @@ func staticAdminHandler(handler http.Handler) http.Handler {
 			log.Debugf(ctx, "authHandler, is admin ? %s, email %s", u.Admin, u.Email)
 		} else {
 			log.Debugf(ctx, "authHandler, no user")
-			url, _ := user.LoginURL(ctx, "dist/index.html")
+			//url, _ := user.LoginURL(ctx, "dist/index.html")
+			url, _ := user.LoginURL(ctx, "admin/coach-selector")
 			fmt.Fprintf(w, `<a href="%s">Sign in or register</a>`, url)
 			return
 		}

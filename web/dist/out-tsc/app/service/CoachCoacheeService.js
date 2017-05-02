@@ -309,4 +309,4 @@ CoachCoacheeService = __decorate([
     __metadata("design:paramtypes", [AuthService])
 ], CoachCoacheeService);
 export { CoachCoacheeService };
-//# sourceMappingURL=/Users/guillaume/git/eritis_fe/src/app/service/CoachCoacheeService.js.map
+//# sourceMappingURL=/Users/guillaume/angular/eritis_fe/src/app/service/CoachCoacheeService.js.map

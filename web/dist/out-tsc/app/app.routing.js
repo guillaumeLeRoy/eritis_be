@@ -26,4 +26,4 @@ var APP_ROUTES = [
     { path: 'admin/coach-selector', component: CoachSelectorComponent },
 ];
 export var routing = RouterModule.forRoot(APP_ROUTES);
-//# sourceMappingURL=/Users/guillaume/git/eritis_fe/src/app/app.routing.js.map
+//# sourceMappingURL=/Users/guillaume/angular/eritis_fe/src/app/app.routing.js.map

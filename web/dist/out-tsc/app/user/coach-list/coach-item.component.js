@@ -30,4 +30,4 @@ CoachItemComponent = __decorate([
     __metadata("design:paramtypes", [])
 ], CoachItemComponent);
 export { CoachItemComponent };
-//# sourceMappingURL=/Users/guillaume/git/eritis_fe/src/app/user/coach-list/coach-item.component.js.map
+//# sourceMappingURL=/Users/guillaume/angular/eritis_fe/src/app/user/coach-list/coach-item.component.js.map

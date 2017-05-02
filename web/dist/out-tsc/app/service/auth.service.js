@@ -36,10 +36,6 @@ var AuthService = AuthService_1 = (function () {
         }.bind(this));
         console.log("ctr done");
     }
-    AuthService.prototype.getCoachs = function () {
-        // return this.httpService.get('https://eritis-be-glr.appspot.com/api/coachs/', null);
-        return this.httpService.get('http://localhost:8080/api/coachs/', null);
-    };
     /*
      * Get connected user from backend
      */
@@ -463,4 +459,4 @@ AuthService = AuthService_1 = __decorate([
 ], AuthService);
 export { AuthService };
 var AuthService_1;
-//# sourceMappingURL=/Users/guillaume/git/eritis_fe/src/app/service/auth.service.js.map
+//# sourceMappingURL=/Users/guillaume/angular/eritis_fe/src/app/service/auth.service.js.map

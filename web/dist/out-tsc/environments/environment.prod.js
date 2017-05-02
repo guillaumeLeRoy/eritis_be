@@ -5,4 +5,4 @@ export var environment = {
     firebase_authDomain: "eritis-150320.firebaseapp.com",
     firebase_databaseURL: "https://eritis-150320.firebaseio.com",
 };
-//# sourceMappingURL=/Users/guillaume/git/eritis_fe/src/environments/environment.prod.js.map
+//# sourceMappingURL=/Users/guillaume/angular/eritis_fe/src/environments/environment.prod.js.map

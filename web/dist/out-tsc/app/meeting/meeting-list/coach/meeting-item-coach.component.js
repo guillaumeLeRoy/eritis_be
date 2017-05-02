@@ -96,4 +96,4 @@ MeetingItemCoachComponent = __decorate([
     __metadata("design:paramtypes", [FormBuilder, CoachCoacheeService, ChangeDetectorRef])
 ], MeetingItemCoachComponent);
 export { MeetingItemCoachComponent };
-//# sourceMappingURL=/Users/guillaume/git/eritis_fe/src/app/meeting/meeting-list/coach/meeting-item-coach.component.js.map
+//# sourceMappingURL=/Users/guillaume/angular/eritis_fe/src/app/meeting/meeting-list/coach/meeting-item-coach.component.js.map

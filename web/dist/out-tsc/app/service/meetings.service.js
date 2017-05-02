@@ -52,4 +52,4 @@ MeetingsService = __decorate([
     __metadata("design:paramtypes", [AuthService])
 ], MeetingsService);
 export { MeetingsService };
-//# sourceMappingURL=/Users/guillaume/git/eritis_fe/src/app/service/meetings.service.js.map
+//# sourceMappingURL=/Users/guillaume/angular/eritis_fe/src/app/service/meetings.service.js.map

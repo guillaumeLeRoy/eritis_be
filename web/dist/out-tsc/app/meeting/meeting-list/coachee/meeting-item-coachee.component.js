@@ -130,4 +130,4 @@ MeetingItemCoacheeComponent = __decorate([
     __metadata("design:paramtypes", [Router, CoachCoacheeService, ChangeDetectorRef])
 ], MeetingItemCoacheeComponent);
 export { MeetingItemCoacheeComponent };
-//# sourceMappingURL=/Users/guillaume/git/eritis_fe/src/app/meeting/meeting-list/coachee/meeting-item-coachee.component.js.map
+//# sourceMappingURL=/Users/guillaume/angular/eritis_fe/src/app/meeting/meeting-list/coachee/meeting-item-coachee.component.js.map

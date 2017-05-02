@@ -10,4 +10,4 @@
     firebase_authDomain: "eritis-be-dev.firebaseapp.com",
     firebase_databaseURL: "https://eritis-be-dev.firebaseio.com",
 };
-//# sourceMappingURL=/Users/guillaume/git/eritis_fe/src/environments/environment.dev.js.map
+//# sourceMappingURL=/Users/guillaume/angular/eritis_fe/src/environments/environment.dev.js.map
