@@ -16,13 +16,11 @@ handlers:
   - url: /(.*\.(gif|png|jpg|svg|css|js|ttf|woff|woff2|eot|ico)(|\.map))$
     static_files: dist/\1
     upload: dist/(.*)(|\.map)
-#    secure: always
 
-  - url: /admin/(.*)
+  - url: /admin
     script: _go_app
 
   - url: /(.*)
     static_files: dist/index.html
     upload: dist/index.html
-#    secure: always
 
