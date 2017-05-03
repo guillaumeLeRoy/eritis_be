@@ -47,7 +47,9 @@ func adminHandler() http.Handler {
 			return
 		}
 
-		http.ServeFile(w, r, "dist/index.html")
+		log.Debugf(ctx, "adminHandler, serve dist/index.html")
+
+		http.ServeFile(w, r, "/dist/index.html")
 		//handler.ServeHTTP(w, r)
 	})
 
