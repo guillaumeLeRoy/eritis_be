@@ -13,12 +13,15 @@ handlers:
     mime_type: text/plain
     upload: acme_A36z5.txt
 
+  - url: /admin(.*)
+    script: _go_app
+
+#  - url: /admin
+#    script: _go_app
+
   - url: /(.*\.(gif|png|jpg|svg|css|js|ttf|woff|woff2|eot|ico)(|\.map))$
     static_files: dist/\1
     upload: dist/(.*)(|\.map)
-
-  - url: /admin(.*)
-    script: _go_app
 
   - url: /(.*)
     static_files: dist/index.html

@@ -19,12 +19,15 @@ func init() {
 
 	//http.Handle("/", adminHandler(http.FileServer(http.Dir("dist"))));
 	//TODO find a way to define a regex ( idea : use gorilla )
-	http.Handle("/admin", adminHandler());
-	http.Handle("/admin/", adminHandler());
+	//handler := http.FileServer(http.Dir("./dist"))
+	handler := http.FileServer(http.Dir("dist"))
+	http.Handle("/admin/", adminHandler(http.StripPrefix("/admin/", handler)))
+	//http.Handle("/admin", adminHandler(handler));
+	//http.Handle("/admin/", adminHandler(handler));
 }
 
 // remember that http.HandlerFunc is a valid http.Handler too
-func adminHandler() http.Handler {
+func adminHandler(handler http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := appengine.NewContext(r)
 		log.Debugf(ctx, "adminHandler, url %s", r.URL.Path)
@@ -47,10 +50,18 @@ func adminHandler() http.Handler {
 			return
 		}
 
-		log.Debugf(ctx, "adminHandler, serve dist/index.html")
+		log.Debugf(ctx, "adminHandler, serve index.html")
 
-		http.ServeFile(w, r, "/dist/index.html")
-		//handler.ServeHTTP(w, r)
+		//http.Redirect(w, r, "/admin/", http.StatusTemporaryRedirect)
+		//http.ServeFile(w, r, "/dist/index.html")
+		//http.ServeFile(w, r, "/index.html")
+		//http.ServeFile(w, r, "index.html")
+		//http.ServeFile(w, r, "/dist/")
+		handler.ServeHTTP(w, r)
+
+		log.Debugf(ctx, "adminHandler, DONE")
+
+		//fmt.Fprintf(w, `<h1>TEst</h1>`)
 	})
 
 }
