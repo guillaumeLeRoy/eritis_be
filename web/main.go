@@ -18,7 +18,7 @@ func init() {
 	//http.Handle("/", templateHandler(tmpl, "index"))
 
 	//http.Handle("/", adminHandler(http.FileServer(http.Dir("dist"))));
-	//TODO find a way to define a regex
+	//TODO find a way to define a regex ( idea : use gorilla )
 	http.Handle("/admin", adminHandler());
 	http.Handle("/admin/", adminHandler());
 }
@@ -33,6 +33,12 @@ func adminHandler() http.Handler {
 
 		if u != nil {
 			log.Debugf(ctx, "adminHandler, is admin ? %s, email %s", u.Admin, u.Email)
+
+			if !u.Admin {
+				log.Debugf(ctx, "adminHandler, restricted access")
+				fmt.Fprintf(w, `<h1>This is a restricted area</h1>`)
+				return
+			}
 		} else {
 			log.Debugf(ctx, "adminHandler, no user")
 			//url, _ := user.LoginURL(ctx, "dist/index.html")

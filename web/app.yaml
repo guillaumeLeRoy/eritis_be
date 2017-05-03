@@ -17,7 +17,7 @@ handlers:
     static_files: dist/\1
     upload: dist/(.*)(|\.map)
 
-  - url: /admin
+  - url: /admin(.*)
     script: _go_app
 
   - url: /(.*)
