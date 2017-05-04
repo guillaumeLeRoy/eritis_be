@@ -156,12 +156,12 @@ var AuthService = AuthService_1 = (function () {
         }
     };
     AuthService.prototype.getHeader = function (user) {
-        console.log("3. getHeader");
+        console.log("getHeader");
         if (user) {
-            console.log("getHeader, currentUser : ", user);
+            // console.log("getHeader, currentUser : ", user);
             var token = user.firebaseToken;
             if (token) {
-                console.log("getHeader, token : ", token);
+                // console.log("getHeader, token : ", token);
                 var headers = new Headers();
                 headers.append('Authorization', 'Bearer ' + token);
                 return Observable.of(headers);
@@ -176,8 +176,8 @@ var AuthService = AuthService_1 = (function () {
         }
     };
     AuthService.prototype.generatePath = function (path, params) {
-        console.log("generatePath, path : ", path);
-        console.log("generatePath, params : ", params);
+        // console.log("generatePath, path : ", path);
+        // console.log("generatePath, params : ", params);
         var completedPath = "";
         var segs = path.split("/");
         var paramIndex = 0;
@@ -186,8 +186,8 @@ var AuthService = AuthService_1 = (function () {
             if (seg == "" || seg == null) {
                 continue;
             }
-            console.log("generatePath, seg : ", seg);
-            console.log("generatePath, paramIndex : ", paramIndex);
+            // console.log("generatePath, seg : ", seg);
+            // console.log("generatePath, paramIndex : ", paramIndex);
             completedPath += "/";
             if (seg.charAt(0) == ":") {
                 completedPath += params[paramIndex];
@@ -199,9 +199,11 @@ var AuthService = AuthService_1 = (function () {
         }
         //always add a "/" at the end
         completedPath += "/";
-        console.log("generatePath, completedPath : ", completedPath);
-        console.log("generatePath, BACKEND_BASE_URL : ", environment.BACKEND_BASE_URL);
-        return environment.BACKEND_BASE_URL + completedPath;
+        // console.log("generatePath, completedPath : ", completedPath);
+        // console.log("generatePath, BACKEND_BASE_URL : ", environment.BACKEND_BASE_URL);
+        var finalUrl = environment.BACKEND_BASE_URL + completedPath;
+        console.log("generatePath, finalUrl : ", finalUrl);
+        return finalUrl;
     };
     AuthService.prototype.updateAuthStatus = function (fbUser) {
         var _this = this;
@@ -434,6 +436,7 @@ AuthService.POST_SIGN_UP_COACH = "/login/:firebaseId/coach";
 AuthService.POST_SIGN_UP_COACHEE = "/login/:firebaseId/coachee";
 AuthService.LOGIN = "/login/:firebaseId";
 AuthService.GET_COACHS = "/coachs";
+AuthService.GET_COACHEES = "/coachees";
 AuthService.GET_COACH_FOR_ID = "/coachs/:id";
 AuthService.GET_COACHEE_FOR_ID = "/coachees/:id";
 /*Meeting*/

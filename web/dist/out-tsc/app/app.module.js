@@ -25,6 +25,7 @@ import { CoachItemComponent } from './user/coach-list/coach-item.component';
 import { CoachCoacheeService } from './service/CoachCoacheeService';
 import { CoachDetailsComponent } from './user/coach-details/coach-details.component';
 import { CalendarModule } from 'angular-calendar'; // lib
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 import { MeetingsService } from './service/meetings.service';
 import { MeetingListComponent } from './meeting/meeting-list/meeting-list.component';
@@ -39,6 +40,9 @@ import { MeetingDateComponent } from './meeting/meeting-date/meeting-date.compon
 import { SliderModule } from 'primeng/components/slider/slider';
 import { Ng2PageScrollModule } from 'ng2-page-scroll';
 import { PostMeetingComponent } from './meeting/review/post-meeting.component';
+import { CoachSelectorComponent } from './user/coach-selector/coach-selector.component';
+import { AdminAPIService } from "./service/adminAPI.service";
+import { AdminComponent } from './admin/admin.component';
 var AppModule = (function () {
     function AppModule() {
     }
@@ -65,9 +69,12 @@ AppModule = __decorate([
             MeetingItemCoachComponent,
             MeetingDateComponent,
             PreMeetingComponent,
-            PostMeetingComponent
+            PostMeetingComponent,
+            CoachSelectorComponent,
+            AdminComponent
         ],
         imports: [
+            BrowserAnimationsModule,
             BrowserModule,
             FormsModule,
             HttpModule,
@@ -78,7 +85,7 @@ AppModule = __decorate([
             SliderModule,
             Ng2PageScrollModule.forRoot()
         ],
-        providers: [DataService, LogService, AuthService, AuthGuard, CoachCoacheeService, MeetingsService, FirebaseService],
+        providers: [DataService, LogService, AuthService, AuthGuard, CoachCoacheeService, MeetingsService, FirebaseService, AdminAPIService],
         bootstrap: [AppComponent]
     })
 ], AppModule);

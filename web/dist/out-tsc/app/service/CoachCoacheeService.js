@@ -23,6 +23,14 @@ var CoachCoacheeService = (function () {
             return json;
         });
     };
+    CoachCoacheeService.prototype.getAllCoachees = function () {
+        console.log("getAllCoachees, start request");
+        return this.apiService.get(AuthService.GET_COACHEES, null).map(function (response) {
+            var json = response.json();
+            console.log("getAllCoachees, response json : ", json);
+            return json;
+        });
+    };
     CoachCoacheeService.prototype.getCoachForId = function (id) {
         console.log("getCoachForId, id", id);
         var param = [id];

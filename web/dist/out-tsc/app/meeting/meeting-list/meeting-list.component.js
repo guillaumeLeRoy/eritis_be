@@ -22,6 +22,7 @@ var MeetingListComponent = (function () {
         this.cd = cd;
         this.hasOpenedMeeting = false;
         this.hasClosedMeeting = false;
+        this.hasUnbookedMeeting = false;
     }
     MeetingListComponent.prototype.ngOnInit = function () {
         console.log("ngOnInit");
@@ -55,8 +56,9 @@ var MeetingListComponent = (function () {
             console.log("got meetings for coach", meetings);
             _this.meetingsArray = meetings;
             _this.meetings = Observable.of(meetings);
-            _this.getOpenedMeetings();
+            _this.getBookedMeetings();
             _this.getClosedMeetings();
+            _this.getUnbookedMeetings();
             _this.cd.detectChanges();
         });
     };
@@ -140,6 +142,37 @@ var MeetingListComponent = (function () {
             }
             this.meetingsClosed = Observable.of(closed_1);
         }
+    };
+    MeetingListComponent.prototype.getBookedMeetings = function () {
+        console.log('getOpenedMeetings');
+        if (this.meetingsArray != null) {
+            var opened = [];
+            for (var _i = 0, _a = this.meetingsArray; _i < _a.length; _i++) {
+                var meeting = _a[_i];
+                if (meeting.isOpen && meeting.agreed_date) {
+                    opened.push(meeting);
+                    this.hasOpenedMeeting = true;
+                }
+            }
+            this.meetingsOpened = Observable.of(opened);
+        }
+    };
+    MeetingListComponent.prototype.getUnbookedMeetings = function () {
+        console.log('getAskedMeetings');
+        if (this.meetingsArray != null) {
+            var unbooked = [];
+            for (var _i = 0, _a = this.meetingsArray; _i < _a.length; _i++) {
+                var meeting = _a[_i];
+                if (meeting.isOpen && !meeting.agreed_date) {
+                    unbooked.push(meeting);
+                    this.hasUnbookedMeeting = true;
+                }
+            }
+            this.meetingsUnbooked = Observable.of(unbooked);
+        }
+    };
+    MeetingListComponent.prototype.refreshDashboard = function () {
+        location.reload();
     };
     MeetingListComponent.prototype.ngOnDestroy = function () {
         if (this.subscription) {

@@ -9,7 +9,6 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CoachCoacheeService } from "../service/CoachCoacheeService";
-import { MEETING_REVIEW_TYPE_SESSION_CONTEXT, MEETING_REVIEW_TYPE_SESSION_GOAL } from "../model/MeetingReview";
 var PreMeetingComponent = (function () {
     function PreMeetingComponent(coachService) {
         this.coachService = coachService;
@@ -18,28 +17,31 @@ var PreMeetingComponent = (function () {
     }
     PreMeetingComponent.prototype.ngOnInit = function () {
         console.log("PreMeetingComponent onInit");
-        this.getAllMeetingReviews();
+        //this.getAllMeetingReviews();
+        this.getMeetingGoal();
+        this.getMeetingContext();
     };
-    /* Get form API all reviews for the given meeting */
-    PreMeetingComponent.prototype.getAllMeetingReviews = function () {
+    /* Get from API review goal for the given meeting */
+    PreMeetingComponent.prototype.getMeetingGoal = function () {
         var _this = this;
-        console.log("getAllMeetingReviews, meetingId : ", this.meetingId);
-        this.coachService.getMeetingReviews(this.meetingId).subscribe(function (reviews) {
-            console.log("getAllMeetingReviews, got reviews : ", reviews);
-            if (reviews != null) {
-                //search for correct type
-                for (var _i = 0, reviews_1 = reviews; _i < reviews_1.length; _i++) {
-                    var review = reviews_1[_i];
-                    if (review.type == MEETING_REVIEW_TYPE_SESSION_GOAL) {
-                        _this.updateGoalValue(review.comment);
-                    }
-                    else if (review.type == MEETING_REVIEW_TYPE_SESSION_CONTEXT) {
-                        _this.updateContextValue(review.comment);
-                    }
-                }
-            }
+        this.coachService.getMeetingGoal(this.meetingId).subscribe(function (reviews) {
+            console.log("getMeetingGoal, got goal : ", reviews);
+            if (reviews != null)
+                _this.updateGoalValue(reviews[0].comment);
         }, function (error) {
-            console.log('getAllMeetingReviews error', error);
+            console.log('getMeetingGoal error', error);
+            //this.displayErrorPostingReview = true;
+        });
+    };
+    /* Get from API all review context for the given meeting */
+    PreMeetingComponent.prototype.getMeetingContext = function () {
+        var _this = this;
+        this.coachService.getMeetingContext(this.meetingId).subscribe(function (reviews) {
+            console.log("getMeetingContext, got context : ", reviews);
+            if (reviews != null)
+                _this.updateContextValue(reviews[0].comment);
+        }, function (error) {
+            console.log('getMeetingContext error', error);
             //this.displayErrorPostingReview = true;
         });
     };

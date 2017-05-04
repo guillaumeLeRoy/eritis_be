@@ -111,6 +111,12 @@ var MeetingItemCoacheeComponent = (function () {
     MeetingItemCoacheeComponent.prototype.goToModifyDate = function (meetingId) {
         this.router.navigate(['/date', meetingId]);
     };
+    MeetingItemCoacheeComponent.prototype.openModal = function () {
+        $('#deleteModal').openModal();
+    };
+    MeetingItemCoacheeComponent.prototype.closeModal = function () {
+        $('#deleteModal').closeModal();
+    };
     return MeetingItemCoacheeComponent;
 }());
 __decorate([

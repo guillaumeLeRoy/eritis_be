@@ -66,6 +66,7 @@ var CoachListComponent = (function () {
         this.coachee = Observable.of(coachee);
         if (coachee.selectedCoach) {
             console.log('onUserObtained, we have a selected coach');
+            // this.selectedCoach = coachee.selectedCoach;
         }
         else {
             // if not coach selected, display possible coachs

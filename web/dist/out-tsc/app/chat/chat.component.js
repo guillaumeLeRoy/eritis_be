@@ -41,6 +41,12 @@ var ChatComponent = (function () {
                 // Hide sign-in button.
                 // We load currently existing chat messages.
                 _this.loadMessages();
+                //load top questions
+                // this.recipeService.getTopQuestions().subscribe(
+                //   response => {
+                //     console.log("top questions response : ", response)
+                //   }
+                // )
             }
             else {
                 console.log("user is NOT authent");

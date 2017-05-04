@@ -23,10 +23,10 @@ var MeetingDateComponent = (function () {
         this.days = ['Dimanche', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'];
         this.now = new Date();
         this.dateModel = { year: this.now.getFullYear(), month: this.now.getMonth() + 1, day: this.now.getDate() };
-        // timeModel: NgbTimeStruct;
         this.timeRange = [10, 18];
         this.displayErrorBookingDate = false;
         this.isEditingPotentialDate = false;
+        this.potentialDatesArray = new Array();
     }
     MeetingDateComponent.prototype.ngOnInit = function () {
         var _this = this;
@@ -51,9 +51,6 @@ var MeetingDateComponent = (function () {
         this.connectedUser = Observable.of(user);
         this.cd.detectChanges();
     };
-    MeetingDateComponent.prototype.sliderMinPosition = function () {
-        return this.timeRange[0];
-    };
     MeetingDateComponent.prototype.bookOrUpdateADate = function () {
         var _this = this;
         console.log('bookADate, dateModel : ', this.dateModel);
@@ -71,34 +68,31 @@ var MeetingDateComponent = (function () {
                 // just update potential date
                 _this.coachService.updatePotentialTime(_this.mEditingPotentialTimeId, timestampMin, timestampMax).subscribe(function (meetingDate) {
                     console.log('updatePotentialTime, meetingDate : ', meetingDate);
-                    // redirect to meetings page
-                    // this.router.navigate(['/meetings']);
-                    // this.potentialDatePosted.emit(meetingDate);
-                    // TODO find a replace potential
+                    // Reload potential times
+                    _this.loadMeetingPotentialTimes(_this.meetingId);
+                    //reset progress bar values
+                    _this.resetValues();
                 }, function (error) {
                     console.log('updatePotentialTime error', error);
                     _this.displayErrorBookingDate = true;
                 });
-                // Reload potential times
-                _this.loadMeetingPotentialTimes(_this.meetingId);
-                _this.resetValues();
             }
             else {
                 // create new date
                 _this.coachService.addPotentialDateToMeeting(_this.meetingId, timestampMin, timestampMax).subscribe(function (meetingDate) {
                     console.log('addPotentialDateToMeeting, meetingDate : ', meetingDate);
-                    // redirect to meetings page
-                    // this.router.navigate(['/meetings']);
-                    // this.potentialDatePosted.emit(meetingDate);
                     _this.potentialDatesArray.push(meetingDate);
+                    // Reload potential times
+                    console.log('reload potential times');
+                    // Reload potential times
+                    _this.loadMeetingPotentialTimes(_this.meetingId);
+                    //reset progress bar values
+                    _this.resetValues();
                 }, function (error) {
                     console.log('addPotentialDateToMeeting error', error);
                     _this.displayErrorBookingDate = true;
                 });
             }
-            // Reload potential times
-            console.log('reload potential times');
-            _this.loadMeetingPotentialTimes(_this.meetingId);
         });
     };
     MeetingDateComponent.prototype.unbookAdate = function (potentialDateId) {
@@ -106,8 +100,10 @@ var MeetingDateComponent = (function () {
         console.log('unbookAdate');
         this.coachService.removePotentialTime(potentialDateId).subscribe(function (response) {
             console.log('unbookAdate, response', response);
-            // TODO reload potential dates
+            //reset progress bar values
             _this.resetValues();
+            // Reload potential times
+            _this.loadMeetingPotentialTimes(_this.meetingId);
             _this.loadMeetingPotentialTimes(_this.meetingId);
         }, function (error) {
             console.log('unbookAdate, error', error);
@@ -115,18 +111,19 @@ var MeetingDateComponent = (function () {
     };
     MeetingDateComponent.prototype.modifyPotentialDate = function (potentialDateId) {
         console.log('modifyPotentialDate, potentialDateId', potentialDateId);
-        var startTime = 7;
-        var endTime = 18;
+        //find the potentialDate we want to modify
         for (var _i = 0, _a = this.potentialDatesArray; _i < _a.length; _i++) {
             var potential = _a[_i];
             if (potential.id === potentialDateId) {
-                startTime = this.getHours(potential.start_date);
-                endTime = this.getHours(potential.end_date);
+                var startTime = this.getHours(potential.start_date);
+                var endTime = this.getHours(potential.end_date);
+                //switch to edit mode
+                this.isEditingPotentialDate = true;
+                this.mEditingPotentialTimeId = potentialDateId;
+                this.timeRange = [startTime, endTime];
+                break;
             }
         }
-        this.isEditingPotentialDate = true;
-        this.mEditingPotentialTimeId = potentialDateId;
-        this.timeRange = [startTime, endTime];
     };
     MeetingDateComponent.prototype.getHours = function (date) {
         return (new Date(date)).getHours();
@@ -158,18 +155,23 @@ var MeetingDateComponent = (function () {
     MeetingDateComponent.prototype.isDisabled = function (date, current) {
         return (date.month !== current.month);
     };
-    MeetingDateComponent.prototype.onPotentialDatePosted = function (date) {
-        console.log('onPotentialDatePosted');
-        // this.potentialDatePosted.emit(date);
-        this.potentialDatesArray.push(date);
-    };
+    /**
+     * Fetch from API potential times for the given meeting id.
+     * @param meetingId
+     */
     MeetingDateComponent.prototype.loadMeetingPotentialTimes = function (meetingId) {
         var _this = this;
         this.coachService.getMeetingPotentialTimes(meetingId).subscribe(function (dates) {
-            console.log('potential dates obtained, ', dates);
-            _this.potentialDatesArray = dates;
+            console.log('loadMeetingPotentialTimes : ', dates);
+            if (dates != null) {
+                //clear array
+                _this.potentialDatesArray = new Array();
+                //add received dates
+                (_a = _this.potentialDatesArray).push.apply(_a, dates);
+            }
             _this.potentialDates = Observable.of(dates);
             _this.cd.detectChanges();
+            var _a;
         }, function (error) {
             console.log('get potentials dates error', error);
         });
