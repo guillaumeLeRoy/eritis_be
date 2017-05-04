@@ -51,6 +51,10 @@ CRON :
 gcloud app deploy cron.yaml
 
 
+rollback :
+appcfg.py rollback /Users/guillaume/go_path_appengine/src/eritis_be/firebase/ -A eritis-be-dev -V 1
+
+
 */
 
 const LIVE_ENV_PROJECT_ID string = "eritis-150320"

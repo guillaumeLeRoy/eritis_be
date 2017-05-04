@@ -16,15 +16,14 @@ handlers:
   - url: /admin(.*)
     script: _go_app
 
-#  - url: /admin
-#    script: _go_app
-
   - url: /(.*\.(gif|png|jpg|svg|css|js|ttf|woff|woff2|eot|ico)(|\.map))$
     static_files: dist/\1
     upload: dist/(.*)(|\.map)
+    application_readable: true
 
   - url: /(.*)
     static_files: dist/index.html
     upload: dist/index.html
+    application_readable: true
 
 
