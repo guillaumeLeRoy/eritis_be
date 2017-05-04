@@ -20,14 +20,61 @@ func init() {
 	//http.Handle("/", adminHandler(http.FileServer(http.Dir("dist"))));
 	//TODO find a way to define a regex ( idea : use gorilla )
 	//handler := http.FileServer(http.Dir("./dist"))
+
+	//handler := http.FileServer(http.Dir("dist"))
+	//http.Handle("/admin", adminLocalHandler(http.StripPrefix("/admin/", handler)))
+	//http.Handle("/admin/", adminLocalHandler(http.StripPrefix("/admin/", handler)))
+
 	handler := http.FileServer(http.Dir("dist"))
-	http.Handle("/admin/", adminHandler(http.StripPrefix("/admin/", handler)))
-	//http.Handle("/admin", adminHandler(handler));
-	//http.Handle("/admin/", adminHandler(handler));
+	http.Handle("/admin", adminRemoteHandler(handler))
+	http.Handle("/admin/", adminRemoteHandler(handler))
+	//http.Handle("/admin", http.StripPrefix("/admin/", adminRemoteHandler(handler)))
+	//http.Handle("/admin/", http.StripPrefix("/admin/", adminRemoteHandler(handler)))
+	//http.Handle("/admin/", http.StripPrefix("/admin/", handler))//do work
+
 }
 
+//// remember that http.HandlerFunc is a valid http.Handler too
+//func adminLocalHandler(handler http.Handler) http.Handler {
+//	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+//		ctx := appengine.NewContext(r)
+//		log.Debugf(ctx, "adminHandler, url %s", r.URL.Path)
+//
+//		u := user.Current(ctx)
+//
+//		if u != nil {
+//			log.Debugf(ctx, "adminHandler, is admin ? %s, email %s", u.Admin, u.Email)
+//
+//			if !u.Admin {
+//				log.Debugf(ctx, "adminHandler, restricted access")
+//				fmt.Fprintf(w, `<h1>This is a restricted area</h1>`)
+//				return
+//			}
+//		} else {
+//			log.Debugf(ctx, "adminHandler, no user")
+//			//url, _ := user.LoginURL(ctx, "dist/index.html")
+//			url, _ := user.LoginURL(ctx, "admin")
+//			fmt.Fprintf(w, `<a href="%s">Sign in or register</a>`, url)
+//			return
+//		}
+//
+//		log.Debugf(ctx, "adminHandler, serve index.html")
+//
+//		//http.Redirect(w, r, "/admin/", http.StatusTemporaryRedirect)
+//		//http.ServeFile(w, r, "/dist/index.html")
+//		//http.ServeFile(w, r, "/index.html")
+//		//http.ServeFile(w, r, "index.html")
+//		//http.ServeFile(w, r, "/dist/")
+//		//handler.ServeHTTP(w, r)
+//
+//		log.Debugf(ctx, "adminHandler, DONE")
+//
+//		//fmt.Fprintf(w, `<h1>TEst</h1>`)
+//	})
+//}
+
 // remember that http.HandlerFunc is a valid http.Handler too
-func adminHandler(handler http.Handler) http.Handler {
+func adminRemoteHandler(handler http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := appengine.NewContext(r)
 		log.Debugf(ctx, "adminHandler, url %s", r.URL.Path)
@@ -52,12 +99,24 @@ func adminHandler(handler http.Handler) http.Handler {
 
 		log.Debugf(ctx, "adminHandler, serve index.html")
 
+		//tested
+		//http.ServeFile(w, r, "dist/index.html")
+		//http.ServeFile(w, r, "/dist/index.html") 403 forbidden
+		//http.ServeFile(w, r, "index.html") 404
+		//http.ServeFile(w, r, "dist/" + r.URL.Path)
+		//http.ServeFile(w, r, filepath.Join("dist", "index.html")) 404
+
+
 		//http.Redirect(w, r, "/admin/", http.StatusTemporaryRedirect)
 		//http.ServeFile(w, r, "/dist/index.html")
+		//http.ServeFile(w, r, "dist/index.html")
+		//http.ServeFile(w, r, filepath.Join("dist", "index.html"))
 		//http.ServeFile(w, r, "/index.html")
 		//http.ServeFile(w, r, "index.html")
 		//http.ServeFile(w, r, "/dist/")
+
 		handler.ServeHTTP(w, r)
+
 
 		log.Debugf(ctx, "adminHandler, DONE")
 
