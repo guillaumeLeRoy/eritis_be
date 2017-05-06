@@ -43,11 +43,7 @@ func (m *Meeting) Create(ctx context.Context) error {
 	return nil
 }
 
-func (m *Meeting) Close(ctx context.Context) error {
-	log.Debugf(ctx, "Close meeting", m)
-
-	m.IsOpen = false
-
+func (m *Meeting) update(ctx context.Context) error {
 	key, err := datastore.Put(ctx, m.Key, m)
 	if err != nil {
 		return err
@@ -55,6 +51,14 @@ func (m *Meeting) Close(ctx context.Context) error {
 	m.Key = key
 
 	return nil
+}
+
+func (m *Meeting) Close(ctx context.Context) error {
+	log.Debugf(ctx, "Close meeting", m)
+
+	m.IsOpen = false
+
+	return m.update(ctx)
 }
 
 func GetMeeting(ctx context.Context, key *datastore.Key) (*Meeting, error) {
@@ -133,11 +137,11 @@ func getMeetingsCountForCoache(ctx context.Context, coachKey *datastore.Key) (in
 	if err != nil {
 		return 0, err
 	}
-	return count,nil
+	return count, nil
 }
 
 func GetMeetingsForCoach(ctx context.Context, coachKey *datastore.Key) ([]*ApiMeeting, error) {
-	log.Debugf(ctx, "GetMeetingsForCoach")
+	log.Debugf(ctx, "GetMeetingsForCoach, key %s", coachKey)
 
 	var meetings []*Meeting
 	keys, err := datastore.NewQuery("Meeting").Filter("CoachKey =", coachKey).GetAll(ctx, &meetings)
@@ -193,7 +197,7 @@ func getMeetingsCountForCoachee(ctx context.Context, coacheeKey *datastore.Key) 
 	if err != nil {
 		return 0, err
 	}
-	return count,nil
+	return count, nil
 }
 
 func GetMeetingsForCoachee(ctx context.Context, coacheeKey *datastore.Key) ([]*ApiMeeting, error) {
@@ -247,4 +251,32 @@ func GetMeetingsForCoachee(ctx context.Context, coacheeKey *datastore.Key) ([]*A
 	}
 
 	return ApiMeetings, nil
+}
+
+func associateCoachWithMeeting(ctx context.Context, coacheeKey *datastore.Key, coachKey *datastore.Key) error {
+	log.Debugf(ctx, "associateCoachWithMeeting, coacheeKey %s, coach %s", coacheeKey, coachKey)
+
+	//get meetings for this coachee
+	var meetings []*Meeting
+	keys, err := datastore.NewQuery("Meeting").Filter("CoacheeKey =", coacheeKey).GetAll(ctx, &meetings)
+	if err != nil {
+		return err
+	}
+
+	//where NO coach is associated to a meeting, set a coach
+	for i, meeting := range meetings {
+		meeting.Key = keys[i]
+
+		if meeting.CoachKey == nil {
+			log.Debugf(ctx, "associate coach")
+			meeting.CoachKey = coachKey
+			//save
+			err = meeting.update(ctx)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
 }

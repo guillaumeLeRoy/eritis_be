@@ -145,6 +145,7 @@ func handleUpdateSelectedCoach(w http.ResponseWriter, r *http.Request, coacheeId
 	}
 
 	//update Coachee selected coach
+	//update coachee's meeting with the selected coach
 	apiCoachee, err := coachee.UpdateSelectedCoach(ctx, coach)
 	if err != nil {
 		RespondErr(ctx, w, r, err, http.StatusInternalServerError)

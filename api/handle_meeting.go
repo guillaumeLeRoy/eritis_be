@@ -266,6 +266,8 @@ func handleCreateMeeting(w http.ResponseWriter, r *http.Request) {
 
 func getAllMeetingsForCoach(w http.ResponseWriter, r *http.Request, uid string) {
 	ctx := appengine.NewContext(r)
+	log.Debugf(ctx, "getAllMeetingsForCoach")
+
 	key, err := datastore.DecodeKey(uid)
 	if err != nil {
 		RespondErr(ctx, w, r, err, http.StatusBadRequest)
@@ -283,6 +285,8 @@ func getAllMeetingsForCoach(w http.ResponseWriter, r *http.Request, uid string) 
 
 func getAllMeetingsForCoachee(w http.ResponseWriter, r *http.Request, uid string) {
 	ctx := appengine.NewContext(r)
+	log.Debugf(ctx, "getAllMeetingsForCoachee")
+
 	key, err := datastore.DecodeKey(uid)
 	if err != nil {
 		RespondErr(ctx, w, r, err, http.StatusBadRequest)

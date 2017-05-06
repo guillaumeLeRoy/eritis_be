@@ -228,6 +228,7 @@ func (c *Coachee)update(ctx context.Context) (error) {
 
 /**
  Associate the given coach with this Coachee
+ Update coachee's meetings with the selected coach.
  */
 func (c *Coachee) UpdateSelectedCoach(ctx context.Context, coach *Coach) (*APICoachee, error) {
 	log.Debugf(ctx, "UpdateSelectedCoach : %s", coach)
@@ -238,6 +239,12 @@ func (c *Coachee) UpdateSelectedCoach(ctx context.Context, coach *Coach) (*APICo
 		return nil, err
 	}
 	c.Key = key
+
+	//update meetings with selected coach
+	err = associateCoachWithMeeting(ctx, c.Key, coach.Key)
+	if err != nil {
+		return nil, err
+	}
 
 	//get the plan
 	plan := createPlanFromId(c.PlanId)
