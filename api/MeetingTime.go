@@ -7,10 +7,12 @@ import (
 	"time"
 )
 
+//Origin represent the user who created this MeetingTime
 type MeetingTime struct {
 	Key       *datastore.Key `json:"id" datastore:"-"`
 	StartDate time.Time `json:"start_date"`
 	EndDate   time.Time `json:"end_date"`
+	Origin    *datastore.Key `json:"origin"`
 }
 
 func (m *MeetingTime) Create(ctx context.Context, meetingKey *datastore.Key) error {

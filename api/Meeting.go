@@ -117,6 +117,20 @@ func (m *Meeting) SetMeetingTime(ctx context.Context, meetingTimeKey *datastore.
 	return nil
 }
 
+func (m *Meeting) clearMeetingTime(ctx context.Context) error {
+	log.Debugf(ctx, "clearMeetingTime", m)
+
+	m.AgreedTime = nil
+
+	key, err := datastore.Put(ctx, m.Key, m)
+	if err != nil {
+		return err
+	}
+	m.Key = key
+
+	return nil
+}
+
 func (m *Meeting) setMeetingCoach(ctx context.Context, coachKey *datastore.Key) error {
 	log.Debugf(ctx, "SetMeetingTime", m)
 
@@ -131,13 +145,19 @@ func (m *Meeting) setMeetingCoach(ctx context.Context, coachKey *datastore.Key) 
 	return nil
 }
 
-//get the number of Meetings saved for a given Coach
-func getMeetingsCountForCoache(ctx context.Context, coachKey *datastore.Key) (int, error) {
-	count, err := datastore.NewQuery("Meeting").Filter("CoachKey =", coachKey).Count(ctx)
+func (m *Meeting)removeMeetingCoach(ctx context.Context) error {
+	log.Debugf(ctx, "SetMeetingTime", m)
+
+	//remove key
+	m.CoacheeKey = nil
+
+	key, err := datastore.Put(ctx, m.Key, m)
 	if err != nil {
-		return 0, err
+		return err
 	}
-	return count, nil
+	m.Key = key
+
+	return nil
 }
 
 func GetMeetingsForCoach(ctx context.Context, coachKey *datastore.Key) ([]*ApiMeeting, error) {

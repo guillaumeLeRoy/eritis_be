@@ -203,6 +203,16 @@ func HandleMeeting(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 
+		//delete meeting
+		if contains {
+			params := PathParams(ctx, r, "/api/meeting/:meetingId")
+			potId, ok := params[":reviewId"]
+			if ok {
+				handleDeleteMeetingReview(w, r, potId)
+				return
+			}
+		}
+
 		http.NotFound(w, r)
 		return
 	default:
@@ -626,6 +636,35 @@ func handleDeleteMeetingReview(w http.ResponseWriter, r *http.Request, reviewId 
 	}
 
 	Respond(ctx, w, r, nil, http.StatusOK)
+}
+
+func handleCoachCancelMeeting(w http.ResponseWriter, r *http.Request, meetingId string) {
+	ctx := appengine.NewContext(r)
+	log.Debugf(ctx, "handleCancelMeeting, meetingId %s", meetingId)
+
+	meetingKey, err := datastore.DecodeKey(meetingId)
+	if err != nil {
+		RespondErr(ctx, w, r, err, http.StatusBadRequest)
+		return
+	}
+
+	meeting, err := GetMeeting(ctx, meetingKey)
+	if err != nil {
+		RespondErr(ctx, w, r, err, http.StatusBadRequest)
+		return
+	}
+
+	//remove Coach from Coachee
+	err = meeting.removeMeetingCoach(ctx)
+	if err != nil {
+		RespondErr(ctx, w, r, err, http.StatusBadRequest)
+		return
+	}
+	//remove agreed MeetingTime
+	err = meeting.clearMeetingTime(ctx)
+
+	//TODO : remove potential date
+
 }
 
 func updateMeetingPotentialTime(w http.ResponseWriter, r *http.Request, potentialId string) {
