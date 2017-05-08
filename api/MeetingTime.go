@@ -87,6 +87,23 @@ func getMeetingPotentialTimesForCoach(ctx context.Context, meetingKey *datastore
 	return times, nil
 }
 
+func clearAllMeetingTimesForAMeeting(ctx context.Context, meetingKey *datastore.Key) error {
+	log.Debugf(ctx, "clearAllMeetingTimesForAMeeting, meeting key %s", meetingKey)
+
+	times, err := GetMeetingPotentialTimes(ctx, meetingKey)
+	if err != nil {
+		return nil, err
+	}
+	for _, time := range times {
+		err = deleteMeetingPotentialTime(ctx, time)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return nil
+}
+
 // update potential time
 func (p *MeetingTime)updateMeetingPotentialTime(ctx context.Context) (error) {
 	log.Debugf(ctx, "updateeMeetingPotentialTime, potential key %s", p.Key)

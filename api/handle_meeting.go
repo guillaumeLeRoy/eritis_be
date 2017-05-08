@@ -674,6 +674,33 @@ func handleCoachCancelMeeting(w http.ResponseWriter, r *http.Request, meetingId 
 	err = meeting.clearMeetingTime(ctx)
 }
 
+func handleCoacheeCancelMeeting(w http.ResponseWriter, r *http.Request, meetingId string) {
+	ctx := appengine.NewContext(r)
+	log.Debugf(ctx, "handleCoacheeCancelMeeting, meetingId %s", meetingId)
+
+	meetingKey, err := datastore.DecodeKey(meetingId)
+	if err != nil {
+		RespondErr(ctx, w, r, err, http.StatusBadRequest)
+		return
+	}
+
+	meeting, err := GetMeeting(ctx, meetingKey)
+	if err != nil {
+		RespondErr(ctx, w, r, err, http.StatusInternalServerError)
+		return
+	}
+
+	//remove all meetingTimes for this meeting
+	err = clearAllMeetingTimesForAMeeting(ctx, meetingKey)
+	if err != nil {
+		RespondErr(ctx, w, r, err, http.StatusInternalServerError)
+		return
+	}
+
+	//TODO remove associated coach
+
+}
+
 func updateMeetingPotentialTime(w http.ResponseWriter, r *http.Request, potentialId string) {
 	ctx := appengine.NewContext(r)
 	log.Debugf(ctx, "updateMeetingPontentialTime, potentialId %s", potentialId)
