@@ -203,12 +203,12 @@ func HandleMeeting(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 
-		//delete meeting
+		//when a coach wants to delete meeting
 		if contains {
 			params := PathParams(ctx, r, "/api/meeting/:meetingId")
-			potId, ok := params[":reviewId"]
+			meetingId, ok := params[":meetingId"]
 			if ok {
-				handleDeleteMeetingReview(w, r, potId)
+				handleCoachCancelMeeting(w, r, meetingId)
 				return
 			}
 		}
@@ -475,13 +475,20 @@ func createMeetingPotentialTime(w http.ResponseWriter, r *http.Request, meetingI
 		RespondErr(ctx, w, r, err, http.StatusBadRequest)
 		return
 	}
-	var potentialTime = &MeetingTime{}
 	//start and end hours are 24 based
 	var potential struct {
 		StartDate string `json:"start_date"`
 		EndDate   string `json:"end_date"`
+		Origin    string `json:"origin"`
 	}
 	err = Decode(r, &potential)
+	if err != nil {
+		RespondErr(ctx, w, r, err, http.StatusBadRequest)
+		return
+	}
+
+	//get Origin : coach or coachee
+	originKey, err := datastore.DecodeKey(potential.Origin)
 	if err != nil {
 		RespondErr(ctx, w, r, err, http.StatusBadRequest)
 		return
@@ -494,7 +501,6 @@ func createMeetingPotentialTime(w http.ResponseWriter, r *http.Request, meetingI
 	}
 	StartDate := time.Unix(StartDateInt, 0)
 	log.Debugf(ctx, "handleCreateMeeting, StartDate : ", StartDate)
-	potentialTime.StartDate = StartDate
 
 	EndDateInt, err := strconv.ParseInt(potential.EndDate, 10, 64)
 	if err != nil {
@@ -502,7 +508,8 @@ func createMeetingPotentialTime(w http.ResponseWriter, r *http.Request, meetingI
 	}
 	EndDate := time.Unix(EndDateInt, 0)
 	log.Debugf(ctx, "handleCreateMeeting, EndDate : ", EndDate)
-	potentialTime.EndDate = EndDate
+
+	potentialTime := constructor(StartDate, EndDate, originKey)
 
 	err = potentialTime.Create(ctx, meetingKey)
 	if err != nil {
@@ -654,6 +661,9 @@ func handleCoachCancelMeeting(w http.ResponseWriter, r *http.Request, meetingId 
 		return
 	}
 
+	//remove MeetingTime(s) set by coach
+	clearMeetingTimeForCoach(ctx, meetingKey, meeting.CoachKey)
+
 	//remove Coach from Coachee
 	err = meeting.removeMeetingCoach(ctx)
 	if err != nil {
@@ -662,9 +672,6 @@ func handleCoachCancelMeeting(w http.ResponseWriter, r *http.Request, meetingId 
 	}
 	//remove agreed MeetingTime
 	err = meeting.clearMeetingTime(ctx)
-
-	//TODO : remove potential date
-
 }
 
 func updateMeetingPotentialTime(w http.ResponseWriter, r *http.Request, potentialId string) {

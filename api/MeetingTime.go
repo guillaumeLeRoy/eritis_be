@@ -15,6 +15,14 @@ type MeetingTime struct {
 	Origin    *datastore.Key `json:"origin"`
 }
 
+func constructor(start time.Time, end time.Time, origin  *datastore.Key) MeetingTime {
+	var potentialTime = &MeetingTime{}
+	potentialTime.StartDate = start
+	potentialTime.EndDate = end
+	potentialTime.Origin = origin
+	return potentialTime
+}
+
 func (m *MeetingTime) Create(ctx context.Context, meetingKey *datastore.Key) error {
 	log.Debugf(ctx, "Create potential time", m)
 
@@ -61,6 +69,24 @@ func GetMeetingPotentialTimes(ctx context.Context, meetingKey *datastore.Key) ([
 	return times, nil
 }
 
+//get all potential times for the given meeting and coach
+func getMeetingPotentialTimesForCoach(ctx context.Context, meetingKey *datastore.Key, coachKey *datastore.Key) ([]*MeetingTime, error) {
+	log.Debugf(ctx, "getMeetingPotentialTimesForCoach, meeting key %s, %s", meetingKey, coachKey)
+
+	var times []*MeetingTime
+	keys, err := datastore.NewQuery("MeetingTime").Ancestor(meetingKey).Filter("Origin =", coachKey).GetAll(ctx, &times)
+	if err != nil {
+		return nil, err
+	}
+
+	log.Debugf(ctx, "GetMeetingPotentialTimes, potentials count %s", len(times))
+
+	for i, time := range times {
+		time.Key = keys[i]
+	}
+	return times, nil
+}
+
 // update potential time
 func (p *MeetingTime)updateMeetingPotentialTime(ctx context.Context) (error) {
 	log.Debugf(ctx, "updateeMeetingPotentialTime, potential key %s", p.Key)
@@ -79,5 +105,22 @@ func deleteMeetingPotentialTime(ctx context.Context, potentialTimeKey *datastore
 	err := datastore.Delete(ctx, potentialTimeKey)
 
 	return err
+}
 
+//remove all Meeting time for the given coach & meeting
+func clearMeetingTimeForCoach(ctx context.Context, meetingKey *datastore.Key, coachKey *datastore.Key) error {
+	log.Debugf(ctx, "clearMeetingTimeForCoach")
+
+	times, err := getMeetingPotentialTimesForCoach(ctx, meetingKey, coachKey)
+	if err != nil {
+		return err
+	}
+
+	if times != nil {
+		for _, t := range times {
+			deleteMeetingPotentialTime(ctx, t.Key)
+		}
+	}
+
+	return nil
 }
