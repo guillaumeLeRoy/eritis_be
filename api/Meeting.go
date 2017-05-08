@@ -61,6 +61,12 @@ func (m *Meeting) Close(ctx context.Context) error {
 	return m.update(ctx)
 }
 
+func (m *Meeting) delete(ctx context.Context) error {
+	log.Debugf(ctx, "delete meeting", m)
+	err := datastore.Delete(ctx, m.Key)
+	return err
+}
+
 func GetMeeting(ctx context.Context, key *datastore.Key) (*Meeting, error) {
 	log.Debugf(ctx, "GetAPIMeeting for key %s", key)
 

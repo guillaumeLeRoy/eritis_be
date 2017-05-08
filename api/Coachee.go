@@ -310,3 +310,18 @@ func (c *Coachee) decreaseAvailableSessionsCount(ctx context.Context) error {
 
 	return nil
 }
+
+// increase number of available sessions and save in datastore
+func (c *Coachee) increaseAvailableSessionsCount(ctx context.Context) error {
+
+	//inc of 1
+	c.AvailableSessionsCount = c.AvailableSessionsCount + 1
+
+	//save
+	err := c.update(ctx)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

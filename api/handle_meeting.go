@@ -203,14 +203,12 @@ func HandleMeeting(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 
-		//when a coach wants to delete meeting
-		if contains {
-			params := PathParams(ctx, r, "/api/meeting/:meetingId")
-			meetingId, ok := params[":meetingId"]
-			if ok {
-				handleCoachCancelMeeting(w, r, meetingId)
-				return
-			}
+		//when a coachee wants to delete meeting
+		params := PathParams(ctx, r, "/api/meeting/:meetingId")
+		meetingId, ok := params[":meetingId"]
+		if ok {
+			handleCoacheeCancelMeeting(w, r, meetingId)
+			return
 		}
 
 		http.NotFound(w, r)
@@ -479,16 +477,8 @@ func createMeetingPotentialTime(w http.ResponseWriter, r *http.Request, meetingI
 	var potential struct {
 		StartDate string `json:"start_date"`
 		EndDate   string `json:"end_date"`
-		Origin    string `json:"origin"`
 	}
 	err = Decode(r, &potential)
-	if err != nil {
-		RespondErr(ctx, w, r, err, http.StatusBadRequest)
-		return
-	}
-
-	//get Origin : coach or coachee
-	originKey, err := datastore.DecodeKey(potential.Origin)
 	if err != nil {
 		RespondErr(ctx, w, r, err, http.StatusBadRequest)
 		return
@@ -509,7 +499,7 @@ func createMeetingPotentialTime(w http.ResponseWriter, r *http.Request, meetingI
 	EndDate := time.Unix(EndDateInt, 0)
 	log.Debugf(ctx, "handleCreateMeeting, EndDate : ", EndDate)
 
-	potentialTime := constructor(StartDate, EndDate, originKey)
+	potentialTime := constructor(StartDate, EndDate)
 
 	err = potentialTime.Create(ctx, meetingKey)
 	if err != nil {
@@ -617,7 +607,32 @@ func deletePotentialDate(w http.ResponseWriter, r *http.Request, potentialId str
 		return
 	}
 
-	deleteMeetingPotentialTime(ctx, potentialDateKey)
+	//find associated meeting
+	meetingKey := potentialDateKey.Parent()
+
+	//remove potential from mmeting
+	if meetingKey != nil {
+		log.Debugf(ctx, "deletePotentialDate, potential has a parent")
+
+		meeting, err := GetMeeting(ctx, meetingKey)
+		if err != nil {
+			RespondErr(ctx, w, r, err, http.StatusBadRequest)
+			return
+		}
+
+		if meeting.AgreedTime.String() == potentialDateKey.String() {
+			log.Debugf(ctx, "deletePotentialDate, remove agreed time")
+			meeting.AgreedTime = nil
+			err = meeting.update(ctx)
+			if err != nil {
+				RespondErr(ctx, w, r, err, http.StatusBadRequest)
+				return
+			}
+		}
+	}
+
+	//delete potential
+	deleteMeetingTime(ctx, potentialDateKey)
 	if err != nil {
 		RespondErr(ctx, w, r, err, http.StatusBadRequest)
 		return
@@ -645,34 +660,35 @@ func handleDeleteMeetingReview(w http.ResponseWriter, r *http.Request, reviewId 
 	Respond(ctx, w, r, nil, http.StatusOK)
 }
 
-func handleCoachCancelMeeting(w http.ResponseWriter, r *http.Request, meetingId string) {
-	ctx := appengine.NewContext(r)
-	log.Debugf(ctx, "handleCancelMeeting, meetingId %s", meetingId)
 
-	meetingKey, err := datastore.DecodeKey(meetingId)
-	if err != nil {
-		RespondErr(ctx, w, r, err, http.StatusBadRequest)
-		return
-	}
-
-	meeting, err := GetMeeting(ctx, meetingKey)
-	if err != nil {
-		RespondErr(ctx, w, r, err, http.StatusBadRequest)
-		return
-	}
-
-	//remove MeetingTime(s) set by coach
-	clearMeetingTimeForCoach(ctx, meetingKey, meeting.CoachKey)
-
-	//remove Coach from Coachee
-	err = meeting.removeMeetingCoach(ctx)
-	if err != nil {
-		RespondErr(ctx, w, r, err, http.StatusBadRequest)
-		return
-	}
-	//remove agreed MeetingTime
-	err = meeting.clearMeetingTime(ctx)
-}
+//func handleCoachCancelMeeting(w http.ResponseWriter, r *http.Request, meetingId string) {
+//	ctx := appengine.NewContext(r)
+//	log.Debugf(ctx, "handleCancelMeeting, meetingId %s", meetingId)
+//
+//	meetingKey, err := datastore.DecodeKey(meetingId)
+//	if err != nil {
+//		RespondErr(ctx, w, r, err, http.StatusBadRequest)
+//		return
+//	}
+//
+//	meeting, err := GetMeeting(ctx, meetingKey)
+//	if err != nil {
+//		RespondErr(ctx, w, r, err, http.StatusBadRequest)
+//		return
+//	}
+//
+//	//remove MeetingTime(s) set by coach
+//	clearMeetingTimeForCoach(ctx, meetingKey, meeting.CoachKey)
+//
+//	//remove Coach from Coachee
+//	err = meeting.removeMeetingCoach(ctx)
+//	if err != nil {
+//		RespondErr(ctx, w, r, err, http.StatusBadRequest)
+//		return
+//	}
+//	//remove agreed MeetingTime
+//	err = meeting.clearMeetingTime(ctx)
+//}
 
 func handleCoacheeCancelMeeting(w http.ResponseWriter, r *http.Request, meetingId string) {
 	ctx := appengine.NewContext(r)
@@ -697,8 +713,29 @@ func handleCoacheeCancelMeeting(w http.ResponseWriter, r *http.Request, meetingI
 		return
 	}
 
-	//TODO remove associated coach
+	//remove reviews
+	err = deleteAllReviewsForMeeting(ctx, meetingKey)
+	if err != nil {
+		RespondErr(ctx, w, r, err, http.StatusInternalServerError)
+		return
+	}
 
+	//remove meeting
+	meeting.delete(ctx)
+	if err != nil {
+		RespondErr(ctx, w, r, err, http.StatusBadRequest)
+		return
+	}
+
+	//increase available sessions count
+	coachee, err := getCoachee(ctx, meeting.CoacheeKey)
+	if err != nil {
+		RespondErr(ctx, w, r, err, http.StatusBadRequest)
+		return
+	}
+	coachee.increaseAvailableSessionsCount(ctx)
+
+	Respond(ctx, w, r, nil, http.StatusOK)
 }
 
 func updateMeetingPotentialTime(w http.ResponseWriter, r *http.Request, potentialId string) {
