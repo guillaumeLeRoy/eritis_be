@@ -8,10 +8,10 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 import { Component, Input, Output, EventEmitter } from '@angular/core';
-import { CoachCoacheeService } from "../service/CoachCoacheeService";
+import { MeetingsService } from "../service/meetings.service";
 var PreMeetingComponent = (function () {
-    function PreMeetingComponent(coachService) {
-        this.coachService = coachService;
+    function PreMeetingComponent(meetingService) {
+        this.meetingService = meetingService;
         this.meetingGoal = new EventEmitter();
         this.meetingContext = new EventEmitter();
     }
@@ -24,7 +24,7 @@ var PreMeetingComponent = (function () {
     /* Get from API review goal for the given meeting */
     PreMeetingComponent.prototype.getMeetingGoal = function () {
         var _this = this;
-        this.coachService.getMeetingGoal(this.meetingId).subscribe(function (reviews) {
+        this.meetingService.getMeetingGoal(this.meetingId).subscribe(function (reviews) {
             console.log("getMeetingGoal, got goal : ", reviews);
             if (reviews != null)
                 _this.updateGoalValue(reviews[0].comment);
@@ -36,7 +36,7 @@ var PreMeetingComponent = (function () {
     /* Get from API all review context for the given meeting */
     PreMeetingComponent.prototype.getMeetingContext = function () {
         var _this = this;
-        this.coachService.getMeetingContext(this.meetingId).subscribe(function (reviews) {
+        this.meetingService.getMeetingContext(this.meetingId).subscribe(function (reviews) {
             console.log("getMeetingContext, got context : ", reviews);
             if (reviews != null)
                 _this.updateContextValue(reviews[0].comment);
@@ -83,7 +83,7 @@ PreMeetingComponent = __decorate([
         templateUrl: './pre-meeting.component.html',
         styleUrls: ['./pre-meeting.component.css']
     }),
-    __metadata("design:paramtypes", [CoachCoacheeService])
+    __metadata("design:paramtypes", [MeetingsService])
 ], PreMeetingComponent);
 export { PreMeetingComponent };
 //# sourceMappingURL=/Users/guillaume/angular/eritis_fe/src/app/meeting/pre-meeting.component.js.map

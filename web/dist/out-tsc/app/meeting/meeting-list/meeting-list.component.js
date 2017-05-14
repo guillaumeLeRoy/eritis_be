@@ -7,7 +7,7 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
-import { Component, ChangeDetectorRef } from '@angular/core';
+import { ChangeDetectorRef, Component } from "@angular/core";
 import { MeetingsService } from "../../service/meetings.service";
 import { Observable } from "rxjs";
 import { AuthService } from "../../service/auth.service";
@@ -33,15 +33,16 @@ var MeetingListComponent = (function () {
     };
     MeetingListComponent.prototype.onRefreshRequested = function () {
         var _this = this;
-        console.log("onRefreshRequested");
         var user = this.authService.getConnectedUser();
         console.log("onRefreshRequested, user : ", user);
-        this.onUserObtained(user);
         if (user == null) {
             this.connectedUserSubscription = this.authService.getConnectedUserObservable().subscribe(function (user) {
                 console.log("onRefreshRequested, getConnectedUser");
                 _this.onUserObtained(user);
             });
+        }
+        else {
+            this.onUserObtained(user);
         }
     };
     MeetingListComponent.prototype.isUserACoach = function (user) {
@@ -181,6 +182,75 @@ var MeetingListComponent = (function () {
         if (this.connectedUserSubscription) {
             this.connectedUserSubscription.unsubscribe();
         }
+    };
+    MeetingListComponent.prototype.coachCancelModalVisibility = function (isVisible) {
+        if (isVisible) {
+            $('#coach_cancel_meeting').openModal();
+        }
+        else {
+            $('#coach_cancel_meeting').closeModal();
+        }
+    };
+    MeetingListComponent.prototype.openCoachCancelMeetingModal = function (meeting) {
+        this.meetingToCancel = meeting;
+        this.coachCancelModalVisibility(true);
+    };
+    MeetingListComponent.prototype.cancelCoachCancelMeeting = function () {
+        this.coachCancelModalVisibility(false);
+        this.meetingToCancel = null;
+    };
+    //remove MeetingTime
+    MeetingListComponent.prototype.validateCoachCancelMeeting = function () {
+        var _this = this;
+        console.log('validateCancelMeeting, agreed date : ', this.meetingToCancel.agreed_date);
+        var meetingTimeId = this.meetingToCancel.agreed_date.id;
+        console.log('validateCancelMeeting, id : ', meetingTimeId);
+        //hide modal
+        this.coachCancelModalVisibility(false);
+        this.meetingToCancel = null;
+        //perform request
+        this.meetingsService.removePotentialTime(meetingTimeId).subscribe(function (response) {
+            console.log('validateCancelMeeting, res ', response);
+            console.log('emit');
+            // this.dateRemoved.emit(null);
+            _this.onRefreshRequested();
+            Materialize.toast('Meeting annulé !', 3000, 'rounded');
+        }, function (error) {
+            console.log('unbookAdate, error', error);
+            Materialize.toast("Impossible d'annuler le meeting", 3000, 'rounded');
+        });
+    };
+    MeetingListComponent.prototype.coacheeDeleteModalVisibility = function (isVisible) {
+        if (isVisible) {
+            $('#coachee_delete_meeting_modal').openModal();
+        }
+        else {
+            $('#coachee_delete_meeting_modal').closeModal();
+        }
+    };
+    MeetingListComponent.prototype.openCoacheeDeleteMeetingModal = function (meeting) {
+        this.meetingToCancel = meeting;
+        this.coacheeDeleteModalVisibility(true);
+    };
+    MeetingListComponent.prototype.cancelCoacheeDeleteMeeting = function () {
+        this.coacheeDeleteModalVisibility(false);
+        this.meetingToCancel = null;
+    };
+    MeetingListComponent.prototype.validateCoacheeDeleteMeeting = function () {
+        var _this = this;
+        console.log('validateCoacheeDeleteMeeting');
+        var meetingId = this.meetingToCancel.id;
+        this.coacheeDeleteModalVisibility(false);
+        this.meetingToCancel = null;
+        this.meetingsService.deleteMeeting(meetingId).subscribe(function (response) {
+            console.log('confirmCancelMeeting, res', response);
+            // this.onMeetingCancelled.emit();
+            _this.onRefreshRequested();
+            Materialize.toast('Meeting supprimé !', 3000, 'rounded');
+        }, function (error) {
+            console.log('confirmCancelMeeting, error', error);
+            Materialize.toast('Impossible de supprimer le meeting', 3000, 'rounded');
+        });
     };
     return MeetingListComponent;
 }());

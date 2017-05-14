@@ -18,8 +18,45 @@ var CoachSelectorComponent = (function () {
     CoachSelectorComponent.prototype.ngOnInit = function () {
     };
     CoachSelectorComponent.prototype.ngAfterViewInit = function () {
-        var _this = this;
         console.log('ngAfterViewInit');
+        this.fetchData();
+    };
+    CoachSelectorComponent.prototype.ngOnDestroy = function () {
+        if (this.getAllCoachsSub != null) {
+            this.getAllCoachsSub.unsubscribe();
+        }
+        if (this.getAllCoacheesSub != null) {
+            this.getAllCoacheesSub.unsubscribe();
+        }
+    };
+    CoachSelectorComponent.prototype.onCoachSelected = function (coach) {
+        this.selectedCoach = coach;
+    };
+    CoachSelectorComponent.prototype.onCoacheeSelected = function (coachee) {
+        this.selectedCoachee = coachee;
+    };
+    CoachSelectorComponent.prototype.canAssociate = function () {
+        return this.selectedCoachee != null && this.selectedCoach != null;
+    };
+    /**
+     * Associate selectedCoach with selectedCoachee
+     * TODO : handle error
+     */
+    CoachSelectorComponent.prototype.associate = function () {
+        var _this = this;
+        // save in backend
+        this.apiService.updateCoacheeSelectedCoach(this.selectedCoachee.id, this.selectedCoach.id).subscribe(function (coachee) {
+            console.log('coach selected saved');
+            //reset values
+            _this.selectedCoach = null;
+            _this.selectedCoachee = null;
+            Materialize.toast('Association effectuée !', 3000, 'rounded');
+            //refresh data
+            _this.fetchData();
+        });
+    };
+    CoachSelectorComponent.prototype.fetchData = function () {
+        var _this = this;
         this.getAllCoachsSub = this.apiService.getCoachs().subscribe(function (coachs) {
             console.log('getAllCoachs subscribe, coachs : ', coachs);
             _this.coachs = Observable.of(coachs);
@@ -37,29 +74,6 @@ var CoachSelectorComponent = (function () {
             }
             _this.coachees = Observable.of(notAssociatedCoachees);
             _this.cd.detectChanges();
-        });
-    };
-    CoachSelectorComponent.prototype.ngOnDestroy = function () {
-        if (this.getAllCoachsSub != null) {
-            this.getAllCoachsSub.unsubscribe();
-        }
-        if (this.getAllCoacheesSub != null) {
-            this.getAllCoacheesSub.unsubscribe();
-        }
-    };
-    CoachSelectorComponent.prototype.onCoachSelected = function (coach) {
-        this.selectedCoach = coach;
-    };
-    CoachSelectorComponent.prototype.onCoacheeSelected = function (coachee) {
-        this.selectedCoachee = coachee;
-    };
-    /**
-     * Associate selectedCoach with selectedCoachee
-     */
-    CoachSelectorComponent.prototype.associate = function () {
-        // save in backend
-        this.apiService.updateCoacheeSelectedCoach(this.selectedCoachee.id, this.selectedCoach.id).subscribe(function (coachee) {
-            console.log('coach selected saved');
         });
     };
     return CoachSelectorComponent;

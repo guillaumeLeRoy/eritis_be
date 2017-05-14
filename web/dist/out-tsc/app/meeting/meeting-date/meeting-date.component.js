@@ -8,15 +8,15 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 import { Component, ChangeDetectorRef } from '@angular/core';
-import { CoachCoacheeService } from '../../service/CoachCoacheeService';
 import { AuthService } from '../../service/auth.service';
 import { Observable } from 'rxjs';
 import { ActivatedRoute, Router } from '@angular/router';
+import { MeetingsService } from "../../service/meetings.service";
 var MeetingDateComponent = (function () {
-    function MeetingDateComponent(router, route, coachService, authService, cd) {
+    function MeetingDateComponent(router, route, meetingService, authService, cd) {
         this.router = router;
         this.route = route;
-        this.coachService = coachService;
+        this.meetingService = meetingService;
         this.authService = authService;
         this.cd = cd;
         this.months = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
@@ -66,20 +66,22 @@ var MeetingDateComponent = (function () {
             var timestampMax = +maxDate.getTime().toFixed(0) / 1000;
             if (_this.isEditingPotentialDate) {
                 // just update potential date
-                _this.coachService.updatePotentialTime(_this.mEditingPotentialTimeId, timestampMin, timestampMax).subscribe(function (meetingDate) {
+                _this.meetingService.updatePotentialTime(_this.mEditingPotentialTimeId, timestampMin, timestampMax).subscribe(function (meetingDate) {
                     console.log('updatePotentialTime, meetingDate : ', meetingDate);
                     // Reload potential times
                     _this.loadMeetingPotentialTimes(_this.meetingId);
                     //reset progress bar values
                     _this.resetValues();
+                    Materialize.toast('Plage modifiée !', 3000, 'rounded');
                 }, function (error) {
                     console.log('updatePotentialTime error', error);
                     _this.displayErrorBookingDate = true;
+                    Materialize.toast('Erreur lors de la modification', 3000, 'rounded');
                 });
             }
             else {
                 // create new date
-                _this.coachService.addPotentialDateToMeeting(_this.meetingId, timestampMin, timestampMax).subscribe(function (meetingDate) {
+                _this.meetingService.addPotentialDateToMeeting(_this.meetingId, timestampMin, timestampMax).subscribe(function (meetingDate) {
                     console.log('addPotentialDateToMeeting, meetingDate : ', meetingDate);
                     _this.potentialDatesArray.push(meetingDate);
                     // Reload potential times
@@ -88,9 +90,11 @@ var MeetingDateComponent = (function () {
                     _this.loadMeetingPotentialTimes(_this.meetingId);
                     //reset progress bar values
                     _this.resetValues();
+                    Materialize.toast('Plage ajoutée !', 3000, 'rounded');
                 }, function (error) {
                     console.log('addPotentialDateToMeeting error', error);
                     _this.displayErrorBookingDate = true;
+                    Materialize.toast("Erreur lors de l'ajout", 3000, 'rounded');
                 });
             }
         });
@@ -98,7 +102,7 @@ var MeetingDateComponent = (function () {
     MeetingDateComponent.prototype.unbookAdate = function (potentialDateId) {
         var _this = this;
         console.log('unbookAdate');
-        this.coachService.removePotentialTime(potentialDateId).subscribe(function (response) {
+        this.meetingService.removePotentialTime(potentialDateId).subscribe(function (response) {
             console.log('unbookAdate, response', response);
             //reset progress bar values
             _this.resetValues();
@@ -125,8 +129,23 @@ var MeetingDateComponent = (function () {
             }
         }
     };
+    MeetingDateComponent.prototype.printTimeNumber = function (hour) {
+        if (hour === Math.round(hour))
+            return hour + ':00';
+        else
+            return Math.round(hour) - 1 + ':30';
+    };
+    MeetingDateComponent.prototype.printTimeString = function (date) {
+        return this.getHours(date) + ':' + this.getMinutes(date);
+    };
     MeetingDateComponent.prototype.getHours = function (date) {
         return (new Date(date)).getHours();
+    };
+    MeetingDateComponent.prototype.getMinutes = function (date) {
+        var m = (new Date(date)).getMinutes();
+        if (m === 0)
+            return '00';
+        return m;
     };
     MeetingDateComponent.prototype.resetValues = function () {
         this.mEditingPotentialTimeId = null;
@@ -161,7 +180,7 @@ var MeetingDateComponent = (function () {
      */
     MeetingDateComponent.prototype.loadMeetingPotentialTimes = function (meetingId) {
         var _this = this;
-        this.coachService.getMeetingPotentialTimes(meetingId).subscribe(function (dates) {
+        this.meetingService.getMeetingPotentialTimes(meetingId).subscribe(function (dates) {
             console.log('loadMeetingPotentialTimes : ', dates);
             if (dates != null) {
                 //clear array
@@ -189,8 +208,8 @@ var MeetingDateComponent = (function () {
         console.log('finish, meetingGoal : ', this.meetingGoal);
         console.log('finish, meetingContext : ', this.meetingContext);
         //save GOAL and CONTEXT
-        this.coachService.addAContextForMeeting(this.meetingId, this.meetingContext).flatMap(function (meetingReview) {
-            return _this.coachService.addAGoalToMeeting(_this.meetingId, _this.meetingGoal);
+        this.meetingService.addAContextForMeeting(this.meetingId, this.meetingContext).flatMap(function (meetingReview) {
+            return _this.meetingService.addAGoalToMeeting(_this.meetingId, _this.meetingGoal);
         }).subscribe(function (meetingReview) {
             var user = _this.authService.getConnectedUser();
             if (user != null) {
@@ -221,7 +240,7 @@ MeetingDateComponent = __decorate([
         templateUrl: './meeting-date.component.html',
         styleUrls: ['./meeting-date.component.css']
     }),
-    __metadata("design:paramtypes", [Router, ActivatedRoute, CoachCoacheeService, AuthService, ChangeDetectorRef])
+    __metadata("design:paramtypes", [Router, ActivatedRoute, MeetingsService, AuthService, ChangeDetectorRef])
 ], MeetingDateComponent);
 export { MeetingDateComponent };
 //# sourceMappingURL=/Users/guillaume/angular/eritis_fe/src/app/meeting/meeting-date/meeting-date.component.js.map

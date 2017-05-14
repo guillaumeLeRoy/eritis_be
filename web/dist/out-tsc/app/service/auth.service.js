@@ -441,6 +441,7 @@ AuthService.GET_COACH_FOR_ID = "/coachs/:id";
 AuthService.GET_COACHEE_FOR_ID = "/coachees/:id";
 /*Meeting*/
 AuthService.POST_MEETING = "/meeting";
+AuthService.DELETE_MEETING = "/meeting/:meetingId";
 AuthService.GET_MEETING_REVIEWS = "/meeting/:meetingId/reviews";
 AuthService.POST_MEETING_REVIEW = "/meeting/:meetingId/review";
 AuthService.PUT_MEETING_REVIEW = "/meeting/reviews/:reviewId"; //update review

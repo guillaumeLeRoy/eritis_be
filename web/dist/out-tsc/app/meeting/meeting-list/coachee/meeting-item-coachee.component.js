@@ -7,17 +7,19 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
-import { Component, Input, ChangeDetectorRef, Output, EventEmitter } from '@angular/core';
+import { ChangeDetectorRef, Component, EventEmitter, Input, Output } from "@angular/core";
 import { Meeting } from "../../../model/meeting";
-import { CoachCoacheeService } from "../../../service/CoachCoacheeService";
 import { Observable } from "rxjs";
 import { Router } from "@angular/router";
+import { MeetingsService } from "../../../service/meetings.service";
 var MeetingItemCoacheeComponent = (function () {
-    function MeetingItemCoacheeComponent(router, coachCoacheeService, cd) {
+    function MeetingItemCoacheeComponent(router, meetingService, cd) {
         this.router = router;
-        this.coachCoacheeService = coachCoacheeService;
+        this.meetingService = meetingService;
         this.cd = cd;
-        this.potentialDatePosted = new EventEmitter();
+        // @Output()
+        // onMeetingCancelled = new EventEmitter<any>();
+        this.cancelMeetingTimeEvent = new EventEmitter();
         this.months = ['Jan', 'Feb', 'Mar', 'Avr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     }
     MeetingItemCoacheeComponent.prototype.ngOnInit = function () {
@@ -27,18 +29,19 @@ var MeetingItemCoacheeComponent = (function () {
         this.getGoal();
         this.getReview();
     };
-    MeetingItemCoacheeComponent.prototype.onPreMeetingReviewPosted = function (meeting) {
-        console.log("onPreMeetingReviewPosted");
-        this.getReview();
-    };
-    MeetingItemCoacheeComponent.prototype.onPotentialDatePosted = function (date) {
-        console.log("onPotentialDatePosted");
-        this.potentialDatePosted.emit(date);
-    };
+    // onPreMeetingReviewPosted(meeting: Meeting) {
+    //   console.log("onPreMeetingReviewPosted");
+    //   this.getReview();
+    // }
+    //
+    // onPotentialDatePosted(date: MeetingDate) {
+    //   console.log("onPotentialDatePosted");
+    //   this.potentialDatePosted.emit(date);
+    // }
     MeetingItemCoacheeComponent.prototype.loadMeetingPotentialTimes = function () {
         var _this = this;
         this.loading = true;
-        this.coachCoacheeService.getMeetingPotentialTimes(this.meeting.id).subscribe(function (dates) {
+        this.meetingService.getMeetingPotentialTimes(this.meeting.id).subscribe(function (dates) {
             console.log("potential dates obtained, ", dates);
             _this.potentialDates = Observable.of(dates);
             _this.cd.detectChanges();
@@ -47,8 +50,17 @@ var MeetingItemCoacheeComponent = (function () {
             console.log('get potentials dates error', error);
         });
     };
+    MeetingItemCoacheeComponent.prototype.printTimeString = function (date) {
+        return this.getHours(date) + ':' + this.getMinutes(date);
+    };
     MeetingItemCoacheeComponent.prototype.getHours = function (date) {
         return (new Date(date)).getHours();
+    };
+    MeetingItemCoacheeComponent.prototype.getMinutes = function (date) {
+        var m = (new Date(date)).getMinutes();
+        if (m === 0)
+            return '00';
+        return m;
     };
     MeetingItemCoacheeComponent.prototype.getDate = function (date) {
         return (new Date(date)).getDate() + ' ' + this.months[(new Date(date)).getMonth()];
@@ -56,7 +68,7 @@ var MeetingItemCoacheeComponent = (function () {
     MeetingItemCoacheeComponent.prototype.getGoal = function () {
         var _this = this;
         this.loading = true;
-        this.coachCoacheeService.getMeetingGoal(this.meeting.id).subscribe(function (reviews) {
+        this.meetingService.getMeetingGoal(this.meeting.id).subscribe(function (reviews) {
             console.log("getMeetingGoal, got goal : ", reviews);
             if (reviews != null)
                 _this.goal = reviews[0].comment;
@@ -73,7 +85,7 @@ var MeetingItemCoacheeComponent = (function () {
     MeetingItemCoacheeComponent.prototype.getReviewValue = function () {
         var _this = this;
         this.loading = true;
-        this.coachCoacheeService.getMeetingValue(this.meeting.id).subscribe(function (reviews) {
+        this.meetingService.getMeetingValue(this.meeting.id).subscribe(function (reviews) {
             console.log("getMeetingValue, got goal : ", reviews);
             if (reviews != null)
                 _this.reviewValue = reviews[0].comment;
@@ -90,7 +102,7 @@ var MeetingItemCoacheeComponent = (function () {
     MeetingItemCoacheeComponent.prototype.getReviewNextStep = function () {
         var _this = this;
         this.loading = true;
-        this.coachCoacheeService.getMeetingNextStep(this.meeting.id).subscribe(function (reviews) {
+        this.meetingService.getMeetingNextStep(this.meeting.id).subscribe(function (reviews) {
             console.log("getMeetingNextStep, got goal : ", reviews);
             if (reviews != null)
                 _this.reviewNextStep = reviews[0].comment;
@@ -112,10 +124,8 @@ var MeetingItemCoacheeComponent = (function () {
         this.router.navigate(['/date', meetingId]);
     };
     MeetingItemCoacheeComponent.prototype.openModal = function () {
-        $('#deleteModal').openModal();
-    };
-    MeetingItemCoacheeComponent.prototype.closeModal = function () {
-        $('#deleteModal').closeModal();
+        this.cancelMeetingTimeEvent.emit(this.meeting); //TODO to improve
+        // $('#deleteModal').openModal();
     };
     return MeetingItemCoacheeComponent;
 }());
@@ -126,14 +136,14 @@ __decorate([
 __decorate([
     Output(),
     __metadata("design:type", Object)
-], MeetingItemCoacheeComponent.prototype, "potentialDatePosted", void 0);
+], MeetingItemCoacheeComponent.prototype, "cancelMeetingTimeEvent", void 0);
 MeetingItemCoacheeComponent = __decorate([
     Component({
         selector: 'rb-meeting-item-coachee',
         templateUrl: 'meeting-item-coachee.component.html',
         styleUrls: ['meeting-item-coachee.component.css'],
     }),
-    __metadata("design:paramtypes", [Router, CoachCoacheeService, ChangeDetectorRef])
+    __metadata("design:paramtypes", [Router, MeetingsService, ChangeDetectorRef])
 ], MeetingItemCoacheeComponent);
 export { MeetingItemCoacheeComponent };
 //# sourceMappingURL=/Users/guillaume/angular/eritis_fe/src/app/meeting/meeting-list/coachee/meeting-item-coachee.component.js.map

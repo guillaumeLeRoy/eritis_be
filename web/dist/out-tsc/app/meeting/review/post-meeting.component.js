@@ -9,12 +9,12 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { FormBuilder, Validators } from "@angular/forms";
-import { CoachCoacheeService } from "../../service/CoachCoacheeService";
 import { Meeting } from "../../model/meeting";
+import { MeetingsService } from "../../service/meetings.service";
 var PostMeetingComponent = (function () {
-    function PostMeetingComponent(formBuilder, coachService) {
+    function PostMeetingComponent(formBuilder, meetingService) {
         this.formBuilder = formBuilder;
-        this.coachService = coachService;
+        this.meetingService = meetingService;
         this.displayErrorReview = false;
         this.reviewPosted = new EventEmitter();
     }
@@ -32,7 +32,7 @@ var PostMeetingComponent = (function () {
     PostMeetingComponent.prototype.submitMeetingValue = function (comment) {
         var _this = this;
         console.log("submitMeetingValue comment : ", comment);
-        this.coachService.addAMeetingReviewForValue(this.meeting.id, comment).subscribe(function (review) {
+        this.meetingService.addAMeetingReviewForValue(this.meeting.id, comment).subscribe(function (review) {
             console.log("submitMeetingValue, get review : ", review);
             //emit event
             _this.reviewPosted.emit(_this.meeting);
@@ -44,7 +44,7 @@ var PostMeetingComponent = (function () {
     PostMeetingComponent.prototype.submitMeetingNextStep = function (comment) {
         var _this = this;
         console.log("submitMeetingNextStep comment : ", comment);
-        this.coachService.addAMeetingReviewForNextStep(this.meeting.id, comment).subscribe(function (review) {
+        this.meetingService.addAMeetingReviewForNextStep(this.meeting.id, comment).subscribe(function (review) {
             console.log("submitMeetingNextStep, get review : ", review);
             //emit event
             _this.reviewPosted.emit(_this.meeting);
@@ -69,7 +69,7 @@ PostMeetingComponent = __decorate([
         templateUrl: './post-meeting.component.html',
         styleUrls: ['./post-meeting.component.css']
     }),
-    __metadata("design:paramtypes", [FormBuilder, CoachCoacheeService])
+    __metadata("design:paramtypes", [FormBuilder, MeetingsService])
 ], PostMeetingComponent);
 export { PostMeetingComponent };
 //# sourceMappingURL=/Users/guillaume/angular/eritis_fe/src/app/meeting/review/post-meeting.component.js.map
