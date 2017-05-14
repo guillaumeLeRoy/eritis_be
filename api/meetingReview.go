@@ -35,7 +35,7 @@ func convertToReviewType(reviewType string) (ReviewType, error) {
 		return SESSION_NEXT_STEP, nil
 	} else if strings.Compare(reviewType, string(SESSION_CONTEXT)) == 0 {
 		return SESSION_CONTEXT, nil
-	}else if strings.Compare(reviewType, string(SESSION_GOAL)) == 0 {
+	} else if strings.Compare(reviewType, string(SESSION_GOAL)) == 0 {
 		return SESSION_GOAL, nil
 	}
 
@@ -110,6 +110,26 @@ func getReviewsForMeetingAndForType(ctx context.Context, meetingKey *datastore.K
 	return reviews, nil
 }
 
+func deleteAllReviewsForMeeting(ctx context.Context, meetingKey  *datastore.Key) error {
+	log.Debugf(ctx, "deleteAllReviewsForMeeting, meeting key %s", meetingKey)
+
+	//get times
+	reviews, err := getAllReviewsForMeeting(ctx, meetingKey)
+	if err != nil {
+		return err
+	}
+
+	//loop and delete them
+	for _, review := range reviews {
+		err = deleteMeetingReview(ctx, review.Key)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 // delete review
 func deleteMeetingReview(ctx context.Context, reviewKey *datastore.Key) (error) {
 	log.Debugf(ctx, "deleteMeetingReview, reviewKey %s", reviewKey)
@@ -117,5 +137,4 @@ func deleteMeetingReview(ctx context.Context, reviewKey *datastore.Key) (error) 
 	err := datastore.Delete(ctx, reviewKey)
 
 	return err
-
 }

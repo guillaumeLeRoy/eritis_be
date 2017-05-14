@@ -7,17 +7,27 @@ import (
 	"time"
 )
 
+const MEETING_TIME_ENTITY string = "MeetingTime"
+
+//Origin represent the user who created this MeetingTime
 type MeetingTime struct {
 	Key       *datastore.Key `json:"id" datastore:"-"`
 	StartDate time.Time `json:"start_date"`
 	EndDate   time.Time `json:"end_date"`
 }
 
+func constructor(start time.Time, end time.Time) *MeetingTime {
+	var potentialTime = &MeetingTime{}
+	potentialTime.StartDate = start
+	potentialTime.EndDate = end
+	return potentialTime
+}
+
 func (m *MeetingTime) Create(ctx context.Context, meetingKey *datastore.Key) error {
 	log.Debugf(ctx, "Create potential time", m)
 
 	//Meeting is an ancestor
-	m.Key = datastore.NewIncompleteKey(ctx, "MeetingTime", meetingKey)
+	m.Key = datastore.NewIncompleteKey(ctx, MEETING_TIME_ENTITY, meetingKey)
 
 	key, err := datastore.Put(ctx, m.Key, m)
 	if err != nil {
@@ -46,7 +56,7 @@ func GetMeetingPotentialTimes(ctx context.Context, meetingKey *datastore.Key) ([
 	log.Debugf(ctx, "GetMeetingPotentialTimes, meeting key %s", meetingKey)
 
 	var times []*MeetingTime
-	keys, err := datastore.NewQuery("MeetingTime").Ancestor(meetingKey).GetAll(ctx, &times)
+	keys, err := datastore.NewQuery(MEETING_TIME_ENTITY).Ancestor(meetingKey).GetAll(ctx, &times)
 	if err != nil {
 		return nil, err
 	}
@@ -57,6 +67,45 @@ func GetMeetingPotentialTimes(ctx context.Context, meetingKey *datastore.Key) ([
 		time.Key = keys[i]
 	}
 	return times, nil
+}
+
+//get all potential times for the given meeting and coach
+func getMeetingPotentialTimesForCoach(ctx context.Context, meetingKey *datastore.Key, coachKey *datastore.Key) ([]*MeetingTime, error) {
+	log.Debugf(ctx, "getMeetingPotentialTimesForCoach, meeting key %s, %s", meetingKey, coachKey)
+
+	var times []*MeetingTime
+	keys, err := datastore.NewQuery(MEETING_TIME_ENTITY).Ancestor(meetingKey).Filter("Origin =", coachKey).GetAll(ctx, &times)
+	if err != nil {
+		return nil, err
+	}
+
+	log.Debugf(ctx, "GetMeetingPotentialTimes, potentials count %s", len(times))
+
+	for i, meetingTime := range times {
+		meetingTime.Key = keys[i]
+	}
+	return times, nil
+}
+
+//remove all the meetingTimes associated with this meeting
+func clearAllMeetingTimesForAMeeting(ctx context.Context, meetingKey *datastore.Key) error {
+	log.Debugf(ctx, "clearAllMeetingTimesForAMeeting, meeting key %s", meetingKey)
+
+	//get times
+	meetingTimes, err := GetMeetingPotentialTimes(ctx, meetingKey)
+	if err != nil {
+		return err
+	}
+
+	//loop and delete them
+	for _, meetingTime := range meetingTimes {
+		err = deleteMeetingTime(ctx, meetingTime.Key)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 // update potential time
@@ -70,12 +119,28 @@ func (p *MeetingTime)updateMeetingPotentialTime(ctx context.Context) (error) {
 
 }
 
-// delete potential time
-func deleteMeetingPotentialTime(ctx context.Context, potentialTimeKey *datastore.Key) (error) {
-	log.Debugf(ctx, "deleteMeetingPotentialTime, potential key %s", potentialTimeKey)
+// delete meetingTime
+func deleteMeetingTime(ctx context.Context, meetingTimeKey *datastore.Key) (error) {
+	log.Debugf(ctx, "deleteMeetingPotentialTime, potential key %s", meetingTimeKey)
 
-	err := datastore.Delete(ctx, potentialTimeKey)
-
+	err := datastore.Delete(ctx, meetingTimeKey)
 	return err
-
 }
+
+////remove all Meeting time for the given coach & meeting
+//func clearMeetingTimeForCoach(ctx context.Context, meetingKey *datastore.Key, coachKey *datastore.Key) error {
+//	log.Debugf(ctx, "clearMeetingTimeForCoach")
+//
+//	times, err := getMeetingPotentialTimesForCoach(ctx, meetingKey, coachKey)
+//	if err != nil {
+//		return err
+//	}
+//
+//	if times != nil {
+//		for _, t := range times {
+//			deleteMeetingTime(ctx, t.Key)
+//		}
+//	}
+//
+//	return nil
+//}

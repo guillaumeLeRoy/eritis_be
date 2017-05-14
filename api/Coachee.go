@@ -233,15 +233,15 @@ func (c *Coachee)update(ctx context.Context) (error) {
 func (c *Coachee) UpdateSelectedCoach(ctx context.Context, coach *Coach) (*APICoachee, error) {
 	log.Debugf(ctx, "UpdateSelectedCoach : %s", coach)
 
+	//associate the coachee with the given coach
 	c.SelectedCoach = coach.Key
-	key, err := datastore.Put(ctx, c.Key, c)
+	err := c.update(ctx)
 	if err != nil {
 		return nil, err
 	}
-	c.Key = key
 
 	//update meetings with selected coach
-	err = associateCoachWithMeeting(ctx, c.Key, coach.Key)
+	err = associateCoachWithMeetings(ctx, c.Key, coach.Key)
 	if err != nil {
 		return nil, err
 	}
@@ -301,6 +301,21 @@ func (c *Coachee) decreaseAvailableSessionsCount(ctx context.Context) error {
 
 	//decrease of 1
 	c.AvailableSessionsCount = c.AvailableSessionsCount - 1
+
+	//save
+	err := c.update(ctx)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// increase number of available sessions and save in datastore
+func (c *Coachee) increaseAvailableSessionsCount(ctx context.Context) error {
+
+	//inc of 1
+	c.AvailableSessionsCount = c.AvailableSessionsCount + 1
 
 	//save
 	err := c.update(ctx)
