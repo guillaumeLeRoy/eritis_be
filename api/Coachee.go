@@ -233,15 +233,15 @@ func (c *Coachee)update(ctx context.Context) (error) {
 func (c *Coachee) UpdateSelectedCoach(ctx context.Context, coach *Coach) (*APICoachee, error) {
 	log.Debugf(ctx, "UpdateSelectedCoach : %s", coach)
 
+	//associate the coachee with the given coach
 	c.SelectedCoach = coach.Key
-	key, err := datastore.Put(ctx, c.Key, c)
+	err := c.update(ctx)
 	if err != nil {
 		return nil, err
 	}
-	c.Key = key
 
 	//update meetings with selected coach
-	err = associateCoachWithMeeting(ctx, c.Key, coach.Key)
+	err = associateCoachWithMeetings(ctx, c.Key, coach.Key)
 	if err != nil {
 		return nil, err
 	}

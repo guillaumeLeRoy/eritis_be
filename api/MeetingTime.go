@@ -7,6 +7,8 @@ import (
 	"time"
 )
 
+const MEETING_TIME_ENTITY string = "MeetingTime"
+
 //Origin represent the user who created this MeetingTime
 type MeetingTime struct {
 	Key       *datastore.Key `json:"id" datastore:"-"`
@@ -25,7 +27,7 @@ func (m *MeetingTime) Create(ctx context.Context, meetingKey *datastore.Key) err
 	log.Debugf(ctx, "Create potential time", m)
 
 	//Meeting is an ancestor
-	m.Key = datastore.NewIncompleteKey(ctx, "MeetingTime", meetingKey)
+	m.Key = datastore.NewIncompleteKey(ctx, MEETING_TIME_ENTITY, meetingKey)
 
 	key, err := datastore.Put(ctx, m.Key, m)
 	if err != nil {
@@ -54,7 +56,7 @@ func GetMeetingPotentialTimes(ctx context.Context, meetingKey *datastore.Key) ([
 	log.Debugf(ctx, "GetMeetingPotentialTimes, meeting key %s", meetingKey)
 
 	var times []*MeetingTime
-	keys, err := datastore.NewQuery("MeetingTime").Ancestor(meetingKey).GetAll(ctx, &times)
+	keys, err := datastore.NewQuery(MEETING_TIME_ENTITY).Ancestor(meetingKey).GetAll(ctx, &times)
 	if err != nil {
 		return nil, err
 	}
@@ -72,7 +74,7 @@ func getMeetingPotentialTimesForCoach(ctx context.Context, meetingKey *datastore
 	log.Debugf(ctx, "getMeetingPotentialTimesForCoach, meeting key %s, %s", meetingKey, coachKey)
 
 	var times []*MeetingTime
-	keys, err := datastore.NewQuery("MeetingTime").Ancestor(meetingKey).Filter("Origin =", coachKey).GetAll(ctx, &times)
+	keys, err := datastore.NewQuery(MEETING_TIME_ENTITY).Ancestor(meetingKey).Filter("Origin =", coachKey).GetAll(ctx, &times)
 	if err != nil {
 		return nil, err
 	}
