@@ -1,4 +1,4 @@
-package api
+package model
 
 import (
 	"golang.org/x/net/context"
@@ -46,7 +46,7 @@ func getPlanName(id PlanInt) string {
 	return "nop"
 }
 
-func getAllPlans(ctx context.Context) ([]*Plan, error) {
+func GetAllPlans(ctx context.Context) ([]*Plan, error) {
 	log.Debugf(ctx, "getAllPlans")
 
 	plans := make([]*Plan, 0)

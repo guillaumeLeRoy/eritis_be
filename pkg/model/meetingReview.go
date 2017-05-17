@@ -1,4 +1,4 @@
-package api
+package model
 
 import (
 	"time"
@@ -28,7 +28,7 @@ const (
 	SESSION_NEXT_STEP ReviewType = "SESSION_NEXT_STEP"
 )
 
-func convertToReviewType(reviewType string) (ReviewType, error) {
+func ConvertToReviewType(reviewType string) (ReviewType, error) {
 	if strings.Compare(reviewType, string(SESSION_VALUE)) == 0 {
 		return SESSION_VALUE, nil
 	} else if strings.Compare(reviewType, string(SESSION_NEXT_STEP)) == 0 {
@@ -42,7 +42,7 @@ func convertToReviewType(reviewType string) (ReviewType, error) {
 	return "", errors.New("can't convert reviewType")
 }
 
-func createReview(ctx context.Context, meetingKey *datastore.Key, comment string, reviewType ReviewType) (*MeetingReview, error) {
+func CreateReview(ctx context.Context, meetingKey *datastore.Key, comment string, reviewType ReviewType) (*MeetingReview, error) {
 	log.Debugf(ctx, "Create createReview")
 
 	var review MeetingReview
@@ -60,7 +60,7 @@ func createReview(ctx context.Context, meetingKey *datastore.Key, comment string
 	return &review, nil
 }
 
-func (r *MeetingReview)updateReview(ctx context.Context, reviewKey *datastore.Key, comment string) (*MeetingReview, error) {
+func (r *MeetingReview)UpdateReview(ctx context.Context, reviewKey *datastore.Key, comment string) (*MeetingReview, error) {
 	log.Debugf(ctx, "Create createReview")
 
 	r.Comment = comment
@@ -74,7 +74,7 @@ func (r *MeetingReview)updateReview(ctx context.Context, reviewKey *datastore.Ke
 	return r, nil
 }
 
-func getAllReviewsForMeeting(ctx context.Context, meetingKey *datastore.Key) ([]*MeetingReview, error) {
+func GetAllReviewsForMeeting(ctx context.Context, meetingKey *datastore.Key) ([]*MeetingReview, error) {
 	log.Debugf(ctx, "getReviewsForMeeting")
 
 	var reviews []*MeetingReview
@@ -92,7 +92,7 @@ func getAllReviewsForMeeting(ctx context.Context, meetingKey *datastore.Key) ([]
 	return reviews, nil
 }
 
-func getReviewsForMeetingAndForType(ctx context.Context, meetingKey *datastore.Key, reviewType string) ([]*MeetingReview, error) {
+func GetReviewsForMeetingAndForType(ctx context.Context, meetingKey *datastore.Key, reviewType string) ([]*MeetingReview, error) {
 	log.Debugf(ctx, "getReviewsForMeetingAndForType, reviewType %s", reviewType)
 
 	var reviews []*MeetingReview
@@ -110,18 +110,18 @@ func getReviewsForMeetingAndForType(ctx context.Context, meetingKey *datastore.K
 	return reviews, nil
 }
 
-func deleteAllReviewsForMeeting(ctx context.Context, meetingKey  *datastore.Key) error {
+func DeleteAllReviewsForMeeting(ctx context.Context, meetingKey  *datastore.Key) error {
 	log.Debugf(ctx, "deleteAllReviewsForMeeting, meeting key %s", meetingKey)
 
 	//get times
-	reviews, err := getAllReviewsForMeeting(ctx, meetingKey)
+	reviews, err := GetAllReviewsForMeeting(ctx, meetingKey)
 	if err != nil {
 		return err
 	}
 
 	//loop and delete them
 	for _, review := range reviews {
-		err = deleteMeetingReview(ctx, review.Key)
+		err = DeleteMeetingReview(ctx, review.Key)
 		if err != nil {
 			return err
 		}
@@ -131,7 +131,7 @@ func deleteAllReviewsForMeeting(ctx context.Context, meetingKey  *datastore.Key)
 }
 
 // delete review
-func deleteMeetingReview(ctx context.Context, reviewKey *datastore.Key) (error) {
+func DeleteMeetingReview(ctx context.Context, reviewKey *datastore.Key) (error) {
 	log.Debugf(ctx, "deleteMeetingReview, reviewKey %s", reviewKey)
 
 	err := datastore.Delete(ctx, reviewKey)

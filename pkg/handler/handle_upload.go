@@ -1,4 +1,4 @@
-package api
+package handler
 
 import (
 	"net/http"
@@ -8,22 +8,23 @@ import (
 	"cloud.google.com/go/storage"
 	"google.golang.org/appengine/file"
 	"golang.org/x/net/context"
+	"eritis_be/pkg/response"
 )
 
-func serviceAccountUploaderHandler(w http.ResponseWriter, r *http.Request) {
+func ServiceAccountUploaderHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := appengine.NewContext(r)
 	log.Debugf(ctx, "handle file upload")
 
 	fileToUpload, header, err := r.FormFile("jsonFile")
 	if err != nil {
-		RespondErr(ctx, w, r, err, http.StatusInternalServerError)
+		response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
 		return
 	}
 	log.Debugf(ctx, "handle file upload, got file")
 
 	data, err := ioutil.ReadAll(fileToUpload)
 	if err != nil {
-		RespondErr(ctx, w, r, err, http.StatusInternalServerError)
+		response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
 		return
 	}
 
@@ -39,7 +40,7 @@ func serviceAccountUploaderHandler(w http.ResponseWriter, r *http.Request) {
 
 	bucketName, err := file.DefaultBucketName(ctx)
 	if err != nil {
-		RespondErr(ctx, w, r, err, http.StatusInternalServerError)
+		response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
 		return
 	}
 
@@ -47,7 +48,7 @@ func serviceAccountUploaderHandler(w http.ResponseWriter, r *http.Request) {
 
 	client, err := storage.NewClient(ctx)
 	if err != nil {
-		RespondErr(ctx, w, r, err, http.StatusInternalServerError)
+		response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
 		return
 	}
 
@@ -58,7 +59,7 @@ func serviceAccountUploaderHandler(w http.ResponseWriter, r *http.Request) {
 	writer := bucketHandler.Object(header.Filename).NewWriter(ctx)
 	size, err := writer.Write(data)
 	if err != nil {
-		RespondErr(ctx, w, r, err, http.StatusInternalServerError)
+		response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
 		return
 	}
 
@@ -66,41 +67,41 @@ func serviceAccountUploaderHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Close, just like writing a file.
 	if err := writer.Close(); err != nil {
-		RespondErr(ctx, w, r, err, http.StatusInternalServerError)
+		response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
 		return
 	}
 
 	log.Debugf(ctx, "handle file upload, DONE")
 
 	//client.NewWriter(d.ctx, bucket, fileName)
-	Respond(ctx, w, r, nil, http.StatusOK)
+	response.Respond(ctx, w, r, nil, http.StatusOK)
 
 }
 
-func serviceAccountGetHandler(w http.ResponseWriter, r *http.Request) {
+func ServiceAccountGetHandler(w http.ResponseWriter, r *http.Request) {
 	ctx := appengine.NewContext(r)
 	log.Debugf(ctx, "handle read service account")
 
-	reader, err := getReaderFromBucket(ctx, "eritis-be-glr-firebase.json")
+	reader, err := GetReaderFromBucket(ctx, "eritis-be-glr-firebase.json")
 	if err != nil {
-		RespondErr(ctx, w, r, err, http.StatusInternalServerError)
+		response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
 		return
 	}
 	log.Debugf(ctx, "handle read, reader created")
 
 	defer reader.Close()
 	//if _, err := io.Copy(os.Stdout, reader); err != nil {
-	//	RespondErr(ctx, w, r, err, http.StatusInternalServerError)
+	//	response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
 	//	return
 	//}
 	// Prints "This object contains text."
 
 	log.Debugf(ctx, "handle read, DONE")
 
-	Respond(ctx, w, r, nil, http.StatusOK)
+	response.Respond(ctx, w, r, nil, http.StatusOK)
 }
 
-func getReaderFromBucket(ctx context.Context, fileName string) (*storage.Reader, error) {
+func GetReaderFromBucket(ctx context.Context, fileName string) (*storage.Reader, error) {
 	bucketName, err := file.DefaultBucketName(ctx)
 	if err != nil {
 		return nil, err

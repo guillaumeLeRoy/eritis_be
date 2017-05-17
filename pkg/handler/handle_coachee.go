@@ -1,10 +1,12 @@
-package api
+package handler
 
 import (
 	"net/http"
 	"google.golang.org/appengine/log"
 	"google.golang.org/appengine"
 	"google.golang.org/appengine/datastore"
+	"eritis_be/pkg/model"
+	"eritis_be/pkg/response"
 )
 
 func HandleCoachees(w http.ResponseWriter, r *http.Request) {
@@ -13,7 +15,7 @@ func HandleCoachees(w http.ResponseWriter, r *http.Request) {
 
 	switch r.Method {
 	case "GET":
-		params := PathParams(ctx, r, "/api/coachees/:id")
+		params := response.PathParams(ctx, r, "/api/coachees/:id")
 		userId, ok := params[":id"]
 		if ok {
 			handleGetCoacheeForId(w, r, userId)// GET /api/coachees/ID
@@ -23,7 +25,7 @@ func HandleCoachees(w http.ResponseWriter, r *http.Request) {
 		return
 	case "PUT":
 		//update selected coach
-		params := PathParams(ctx, r, "/api/coachees/:coacheeId/coach/:coachId")
+		params := response.PathParams(ctx, r, "/api/coachees/:coacheeId/coach/:coachId")
 		coacheeId, ok := params[":coacheeId"]
 		if ok {
 			//read a coach id
@@ -50,28 +52,28 @@ func handleGetCoacheeForId(w http.ResponseWriter, r *http.Request, id string) {
 
 	key, err := datastore.DecodeKey(id)
 	if err != nil {
-		RespondErr(ctx, w, r, err, http.StatusBadRequest)
+		response.RespondErr(ctx, w, r, err, http.StatusBadRequest)
 		return
 	}
 
-	coach, err := GetAPICoachee(ctx, key)
+	coach, err := model.GetAPICoachee(ctx, key)
 	if err != nil {
-		RespondErr(ctx, w, r, err, http.StatusInternalServerError)
+		response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
 		return
 	}
-	Respond(ctx, w, r, coach, http.StatusOK)
+	response.Respond(ctx, w, r, coach, http.StatusOK)
 }
 
 func handleGetAllCoachees(w http.ResponseWriter, r *http.Request) {
 	ctx := appengine.NewContext(r)
 	log.Debugf(ctx, "handleGetAllCoachees")
 
-	coachees, err := GetAllAPICoachees(ctx)
+	coachees, err := model.GetAllAPICoachees(ctx)
 	if err != nil {
-		RespondErr(ctx, w, r, err, http.StatusInternalServerError)
+		response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
 		return
 	}
-	Respond(ctx, w, r, coachees, http.StatusOK)
+	response.Respond(ctx, w, r, coachees, http.StatusOK)
 }
 
 func handleUpdateCoacheeForId(w http.ResponseWriter, r *http.Request, id string) {
@@ -80,13 +82,13 @@ func handleUpdateCoacheeForId(w http.ResponseWriter, r *http.Request, id string)
 
 	key, err := datastore.DecodeKey(id)
 	if err != nil {
-		RespondErr(ctx, w, r, err, http.StatusBadRequest)
+		response.RespondErr(ctx, w, r, err, http.StatusBadRequest)
 		return
 	}
 
-	coachee, err := GetAPICoachee(ctx, key)
+	coachee, err := model.GetAPICoachee(ctx, key)
 	if err != nil {
-		RespondErr(ctx, w, r, err, http.StatusInternalServerError)
+		response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
 		return
 	}
 
@@ -94,22 +96,22 @@ func handleUpdateCoacheeForId(w http.ResponseWriter, r *http.Request, id string)
 		DisplayName string `json:"display_name"`
 		AvatarUrl   string `json:"avatar_url"`
 	}
-	err = Decode(r, &updateCoachee)
+	err = response.Decode(r, &updateCoachee)
 	if err != nil {
-		RespondErr(ctx, w, r, err, http.StatusBadRequest)
+		response.RespondErr(ctx, w, r, err, http.StatusBadRequest)
 		return
 	}
 
 	//update
 	coachee.DisplayName = updateCoachee.DisplayName
 	coachee.AvatarURL = updateCoachee.AvatarUrl
-	coachee.update(ctx)
+	coachee.Update(ctx)
 	if err != nil {
-		RespondErr(ctx, w, r, err, http.StatusInternalServerError)
+		response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
 		return
 	}
 
-	Respond(ctx, w, r, coachee, http.StatusOK)
+	response.Respond(ctx, w, r, coachee, http.StatusOK)
 }
 
 /*
@@ -122,25 +124,25 @@ func handleUpdateSelectedCoach(w http.ResponseWriter, r *http.Request, coacheeId
 	//get coachee
 	coacheeKey, err := datastore.DecodeKey(coacheeId)
 	if err != nil {
-		RespondErr(ctx, w, r, err, http.StatusBadRequest)
+		response.RespondErr(ctx, w, r, err, http.StatusBadRequest)
 		return
 	}
 
-	coachee, err := GetAPICoachee(ctx, coacheeKey)
+	coachee, err := model.GetAPICoachee(ctx, coacheeKey)
 	if err != nil {
-		RespondErr(ctx, w, r, err, http.StatusInternalServerError)
+		response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
 		return
 	}
 
 	//get coach
 	coachKey, err := datastore.DecodeKey(coachId)
 	if err != nil {
-		RespondErr(ctx, w, r, err, http.StatusBadRequest)
+		response.RespondErr(ctx, w, r, err, http.StatusBadRequest)
 		return
 	}
-	coach, err := GetCoach(ctx, coachKey)
+	coach, err := model.GetCoach(ctx, coachKey)
 	if err != nil {
-		RespondErr(ctx, w, r, err, http.StatusInternalServerError)
+		response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
 		return
 	}
 
@@ -148,16 +150,16 @@ func handleUpdateSelectedCoach(w http.ResponseWriter, r *http.Request, coacheeId
 	//update coachee's meeting with the selected coach
 	apiCoachee, err := coachee.UpdateSelectedCoach(ctx, coach)
 	if err != nil {
-		RespondErr(ctx, w, r, err, http.StatusInternalServerError)
+		response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
 		return
 	}
 
 	//send an email to the Coach to notify that he was selected
 	err = sendEmailToSelectedCoach(ctx, coach, &coachee.Coachee)
 	if err != nil {
-		RespondErr(ctx, w, r, err, http.StatusInternalServerError)
+		response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
 		return
 	}
 
-	Respond(ctx, w, r, apiCoachee, http.StatusOK)
+	response.Respond(ctx, w, r, apiCoachee, http.StatusOK)
 }

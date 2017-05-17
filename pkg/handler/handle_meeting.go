@@ -1,4 +1,4 @@
-package api
+package handler
 
 import (
 	"net/http"
@@ -10,6 +10,8 @@ import (
 	"strconv"
 	"strings"
 	"golang.org/x/net/context"
+	"eritis_be/pkg/model"
+	"eritis_be/pkg/response"
 )
 
 func HandleMeeting(w http.ResponseWriter, r *http.Request) {
@@ -22,7 +24,7 @@ func HandleMeeting(w http.ResponseWriter, r *http.Request) {
 
 		//create potential meeting time
 		if ok := strings.Contains(r.URL.Path, "potential"); ok {
-			params := PathParams(ctx, r, "/api/meeting/:uid/potential")
+			params := response.PathParams(ctx, r, "/api/meeting/:uid/potential")
 			uid, ok := params[":uid"]
 			if ok {
 				createMeetingPotentialTime(w, r, uid)// POST /api/meeting/:uid/potential
@@ -32,7 +34,7 @@ func HandleMeeting(w http.ResponseWriter, r *http.Request) {
 
 		/// create new meeting review
 		if ok := strings.Contains(r.URL.Path, "review"); ok {
-			params := PathParams(ctx, r, "/api/meeting/:uid/review")
+			params := response.PathParams(ctx, r, "/api/meeting/:uid/review")
 			uid, ok := params[":uid"]
 			if ok {
 				createReviewForAMeeting(w, r, uid)// POST /api/meeting/:uid/review
@@ -49,7 +51,7 @@ func HandleMeeting(w http.ResponseWriter, r *http.Request) {
 		//add coach to meeting
 		contains := strings.Contains(r.URL.Path, "coach")
 		if contains {
-			params := PathParams(ctx, r, "/api/meeting/:meetingId/coach/:coachId")
+			params := response.PathParams(ctx, r, "/api/meeting/:meetingId/coach/:coachId")
 			meetingId, ok := params[":meetingId"]
 			coachId, ok := params[":coachId"]
 			if ok {
@@ -61,7 +63,7 @@ func HandleMeeting(w http.ResponseWriter, r *http.Request) {
 		//update potential date
 		contains = strings.Contains(r.URL.Path, "potential")
 		if contains {
-			params := PathParams(ctx, r, "/api/meeting/potential/:potId")
+			params := response.PathParams(ctx, r, "/api/meeting/potential/:potId")
 			potId, ok := params[":potId"]
 			if ok {
 				updateMeetingPotentialTime(w, r, potId)
@@ -72,7 +74,7 @@ func HandleMeeting(w http.ResponseWriter, r *http.Request) {
 		//set meeting hour
 		contains = strings.Contains(r.URL.Path, "date")
 		if contains {
-			params := PathParams(ctx, r, "/api/meeting/:meetingId/date/:potId")
+			params := response.PathParams(ctx, r, "/api/meeting/:meetingId/date/:potId")
 			meetingId, ok := params[":meetingId"]
 			potId, ok := params[":potId"]
 			if ok {
@@ -84,7 +86,7 @@ func HandleMeeting(w http.ResponseWriter, r *http.Request) {
 		//close meeting with review
 		contains = strings.Contains(r.URL.Path, "close")
 		if contains {
-			params := PathParams(ctx, r, "/api/meeting/:uid/close")
+			params := response.PathParams(ctx, r, "/api/meeting/:uid/close")
 			uid, ok := params[":uid"]
 			if ok {
 				closeMeeting(w, r, uid)// PUT /api/meeting/:uid/close
@@ -100,7 +102,7 @@ func HandleMeeting(w http.ResponseWriter, r *http.Request) {
 		 */
 		contains := strings.Contains(r.URL.Path, "/api/meetings/coachee")
 		if contains {
-			params := PathParams(ctx, r, "/api/meetings/coachee/:uid")
+			params := response.PathParams(ctx, r, "/api/meetings/coachee/:uid")
 			//verify url contains coachee
 			if _, ok := params["coachee"]; ok {
 				//get uid param
@@ -117,7 +119,7 @@ func HandleMeeting(w http.ResponseWriter, r *http.Request) {
 		 */
 		contains = strings.Contains(r.URL.Path, "/api/meetings/coach")
 		if contains {
-			params := PathParams(ctx, r, "/api/meetings/coach/:uid")
+			params := response.PathParams(ctx, r, "/api/meetings/coach/:uid")
 			//verify url contains coach
 			if _, ok := params["coach"]; ok {
 				//get uid param
@@ -134,7 +136,7 @@ func HandleMeeting(w http.ResponseWriter, r *http.Request) {
 		*/
 		contains = strings.Contains(r.URL.Path, "potentials")
 		if contains {
-			params := PathParams(ctx, r, "/api/meeting/:meetingId/potentials")
+			params := response.PathParams(ctx, r, "/api/meeting/:meetingId/potentials")
 			//verify url contains meeting
 			if _, ok := params["meeting"]; ok {
 				//get uid param
@@ -149,7 +151,7 @@ func HandleMeeting(w http.ResponseWriter, r *http.Request) {
 		////get all reviews for meeting and type
 		//contains = strings.Contains(r.URL.Path, "/api/meeting/")
 		//if contains {
-		//	params := PathParams(ctx, r, "/api/meeting/:meetingId/reviews/:type")
+		//	params := response.PathParams(ctx, r, "/api/meeting/:meetingId/reviews/:type")
 		//	//verify url contains meeting
 		//	if _, ok := params["meeting"]; ok {
 		//		//get uid param
@@ -164,7 +166,7 @@ func HandleMeeting(w http.ResponseWriter, r *http.Request) {
 		//get all reviews for a meeting
 		contains = strings.Contains(r.URL.Path, "/api/meeting/")
 		if contains {
-			params := PathParams(ctx, r, "/api/meeting/:meetingId/reviews")
+			params := response.PathParams(ctx, r, "/api/meeting/:meetingId/reviews")
 			//verify url contains meeting
 			if _, ok := params["meeting"]; ok {
 				//get uid param
@@ -184,7 +186,7 @@ func HandleMeeting(w http.ResponseWriter, r *http.Request) {
 		//delete potential dates for a meeting
 		contains := strings.Contains(r.URL.Path, "potentials")
 		if contains {
-			params := PathParams(ctx, r, "/api/meeting/potentials/:potId")
+			params := response.PathParams(ctx, r, "/api/meeting/potentials/:potId")
 			potId, ok := params[":potId"]
 			if ok {
 				deletePotentialDate(w, r, potId)
@@ -195,7 +197,7 @@ func HandleMeeting(w http.ResponseWriter, r *http.Request) {
 		//delete review for a meeting
 		contains = strings.Contains(r.URL.Path, "reviews")
 		if contains {
-			params := PathParams(ctx, r, "/api/meeting/reviews/:reviewId")
+			params := response.PathParams(ctx, r, "/api/meeting/reviews/:reviewId")
 			potId, ok := params[":reviewId"]
 			if ok {
 				handleDeleteMeetingReview(w, r, potId)
@@ -204,7 +206,7 @@ func HandleMeeting(w http.ResponseWriter, r *http.Request) {
 		}
 
 		//when a coachee wants to delete meeting
-		params := PathParams(ctx, r, "/api/meeting/:meetingId")
+		params := response.PathParams(ctx, r, "/api/meeting/:meetingId")
 		meetingId, ok := params[":meetingId"]
 		if ok {
 			handleCoacheeCancelMeeting(w, r, meetingId)
@@ -225,9 +227,9 @@ func handleCreateMeeting(w http.ResponseWriter, r *http.Request) {
 	var newMeeting struct {
 		CoacheeId string `json:"coacheeId"`
 	}
-	err := Decode(r, &newMeeting)
+	err := response.Decode(r, &newMeeting)
 	if err != nil {
-		RespondErr(ctx, w, r, err, http.StatusBadRequest)
+		response.RespondErr(ctx, w, r, err, http.StatusBadRequest)
 		return
 	}
 
@@ -237,47 +239,47 @@ func handleCreateMeeting(w http.ResponseWriter, r *http.Request) {
 
 	coacheeKey, err := datastore.DecodeKey(newMeeting.CoacheeId)
 	if err != nil {
-		RespondErr(ctx, w, r, errors.New("invalid coachee id"),
+		response.RespondErr(ctx, w, r, errors.New("invalid coachee id"),
 			http.StatusBadRequest)
 		return
 	}
 	//verify this user can create a new meeting
-	coachee, err := getCoachee(ctx, coacheeKey)
+	coachee, err := model.GetCoachee(ctx, coacheeKey)
 	if err != nil {
-		RespondErr(ctx, w, r, err, http.StatusBadRequest)
+		response.RespondErr(ctx, w, r, err, http.StatusBadRequest)
 		return
 	}
 	//check
 	if coachee.AvailableSessionsCount <= 0 {
-		RespondErr(ctx, w, r, errors.New("limit reached"), http.StatusBadRequest)
+		response.RespondErr(ctx, w, r, errors.New("limit reached"), http.StatusBadRequest)
 		return
 	}
 
 	//create new meeting
-	meeting, err := createMeetingCoachee(ctx, coacheeKey)
+	meeting, err := model.CreateMeetingCoachee(ctx, coacheeKey)
 	if err != nil {
-		RespondErr(ctx, w, r, err, http.StatusInternalServerError)
+		response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
 		return
 	}
 
 	//if this coachee already have a coach associated then auto associate this new meeting
 	if coachee.SelectedCoach != nil {
 		//associate a MeetingCoach with meetingCoachee
-		err = associate(ctx, coachee.SelectedCoach, meeting)
+		err = model.Associate(ctx, coachee.SelectedCoach, meeting)
 		if err != nil {
-			RespondErr(ctx, w, r, err, http.StatusInternalServerError)
+			response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
 			return
 		}
 	}
 
 	//decrease number of available sessions and save
-	err = coachee.decreaseAvailableSessionsCount(ctx)
+	err = coachee.DecreaseAvailableSessionsCount(ctx)
 	if err != nil {
-		RespondErr(ctx, w, r, err, http.StatusBadRequest)
+		response.RespondErr(ctx, w, r, err, http.StatusBadRequest)
 		return
 	}
 
-	Respond(ctx, w, r, meeting, http.StatusCreated)
+	response.Respond(ctx, w, r, meeting, http.StatusCreated)
 }
 
 func getAllMeetingsForCoach(w http.ResponseWriter, r *http.Request, uid string) {
@@ -286,18 +288,18 @@ func getAllMeetingsForCoach(w http.ResponseWriter, r *http.Request, uid string) 
 
 	key, err := datastore.DecodeKey(uid)
 	if err != nil {
-		RespondErr(ctx, w, r, err, http.StatusBadRequest)
+		response.RespondErr(ctx, w, r, err, http.StatusBadRequest)
 		return
 	}
 
-	var meetings[]*ApiMeeting
-	meetings, err = GetMeetingsForCoach(ctx, key);
+	var meetings[]*model.ApiMeeting
+	meetings, err = model.GetMeetingsForCoach(ctx, key);
 	if err != nil {
-		RespondErr(ctx, w, r, err, http.StatusInternalServerError)
+		response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
 		return
 	}
 
-	Respond(ctx, w, r, meetings, http.StatusCreated)
+	response.Respond(ctx, w, r, meetings, http.StatusCreated)
 
 }
 
@@ -307,15 +309,15 @@ func getAllMeetingsForCoachee(w http.ResponseWriter, r *http.Request, uid string
 
 	coacheeKey, err := datastore.DecodeKey(uid)
 	if err != nil {
-		RespondErr(ctx, w, r, err, http.StatusBadRequest)
+		response.RespondErr(ctx, w, r, err, http.StatusBadRequest)
 		return
 	}
 
-	var meetings[]*ApiMeeting
+	var meetings[]*model.ApiMeeting
 	err = datastore.RunInTransaction(ctx, func(ctx context.Context) error {
 		log.Debugf(ctx, "getAllMeetingsForCoachee, transaction start")
 
-		meetings, err = GetMeetingsForCoachee(ctx, coacheeKey);
+		meetings, err = model.GetMeetingsForCoachee(ctx, coacheeKey);
 		if err != nil {
 			return err
 		}
@@ -325,13 +327,13 @@ func getAllMeetingsForCoachee(w http.ResponseWriter, r *http.Request, uid string
 		return nil
 	}, &datastore.TransactionOptions{XG: true})
 	if err != nil {
-		RespondErr(ctx, w, r, err, http.StatusInternalServerError)
+		response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
 		return
 	}
 
 	log.Debugf(ctx, "getAllMeetingsForCoachee, %s", meetings)
 
-	Respond(ctx, w, r, &meetings, http.StatusCreated)
+	response.Respond(ctx, w, r, &meetings, http.StatusCreated)
 }
 
 /* Add a review for the given meeting. Only one review can exist for a given type.
@@ -342,7 +344,7 @@ func createReviewForAMeeting(w http.ResponseWriter, r *http.Request, meetingId s
 
 	meetingKey, err := datastore.DecodeKey(meetingId)
 	if err != nil {
-		RespondErr(ctx, w, r, err, http.StatusBadRequest)
+		response.RespondErr(ctx, w, r, err, http.StatusBadRequest)
 		return
 	}
 
@@ -350,46 +352,46 @@ func createReviewForAMeeting(w http.ResponseWriter, r *http.Request, meetingId s
 		Type    string `json:"type"`
 		Comment string `json:"comment"`
 	}
-	err = Decode(r, &review)
+	err = response.Decode(r, &review)
 	if err != nil {
-		RespondErr(ctx, w, r, err, http.StatusBadRequest)
+		response.RespondErr(ctx, w, r, err, http.StatusBadRequest)
 		return
 	}
 
 	//convert
-	reviewType, err := convertToReviewType(review.Type)
+	reviewType, err := model.ConvertToReviewType(review.Type)
 	if err != nil {
-		RespondErr(ctx, w, r, err, http.StatusBadRequest)
+		response.RespondErr(ctx, w, r, err, http.StatusBadRequest)
 		return
 	}
 
 
 	//check if a review already for this type
-	reviews, err := getReviewsForMeetingAndForType(ctx, meetingKey, review.Type)
+	reviews, err := model.GetReviewsForMeetingAndForType(ctx, meetingKey, review.Type)
 	if err != nil {
-		RespondErr(ctx, w, r, err, http.StatusInternalServerError)
+		response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
 		return
 	}
 
-	var meetingRev *MeetingReview
+	var meetingRev *model.MeetingReview
 	if len(reviews) == 0 {
 		//create review
-		meetingRev, err = createReview(ctx, meetingKey, review.Comment, reviewType)
+		meetingRev, err = model.CreateReview(ctx, meetingKey, review.Comment, reviewType)
 		if err != nil {
-			RespondErr(ctx, w, r, err, http.StatusInternalServerError)
+			response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
 			return
 		}
 	} else {
 		//update review
 		//reviews[0] should be safe to access to
-		meetingRev, err = reviews[0].updateReview(ctx, reviews[0].Key, review.Comment)
+		meetingRev, err = reviews[0].UpdateReview(ctx, reviews[0].Key, review.Comment)
 		if err != nil {
-			RespondErr(ctx, w, r, err, http.StatusInternalServerError)
+			response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
 			return
 		}
 	}
 
-	Respond(ctx, w, r, meetingRev, http.StatusCreated)
+	response.Respond(ctx, w, r, meetingRev, http.StatusCreated)
 }
 
 func getAllReviewsForAMeeting(w http.ResponseWriter, r *http.Request, meetingId string, reviewType string) {
@@ -399,22 +401,22 @@ func getAllReviewsForAMeeting(w http.ResponseWriter, r *http.Request, meetingId 
 
 	meetingKey, err := datastore.DecodeKey(meetingId)
 	if err != nil {
-		RespondErr(ctx, w, r, err, http.StatusBadRequest)
+		response.RespondErr(ctx, w, r, err, http.StatusBadRequest)
 		return
 	}
 
-	var reviews []*MeetingReview
+	var reviews []*model.MeetingReview
 	if reviewType != "" {
-		reviews, err = getReviewsForMeetingAndForType(ctx, meetingKey, reviewType)
+		reviews, err = model.GetReviewsForMeetingAndForType(ctx, meetingKey, reviewType)
 	} else {
-		reviews, err = getAllReviewsForMeeting(ctx, meetingKey)
+		reviews, err = model.GetAllReviewsForMeeting(ctx, meetingKey)
 	}
 	if err != nil {
-		RespondErr(ctx, w, r, err, http.StatusInternalServerError)
+		response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
 		return
 	}
 
-	Respond(ctx, w, r, reviews, http.StatusCreated)
+	response.Respond(ctx, w, r, reviews, http.StatusCreated)
 }
 
 /* We suppose the meeting is closed by a Coach */
@@ -424,7 +426,7 @@ func closeMeeting(w http.ResponseWriter, r *http.Request, meetingId string) {
 
 	key, err := datastore.DecodeKey(meetingId)
 	if err != nil {
-		RespondErr(ctx, w, r, err, http.StatusBadRequest)
+		response.RespondErr(ctx, w, r, err, http.StatusBadRequest)
 		return
 	}
 
@@ -432,19 +434,19 @@ func closeMeeting(w http.ResponseWriter, r *http.Request, meetingId string) {
 		Comment string `json:"comment"`
 		Type    string `json:"type"`
 	}
-	err = Decode(r, &review)
+	err = response.Decode(r, &review)
 	if err != nil {
-		RespondErr(ctx, w, r, err, http.StatusBadRequest)
+		response.RespondErr(ctx, w, r, err, http.StatusBadRequest)
 		return
 	}
 
 	log.Debugf(ctx, "closeMeeting, got review %s : ", review)
 
-	var ApiMeeting *ApiMeeting
+	var ApiMeeting *model.ApiMeeting
 	err = datastore.RunInTransaction(ctx, func(ctx context.Context) error {
 		var err error
-		var meeting *MeetingCoachee
-		meeting, err = getMeeting(ctx, key)
+		var meeting *model.MeetingCoachee
+		meeting, err = model.GetMeeting(ctx, key)
 		if err != nil {
 			return err
 		}
@@ -452,20 +454,20 @@ func closeMeeting(w http.ResponseWriter, r *http.Request, meetingId string) {
 		log.Debugf(ctx, "closeMeeting, get meeting", meeting)
 
 		//convert
-		reviewType, err := convertToReviewType(review.Type)
+		reviewType, err := model.ConvertToReviewType(review.Type)
 		if err != nil {
 			return err
 		}
 
 		//create review
-		meetingRev, err := createReview(ctx, meeting.Key, review.Comment, reviewType)
+		meetingRev, err := model.CreateReview(ctx, meeting.Key, review.Comment, reviewType)
 		if err != nil {
 			return err
 		}
 
 		log.Debugf(ctx, "closeMeeting, review created : ", meetingRev)
 
-		err = meeting.close(ctx)
+		err = meeting.Close(ctx)
 		if err != nil {
 			return err
 		}
@@ -473,7 +475,7 @@ func closeMeeting(w http.ResponseWriter, r *http.Request, meetingId string) {
 		log.Debugf(ctx, "closeMeeting, closed")
 
 		//convert to API meeting
-		ApiMeeting, err = meeting.convertToAPIMeeting(ctx)
+		ApiMeeting, err = meeting.ConvertToAPIMeeting(ctx)
 		if err != nil {
 			return err
 		}
@@ -481,11 +483,11 @@ func closeMeeting(w http.ResponseWriter, r *http.Request, meetingId string) {
 		return nil
 	}, &datastore.TransactionOptions{XG: true})
 	if err != nil {
-		RespondErr(ctx, w, r, err, http.StatusInternalServerError)
+		response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
 		return
 	}
 
-	Respond(ctx, w, r, ApiMeeting, http.StatusOK)
+	response.Respond(ctx, w, r, ApiMeeting, http.StatusOK)
 }
 
 // create a potential time for the given meeting
@@ -495,7 +497,7 @@ func createMeetingPotentialTime(w http.ResponseWriter, r *http.Request, meetingI
 
 	meetingKey, err := datastore.DecodeKey(meetingId)
 	if err != nil {
-		RespondErr(ctx, w, r, err, http.StatusBadRequest)
+		response.RespondErr(ctx, w, r, err, http.StatusBadRequest)
 		return
 	}
 	//start and end hours are 24 based
@@ -503,36 +505,36 @@ func createMeetingPotentialTime(w http.ResponseWriter, r *http.Request, meetingI
 		StartDate string `json:"start_date"`
 		EndDate   string `json:"end_date"`
 	}
-	err = Decode(r, &potential)
+	err = response.Decode(r, &potential)
 	if err != nil {
-		RespondErr(ctx, w, r, err, http.StatusBadRequest)
+		response.RespondErr(ctx, w, r, err, http.StatusBadRequest)
 		return
 	}
 
 	//convert String date to time Object
 	StartDateInt, err := strconv.ParseInt(potential.StartDate, 10, 64)
 	if err != nil {
-		RespondErr(ctx, w, r, errors.New("invalid time"), http.StatusBadRequest)
+		response.RespondErr(ctx, w, r, errors.New("invalid time"), http.StatusBadRequest)
 	}
 	StartDate := time.Unix(StartDateInt, 0)
 	log.Debugf(ctx, "handleCreateMeeting, StartDate : ", StartDate)
 
 	EndDateInt, err := strconv.ParseInt(potential.EndDate, 10, 64)
 	if err != nil {
-		RespondErr(ctx, w, r, errors.New("invalid time"), http.StatusBadRequest)
+		response.RespondErr(ctx, w, r, errors.New("invalid time"), http.StatusBadRequest)
 	}
 	EndDate := time.Unix(EndDateInt, 0)
 	log.Debugf(ctx, "handleCreateMeeting, EndDate : ", EndDate)
 
-	potentialTime := constructor(StartDate, EndDate)
+	potentialTime := model.Constructor(StartDate, EndDate)
 
 	err = potentialTime.Create(ctx, meetingKey)
 	if err != nil {
-		RespondErr(ctx, w, r, err, http.StatusBadRequest)
+		response.RespondErr(ctx, w, r, err, http.StatusBadRequest)
 		return
 	}
 
-	Respond(ctx, w, r, potentialTime, http.StatusOK)
+	response.Respond(ctx, w, r, potentialTime, http.StatusOK)
 }
 
 //get all potential times for the given meeting
@@ -542,17 +544,17 @@ func getPotentialsTimeForAMeeting(w http.ResponseWriter, r *http.Request, meetin
 
 	meetingKey, err := datastore.DecodeKey(meetingId)
 	if err != nil {
-		RespondErr(ctx, w, r, err, http.StatusBadRequest)
+		response.RespondErr(ctx, w, r, err, http.StatusBadRequest)
 		return
 	}
 
-	meetings, err := GetMeetingPotentialTimes(ctx, meetingKey)
+	meetings, err := model.GetMeetingPotentialTimes(ctx, meetingKey)
 	if err != nil {
-		RespondErr(ctx, w, r, err, http.StatusBadRequest)
+		response.RespondErr(ctx, w, r, err, http.StatusBadRequest)
 		return
 	}
 
-	Respond(ctx, w, r, meetings, http.StatusOK)
+	response.Respond(ctx, w, r, meetings, http.StatusOK)
 }
 
 func setTimeForMeeting(w http.ResponseWriter, r *http.Request, meetingId string, potentialId string) {
@@ -561,31 +563,31 @@ func setTimeForMeeting(w http.ResponseWriter, r *http.Request, meetingId string,
 
 	meetingKey, err := datastore.DecodeKey(meetingId)
 	if err != nil {
-		RespondErr(ctx, w, r, err, http.StatusBadRequest)
+		response.RespondErr(ctx, w, r, err, http.StatusBadRequest)
 		return
 	}
 
 	meetingTimeKey, err := datastore.DecodeKey(potentialId)
 	if err != nil {
-		RespondErr(ctx, w, r, err, http.StatusBadRequest)
+		response.RespondErr(ctx, w, r, err, http.StatusBadRequest)
 		return
 	}
 
 	//set potential time to meeting
-	meeting, err := getMeeting(ctx, meetingKey)
+	meeting, err := model.GetMeeting(ctx, meetingKey)
 	meeting.SetMeetingTime(ctx, meetingTimeKey)
 	if err != nil {
-		RespondErr(ctx, w, r, err, http.StatusBadRequest)
+		response.RespondErr(ctx, w, r, err, http.StatusBadRequest)
 		return
 	}
 
 	//get API meeting
-	meetingApi, err := meeting.convertToAPIMeeting(ctx)
+	meetingApi, err := meeting.ConvertToAPIMeeting(ctx)
 	if err != nil {
-		RespondErr(ctx, w, r, err, http.StatusBadRequest)
+		response.RespondErr(ctx, w, r, err, http.StatusBadRequest)
 		return
 	}
-	Respond(ctx, w, r, meetingApi, http.StatusOK)
+	response.Respond(ctx, w, r, meetingApi, http.StatusOK)
 
 }
 
@@ -595,28 +597,28 @@ func setCoachForMeeting(w http.ResponseWriter, r *http.Request, meetingId string
 
 	meetingKey, err := datastore.DecodeKey(meetingId)
 	if err != nil {
-		RespondErr(ctx, w, r, err, http.StatusBadRequest)
+		response.RespondErr(ctx, w, r, err, http.StatusBadRequest)
 		return
 	}
 
 	coachKey, err := datastore.DecodeKey(coachId)
 	if err != nil {
-		RespondErr(ctx, w, r, err, http.StatusBadRequest)
+		response.RespondErr(ctx, w, r, err, http.StatusBadRequest)
 		return
 	}
 
 	// get meetingCoachee
-	meetingCoachee, err := getMeeting(ctx, meetingKey)
+	meetingCoachee, err := model.GetMeeting(ctx, meetingKey)
 	//associate a MeetingCoach with meetingCoachee
-	associate(ctx, coachKey, meetingCoachee)
+	model.Associate(ctx, coachKey, meetingCoachee)
 
 	//get API meeting
-	meetingApi, err := meetingCoachee.convertToAPIMeeting(ctx)
+	meetingApi, err := meetingCoachee.ConvertToAPIMeeting(ctx)
 	if err != nil {
-		RespondErr(ctx, w, r, err, http.StatusBadRequest)
+		response.RespondErr(ctx, w, r, err, http.StatusBadRequest)
 		return
 	}
-	Respond(ctx, w, r, meetingApi, http.StatusOK)
+	response.Respond(ctx, w, r, meetingApi, http.StatusOK)
 }
 
 func deletePotentialDate(w http.ResponseWriter, r *http.Request, meetinTimeId string) {
@@ -625,7 +627,7 @@ func deletePotentialDate(w http.ResponseWriter, r *http.Request, meetinTimeId st
 
 	meetingTimeKey, err := datastore.DecodeKey(meetinTimeId)
 	if err != nil {
-		RespondErr(ctx, w, r, err, http.StatusBadRequest)
+		response.RespondErr(ctx, w, r, err, http.StatusBadRequest)
 		return
 	}
 
@@ -636,31 +638,31 @@ func deletePotentialDate(w http.ResponseWriter, r *http.Request, meetinTimeId st
 	if meetingKey != nil {
 		log.Debugf(ctx, "deletePotentialDate, potential has a parent")
 
-		meeting, err := getMeeting(ctx, meetingKey)
+		meeting, err := model.GetMeeting(ctx, meetingKey)
 		if err != nil {
-			RespondErr(ctx, w, r, err, http.StatusBadRequest)
+			response.RespondErr(ctx, w, r, err, http.StatusBadRequest)
 			return
 		}
 
 		if meeting.AgreedTime.String() == meetingTimeKey.String() {
 			log.Debugf(ctx, "deletePotentialDate, remove agreed time")
 			meeting.AgreedTime = nil
-			err = meeting.update(ctx)
+			err = meeting.Update(ctx)
 			if err != nil {
-				RespondErr(ctx, w, r, err, http.StatusBadRequest)
+				response.RespondErr(ctx, w, r, err, http.StatusBadRequest)
 				return
 			}
 		}
 	}
 
 	//delete potential
-	deleteMeetingTime(ctx, meetingTimeKey)
+	model.DeleteMeetingTime(ctx, meetingTimeKey)
 	if err != nil {
-		RespondErr(ctx, w, r, err, http.StatusBadRequest)
+		response.RespondErr(ctx, w, r, err, http.StatusBadRequest)
 		return
 	}
 
-	Respond(ctx, w, r, nil, http.StatusOK)
+	response.Respond(ctx, w, r, nil, http.StatusOK)
 }
 
 func handleDeleteMeetingReview(w http.ResponseWriter, r *http.Request, reviewId string) {
@@ -669,17 +671,17 @@ func handleDeleteMeetingReview(w http.ResponseWriter, r *http.Request, reviewId 
 
 	potentialDateKey, err := datastore.DecodeKey(reviewId)
 	if err != nil {
-		RespondErr(ctx, w, r, err, http.StatusBadRequest)
+		response.RespondErr(ctx, w, r, err, http.StatusBadRequest)
 		return
 	}
 
-	deleteMeetingReview(ctx, potentialDateKey)
+	model.DeleteMeetingReview(ctx, potentialDateKey)
 	if err != nil {
-		RespondErr(ctx, w, r, err, http.StatusBadRequest)
+		response.RespondErr(ctx, w, r, err, http.StatusBadRequest)
 		return
 	}
 
-	Respond(ctx, w, r, nil, http.StatusOK)
+	response.Respond(ctx, w, r, nil, http.StatusOK)
 }
 
 
@@ -689,13 +691,13 @@ func handleDeleteMeetingReview(w http.ResponseWriter, r *http.Request, reviewId 
 //
 //	meetingKey, err := datastore.DecodeKey(meetingId)
 //	if err != nil {
-//		RespondErr(ctx, w, r, err, http.StatusBadRequest)
+//		response.RespondErr(ctx, w, r, err, http.StatusBadRequest)
 //		return
 //	}
 //
 //	meeting, err := GetMeeting(ctx, meetingKey)
 //	if err != nil {
-//		RespondErr(ctx, w, r, err, http.StatusBadRequest)
+//		response.RespondErr(ctx, w, r, err, http.StatusBadRequest)
 //		return
 //	}
 //
@@ -705,7 +707,7 @@ func handleDeleteMeetingReview(w http.ResponseWriter, r *http.Request, reviewId 
 //	//remove Coach from Coachee
 //	err = meeting.removeMeetingCoach(ctx)
 //	if err != nil {
-//		RespondErr(ctx, w, r, err, http.StatusBadRequest)
+//		response.RespondErr(ctx, w, r, err, http.StatusBadRequest)
 //		return
 //	}
 //	//remove agreed MeetingTime
@@ -718,18 +720,18 @@ func handleCoacheeCancelMeeting(w http.ResponseWriter, r *http.Request, meetingI
 
 	meetingKey, err := datastore.DecodeKey(meetingId)
 	if err != nil {
-		RespondErr(ctx, w, r, err, http.StatusBadRequest)
+		response.RespondErr(ctx, w, r, err, http.StatusBadRequest)
 		return
 	}
 
 	//remove all meetingTimes for this meeting
-	err = clearAllMeetingTimesForAMeeting(ctx, meetingKey)
+	err = model.ClearAllMeetingTimesForAMeeting(ctx, meetingKey)
 	if err != nil {
 		return
 	}
 
 	//remove reviews
-	err = deleteAllReviewsForMeeting(ctx, meetingKey)
+	err = model.DeleteAllReviewsForMeeting(ctx, meetingKey)
 	if err != nil {
 		return
 	}
@@ -739,25 +741,25 @@ func handleCoacheeCancelMeeting(w http.ResponseWriter, r *http.Request, meetingI
 		log.Debugf(ctx, "handleCoacheeCancelMeeting, RunInTransaction")
 
 		//load meetingCoachee
-		meetingCoachee, err := getMeeting(ctx, meetingKey)
+		meetingCoachee, err := model.GetMeeting(ctx, meetingKey)
 		if err != nil {
 			return err
 		}
 
 		//remove meetingCoachee
-		meetingCoachee.delete(ctx)
+		meetingCoachee.Delete(ctx)
 		if err != nil {
 			return err
 		}
 
 		//load meetingCoach if any
 		if meetingCoachee.MeetingCoachKey != nil {
-			meetingCoach, err := getMeetingCoach(ctx, meetingCoachee.MeetingCoachKey)
+			meetingCoach, err := model.GetMeetingCoach(ctx, meetingCoachee.MeetingCoachKey)
 			if err != nil {
 				return err
 			}
 
-			err = meetingCoach.delete(ctx)
+			err = meetingCoach.Delete(ctx)
 			if err != nil {
 				return err
 			}
@@ -768,20 +770,20 @@ func handleCoacheeCancelMeeting(w http.ResponseWriter, r *http.Request, meetingI
 		return nil
 	}, &datastore.TransactionOptions{XG: true})
 	if err != nil {
-		RespondErr(ctx, w, r, err, http.StatusInternalServerError)
+		response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
 		return
 	}
 
 	//get coachee for this meeting
-	coachee, err := getCoachee(ctx, meetingKey.Parent())
+	coachee, err := model.GetCoachee(ctx, meetingKey.Parent())
 	if err != nil {
-		RespondErr(ctx, w, r, err, http.StatusBadRequest)
+		response.RespondErr(ctx, w, r, err, http.StatusBadRequest)
 		return
 	}
 	//increase available sessions count
-	coachee.increaseAvailableSessionsCount(ctx)
+	coachee.IncreaseAvailableSessionsCount(ctx)
 
-	Respond(ctx, w, r, nil, http.StatusOK)
+	response.Respond(ctx, w, r, nil, http.StatusOK)
 }
 
 func updateMeetingPotentialTime(w http.ResponseWriter, r *http.Request, potentialId string) {
@@ -790,14 +792,14 @@ func updateMeetingPotentialTime(w http.ResponseWriter, r *http.Request, potentia
 
 	potentialDateKey, err := datastore.DecodeKey(potentialId)
 	if err != nil {
-		RespondErr(ctx, w, r, err, http.StatusBadRequest)
+		response.RespondErr(ctx, w, r, err, http.StatusBadRequest)
 		return
 	}
 
 	//load potentialDate
-	meetingTime, err := GetMeetingTime(ctx, potentialDateKey)
+	meetingTime, err := model.GetMeetingTime(ctx, potentialDateKey)
 	if err != nil {
-		RespondErr(ctx, w, r, err, http.StatusBadRequest)
+		response.RespondErr(ctx, w, r, err, http.StatusBadRequest)
 		return
 	}
 
@@ -806,16 +808,16 @@ func updateMeetingPotentialTime(w http.ResponseWriter, r *http.Request, potentia
 		StartDate string `json:"start_date"`
 		EndDate   string `json:"end_date"`
 	}
-	err = Decode(r, &potential)
+	err = response.Decode(r, &potential)
 	if err != nil {
-		RespondErr(ctx, w, r, err, http.StatusBadRequest)
+		response.RespondErr(ctx, w, r, err, http.StatusBadRequest)
 		return
 	}
 
 	//convert String date to time Object
 	StartDateInt, err := strconv.ParseInt(potential.StartDate, 10, 64)
 	if err != nil {
-		RespondErr(ctx, w, r, errors.New("invalid time"), http.StatusBadRequest)
+		response.RespondErr(ctx, w, r, errors.New("invalid time"), http.StatusBadRequest)
 	}
 	StartDate := time.Unix(StartDateInt, 0)
 	log.Debugf(ctx, "handleCreateMeeting, StartDate : ", StartDate)
@@ -823,15 +825,15 @@ func updateMeetingPotentialTime(w http.ResponseWriter, r *http.Request, potentia
 
 	EndDateInt, err := strconv.ParseInt(potential.EndDate, 10, 64)
 	if err != nil {
-		RespondErr(ctx, w, r, errors.New("invalid time"), http.StatusBadRequest)
+		response.RespondErr(ctx, w, r, errors.New("invalid time"), http.StatusBadRequest)
 	}
 	EndDate := time.Unix(EndDateInt, 0)
 	log.Debugf(ctx, "handleCreateMeeting, EndDate : ", EndDate)
 	meetingTime.EndDate = EndDate
 
 	//update with new values
-	meetingTime.updateMeetingPotentialTime(ctx)
+	meetingTime.UpdateMeetingPotentialTime(ctx)
 
 	//return new meetingTime
-	Respond(ctx, w, r, meetingTime, http.StatusOK)
+	response.Respond(ctx, w, r, meetingTime, http.StatusOK)
 }

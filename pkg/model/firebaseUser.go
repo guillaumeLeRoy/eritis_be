@@ -1,4 +1,4 @@
-package api
+package model
 
 import (
 	"errors"
@@ -14,6 +14,7 @@ type FirebaseUser struct {
 type Login struct {
 	Coach   *Coach `json:"coach"`
 	Coachee *APICoachee `json:"coachee"`
+	Rh      *Rh `json:"rh"`
 }
 
 func ( u FirebaseUser) OK() error {
@@ -28,7 +29,7 @@ func ( u FirebaseUser) OK() error {
 // datastore instance is unable to provide a User because it doesn't exist.
 var ErrNoUser = errors.New("user : No user found")
 
-func (u *FirebaseUser) CreateCoach(ctx context.Context) (*Coach, error) {
+func CreateCoach(ctx context.Context, u *FirebaseUser) (*Coach, error) {
 	log.Debugf(ctx, "CreateCoach, create, %s", u)
 
 	coach, err := getCoachFromFirebaseId(ctx, u.UID)
@@ -52,10 +53,10 @@ func (u *FirebaseUser) CreateCoach(ctx context.Context) (*Coach, error) {
 
 }
 
-func createCoachee(ctx context.Context, u *FirebaseUser, planId PlanInt) (*APICoachee, error) {
+func CreateCoachee(ctx context.Context, u *FirebaseUser, planId PlanInt) (*APICoachee, error) {
 	log.Debugf(ctx, "CreateCoachee, create, %s", u)
 
-	coachee, err := getCoacheeFromFirebaseId(ctx, u.UID)
+	coachee, err := GetCoacheeFromFirebaseId(ctx, u.UID)
 	if err != nil && err != ErrNoUser {
 		return nil, errors.New("Error trying to know if a user is already in the datastore")
 	}
@@ -75,6 +76,30 @@ func createCoachee(ctx context.Context, u *FirebaseUser, planId PlanInt) (*APICo
 	return coachee, nil
 }
 
+func CreateRH(ctx context.Context, u *FirebaseUser) (*Rh, error) {
+	log.Debugf(ctx, "createRH, create, %s", u)
+
+	coach, err := GetRhFromFirebaseId(ctx, u.UID)
+	if err != nil && err != ErrNoUser {
+		return nil, errors.New("Error trying to know if a user is already in the datastore")
+	}
+
+	if coach != nil {
+		return nil, errors.New("Rh already exists")
+	}
+
+	//create a new user
+	coach, err = CreateRhFromFirebaseUser(ctx, u)
+	if err != nil {
+		return nil, err
+	}
+
+	log.Debugf(ctx, "firebaseUser, Rh created %s", coach)
+
+	return coach, nil
+
+}
+
 //get User for the given user Firebase id
 func (u *FirebaseUser) GetUser(ctx context.Context) (*Login, error) {
 	log.Debugf(ctx, "firebaseUser, GetUser with FB id : %s", u.UID)
@@ -91,7 +116,9 @@ func (u *FirebaseUser) GetUser(ctx context.Context) (*Login, error) {
 	}
 
 	//no coach
-	coachee, err := getCoacheeFromFirebaseId(ctx, u.UID)
+
+	//get a coachee
+	coachee, err := GetCoacheeFromFirebaseId(ctx, u.UID)
 	if err != nil && err != ErrNoUser {
 		return nil, err
 	}
@@ -99,13 +126,24 @@ func (u *FirebaseUser) GetUser(ctx context.Context) (*Login, error) {
 	//no coachee
 	if err == nil {
 		log.Debugf(ctx, "GetUser, found a coachee")
-
 		//we have a coachee
 		return &Login{Coachee:coachee}, nil
 	}
 
+
+	//no coachee
+
+	//try to get a RH
+	rh, err := GetRhFromFirebaseId(ctx, u.UID)
+	//no rh
+	if err == nil {
+		log.Debugf(ctx, "GetUser, found a rh")
+		//we have a rh
+		return &Login{Rh:rh}, nil
+	}
 	log.Debugf(ctx, "GetUser, no one")
 
 	//no one ...
 	return nil, ErrNoUser
 }
+

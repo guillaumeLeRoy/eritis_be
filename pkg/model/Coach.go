@@ -1,4 +1,4 @@
-package api
+package model
 
 import (
 	"google.golang.org/appengine/datastore"
@@ -10,6 +10,8 @@ import (
 	"fmt"
 	"strings"
 )
+
+const COACH_ENTITY string = "Coach"
 
 type Coach struct {
 	Key         *datastore.Key `json:"id" datastore:"-"`
@@ -44,7 +46,7 @@ func GetCoach(ctx context.Context, key *datastore.Key) (*Coach, error) {
 
 func GetAllCoach(ctx context.Context) ([]*Coach, error) {
 	var coachs []*Coach
-	keys, err := datastore.NewQuery("Coach").GetAll(ctx, &coachs)
+	keys, err := datastore.NewQuery(COACH_ENTITY).GetAll(ctx, &coachs)
 	if err != nil {
 		return nil, err
 	}
@@ -60,7 +62,7 @@ func CreateCoachFromFirebaseUser(ctx context.Context, fbUser *FirebaseUser) (*Co
 	log.Debugf(ctx, "CoachFromFirebaseUser")
 
 	var coach Coach
-	coach.Key = datastore.NewIncompleteKey(ctx, "Coach", nil)
+	coach.Key = datastore.NewIncompleteKey(ctx, COACH_ENTITY, nil)
 
 	//create new user
 	coach.FirebaseId = fbUser.UID
@@ -85,14 +87,9 @@ func getCoachFromFirebaseId(ctx context.Context, fbId string) (*Coach, error) {
 	log.Debugf(ctx, "getCoachFromFirebaseId id : %s", fbId)
 
 	var coachs []*Coach
-	keys, err := datastore.NewQuery("Coach").Filter("FirebaseId =", fbId).GetAll(ctx, &coachs)
+	keys, err := datastore.NewQuery(COACH_ENTITY).Filter("FirebaseId =", fbId).GetAll(ctx, &coachs)
 	if err != nil {
 		return nil, err
-	}
-
-	keysBis, err := datastore.NewQuery("Coach").GetAll(ctx, &coachs)
-	for _, key := range keysBis {
-		log.Debugf(ctx, "getCoachFromFirebaseId key ", key)
 	}
 
 	if len(keys) == 0 {
@@ -117,6 +114,17 @@ func (c *Coach)Update(ctx context.Context, displayName string, description strin
 	c.DisplayName = displayName
 	c.Description = description
 	c.AvatarURL = avatarUrl
+
+	err := c.update(ctx)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (c *Coach)update(ctx context.Context) (error) {
+	log.Debugf(ctx, "update coach : %s", c)
 
 	key, err := datastore.Put(ctx, c.Key, c)
 	if err != nil {

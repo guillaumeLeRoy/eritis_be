@@ -1,4 +1,4 @@
-package api
+package model
 
 import (
 	"google.golang.org/appengine/datastore"
@@ -16,7 +16,7 @@ type MeetingTime struct {
 	EndDate   time.Time `json:"end_date"`
 }
 
-func constructor(start time.Time, end time.Time) *MeetingTime {
+func Constructor(start time.Time, end time.Time) *MeetingTime {
 	var potentialTime = &MeetingTime{}
 	potentialTime.StartDate = start
 	potentialTime.EndDate = end
@@ -88,7 +88,7 @@ func getMeetingPotentialTimesForCoach(ctx context.Context, meetingKey *datastore
 }
 
 //remove all the meetingTimes associated with this meeting
-func clearAllMeetingTimesForAMeeting(ctx context.Context, meetingKey *datastore.Key) error {
+func ClearAllMeetingTimesForAMeeting(ctx context.Context, meetingKey *datastore.Key) error {
 	log.Debugf(ctx, "clearAllMeetingTimesForAMeeting, meeting key %s", meetingKey)
 
 	//get times
@@ -99,7 +99,7 @@ func clearAllMeetingTimesForAMeeting(ctx context.Context, meetingKey *datastore.
 
 	//loop and delete them
 	for _, meetingTime := range meetingTimes {
-		err = deleteMeetingTime(ctx, meetingTime.Key)
+		err = DeleteMeetingTime(ctx, meetingTime.Key)
 		if err != nil {
 			return err
 		}
@@ -109,7 +109,7 @@ func clearAllMeetingTimesForAMeeting(ctx context.Context, meetingKey *datastore.
 }
 
 // update potential time
-func (p *MeetingTime)updateMeetingPotentialTime(ctx context.Context) (error) {
+func (p *MeetingTime)UpdateMeetingPotentialTime(ctx context.Context) (error) {
 	log.Debugf(ctx, "updateeMeetingPotentialTime, potential key %s", p.Key)
 
 	key, err := datastore.Put(ctx, p.Key, p)
@@ -120,7 +120,7 @@ func (p *MeetingTime)updateMeetingPotentialTime(ctx context.Context) (error) {
 }
 
 // delete meetingTime
-func deleteMeetingTime(ctx context.Context, meetingTimeKey *datastore.Key) (error) {
+func DeleteMeetingTime(ctx context.Context, meetingTimeKey *datastore.Key) (error) {
 	log.Debugf(ctx, "deleteMeetingPotentialTime, potential key %s", meetingTimeKey)
 
 	err := datastore.Delete(ctx, meetingTimeKey)

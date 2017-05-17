@@ -1,4 +1,4 @@
-package api
+package handler
 
 import (
 	"fmt"
@@ -7,6 +7,8 @@ import (
 	"net/http"
 	"google.golang.org/appengine"
 	"golang.org/x/net/context"
+	"eritis_be/pkg/model"
+	"eritis_be/pkg/response"
 )
 
 const CONTACT_ERITIS = "diana@eritis.co.uk";
@@ -14,7 +16,7 @@ const CONTACT_ERITIS = "diana@eritis.co.uk";
 const COACH_WELCOME_MSG = `Bienvenue dans la famille Eritis`
 const COACH_SELECTED_MSG = `Vous avez été sélectionné par %s pour une séance de coaching`
 
-func handleContact(w http.ResponseWriter, r *http.Request) {
+func HandleContact(w http.ResponseWriter, r *http.Request) {
 	ctx := appengine.NewContext(r)
 	log.Debugf(ctx, "handle contact")
 
@@ -29,16 +31,16 @@ func handleContact(w http.ResponseWriter, r *http.Request) {
 			Email   string `json:"email"`
 			Message string `json:"message"`
 		}
-		err := Decode(r, &contact)
+		err := response.Decode(r, &contact)
 		if err != nil {
-			RespondErr(ctx, w, r, err, http.StatusBadRequest)
+			response.RespondErr(ctx, w, r, err, http.StatusBadRequest)
 			return
 		}
 		log.Debugf(ctx, "handle contact, contact %s", contact)
 
 		err = contactEritis(ctx, contact.Name, contact.Email, contact.Message)// POST /api/v1/contact
 		if err != nil {
-			RespondErr(ctx, w, r, err, http.StatusInternalServerError)
+			response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
 			return
 		}
 		w.WriteHeader(http.StatusOK)
@@ -72,7 +74,7 @@ func contactEritis(ctx context.Context, name string, email string, message strin
 	return nil
 }
 
-func sendWelcomeEmailToCoach(ctx context.Context, coach *Coach) error {
+func sendWelcomeEmailToCoach(ctx context.Context, coach *model.Coach) error {
 	addrs := []string{coach.Email}
 
 	msg := &mail.Message{
@@ -89,7 +91,7 @@ func sendWelcomeEmailToCoach(ctx context.Context, coach *Coach) error {
 
 	return nil
 }
-func sendTestEmail(w http.ResponseWriter, r *http.Request) {
+func SendTestEmail(w http.ResponseWriter, r *http.Request) {
 	ctx := appengine.NewContext(r)
 
 	addrs := []string{"gleroy78@gmail.com, theo@eritis.co.uk"}
@@ -103,13 +105,13 @@ func sendTestEmail(w http.ResponseWriter, r *http.Request) {
 
 	if err := mail.Send(ctx, msg); err != nil {
 		log.Errorf(ctx, "Couldn't send email: %v", err)
-		RespondErr(ctx, w, r, err, http.StatusInternalServerError)
+		response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
 		return
 	}
 	w.WriteHeader(http.StatusOK)
 }
 
-func sendEmailToSelectedCoach(ctx context.Context, coach *Coach, coachee *Coachee) error {
+func sendEmailToSelectedCoach(ctx context.Context, coach *model.Coach, coachee *model.Coachee) error {
 	addrs := []string{coach.Email}
 
 	msg := &mail.Message{

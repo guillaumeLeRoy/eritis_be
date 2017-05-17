@@ -1,4 +1,4 @@
-package api
+package response
 
 import (
 	"testing"
@@ -10,7 +10,7 @@ func TestPathParams(t *testing.T) {
 	if err != nil {
 		t.Errorf("NewRequest: %s", err)
 	}
-	params := pathParams(r, "one/two/three/four")
+	params := PathParams(r, "one/two/three/four")
 	if len(params) != 4 {
 		t.Errorf("expected 4 params but got %d: %v", len(params), params)
 	}
@@ -23,7 +23,7 @@ func TestPathParams(t *testing.T) {
 			t.Errorf("%s: %s != %s", k, params[k], v)
 		}
 	}
-	params = pathParams(r, "one/two/three/four/five/six")
+	params = PathParams(r, "one/two/three/four/five/six")
 	if len(params) != 5 {
 		t.Errorf("expected 5 params but got %d: %v", len(params), params)
 	}

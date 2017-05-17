@@ -1,12 +1,14 @@
-package api
+package handler
 
 import (
 	"net/http"
 	"google.golang.org/appengine"
 	"google.golang.org/appengine/log"
+	"eritis_be/pkg/model"
+	"eritis_be/pkg/response"
 )
 
-func handleCron(w http.ResponseWriter, r *http.Request) {
+func HandleCron(w http.ResponseWriter, r *http.Request) {
 	ctx := appengine.NewContext(r)
 	log.Debugf(ctx, "handleCron")
 
@@ -28,21 +30,21 @@ func handleRefreshAvailableSessionsCount(w http.ResponseWriter, r *http.Request)
 
 
 	//get all coachees
-	coachees, err := getAllCoachees(ctx)
+	coachees, err := model.GetAllCoachees(ctx)
 	if err != nil {
-		RespondErr(ctx, w, r, err, http.StatusBadRequest)
+		response.RespondErr(ctx, w, r, err, http.StatusBadRequest)
 		return
 	}
 
 	//go through each coachee and try to refresh
 	for _, coachee := range coachees {
-		err = coachee.refreshAvailableSessionsCount(ctx)
+		err = coachee.RefreshAvailableSessionsCount(ctx)
 		if err != nil {
-			RespondErr(ctx, w, r, err, http.StatusInternalServerError)
+			response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
 			return
 		}
 	}
 
 	//no response but status OK
-	Respond(ctx, w, r, nil, http.StatusOK)
+	response.Respond(ctx, w, r, nil, http.StatusOK)
 }

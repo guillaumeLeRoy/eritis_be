@@ -1,4 +1,4 @@
-package api
+package model
 
 import (
 	"google.golang.org/appengine/datastore"
@@ -28,7 +28,7 @@ type ApiMeeting struct {
 	IsOpen     bool `json:"isOpen"`
 }
 
-func createMeetingCoachee(ctx context.Context, coacheeKey *datastore.Key) (*MeetingCoachee, error) {
+func CreateMeetingCoachee(ctx context.Context, coacheeKey *datastore.Key) (*MeetingCoachee, error) {
 	log.Debugf(ctx, "Create meeting")
 
 	var meeting MeetingCoachee
@@ -37,7 +37,7 @@ func createMeetingCoachee(ctx context.Context, coacheeKey *datastore.Key) (*Meet
 	//meeting is open
 	meeting.IsOpen = true
 
-	err := meeting.update(ctx)
+	err := meeting.Update(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -45,7 +45,7 @@ func createMeetingCoachee(ctx context.Context, coacheeKey *datastore.Key) (*Meet
 	return &meeting, nil
 }
 
-func (m *MeetingCoachee) update(ctx context.Context) error {
+func (m *MeetingCoachee) Update(ctx context.Context) error {
 	key, err := datastore.Put(ctx, m.Key, m)
 	if err != nil {
 		return err
@@ -55,7 +55,7 @@ func (m *MeetingCoachee) update(ctx context.Context) error {
 	return nil
 }
 
-func getMeeting(ctx context.Context, meetingCoacheeKey *datastore.Key) (*MeetingCoachee, error) {
+func GetMeeting(ctx context.Context, meetingCoacheeKey *datastore.Key) (*MeetingCoachee, error) {
 	log.Debugf(ctx, "GetAPIMeeting for key %s", meetingCoacheeKey)
 
 	var meeting MeetingCoachee
@@ -68,20 +68,20 @@ func getMeeting(ctx context.Context, meetingCoacheeKey *datastore.Key) (*Meeting
 	return &meeting, nil
 }
 
-func (m *MeetingCoachee) close(ctx context.Context) error {
+func (m *MeetingCoachee) Close(ctx context.Context) error {
 	log.Debugf(ctx, "Close meeting", m)
 	m.IsOpen = false
-	return m.update(ctx)
+	return m.Update(ctx)
 }
 
-func (m *MeetingCoachee) delete(ctx context.Context) error {
+func (m *MeetingCoachee) Delete(ctx context.Context) error {
 	log.Debugf(ctx, "delete meeting", m)
 	err := datastore.Delete(ctx, m.Key)
 	return err
 }
 
 //convert given MeetingCoachee into a APImeeting
-func (m *MeetingCoachee)convertToAPIMeeting(ctx context.Context) (*ApiMeeting, error) {
+func (m *MeetingCoachee)ConvertToAPIMeeting(ctx context.Context) (*ApiMeeting, error) {
 	log.Debugf(ctx, "convertToAPIMeeting", m)
 
 	var ApiMeeting ApiMeeting
@@ -121,7 +121,7 @@ func (m *MeetingCoachee) SetMeetingTime(ctx context.Context, meetingTimeKey *dat
 
 	m.AgreedTime = meetingTimeKey
 
-	err := m.update(ctx)
+	err := m.Update(ctx)
 	if err != nil {
 		return err
 	}
@@ -134,7 +134,7 @@ func (m *MeetingCoachee) clearMeetingTime(ctx context.Context) error {
 
 	m.AgreedTime = nil
 
-	err := m.update(ctx)
+	err := m.Update(ctx)
 	if err != nil {
 		return err
 	}
@@ -142,7 +142,7 @@ func (m *MeetingCoachee) clearMeetingTime(ctx context.Context) error {
 	return nil
 }
 
-func associate(ctx context.Context, coachKey *datastore.Key, meetingCoachee *MeetingCoachee) error {
+func Associate(ctx context.Context, coachKey *datastore.Key, meetingCoachee *MeetingCoachee) error {
 	//create a MeetingCoach for coachKey
 	meetingCoach, err := create(ctx, coachKey, meetingCoachee.Key)
 	if err != nil {
@@ -163,7 +163,7 @@ func (m *MeetingCoachee) setMeetingCoach(ctx context.Context, meetingCoach *Meet
 	//this meeting is now associated with a meetingCoach
 	m.MeetingCoachKey = meetingCoach.Key
 
-	err := m.update(ctx)
+	err := m.Update(ctx)
 	if err != nil {
 		return err
 	}
@@ -176,7 +176,7 @@ func (m *MeetingCoachee)removeMeetingCoach(ctx context.Context) error {
 	//remove key
 	m.MeetingCoachKey = nil
 
-	err := m.update(ctx)
+	err := m.Update(ctx)
 	if err != nil {
 		return err
 	}
@@ -198,7 +198,7 @@ func GetMeetingsForCoachee(ctx context.Context, coacheeKey *datastore.Key) ([]*A
 	var apiMeetings []*ApiMeeting = make([]*ApiMeeting, len(meetings))
 	for i, meeting := range meetings {
 		meeting.Key = keys[i]
-		apiMeetings[i], err = meeting.convertToAPIMeeting(ctx)
+		apiMeetings[i], err = meeting.ConvertToAPIMeeting(ctx)
 		if err != nil {
 			return nil, err
 		}
@@ -225,7 +225,7 @@ func associateCoachWithMeetings(ctx context.Context, coacheeKey *datastore.Key, 
 
 		if meeting.MeetingCoachKey == nil {
 			log.Debugf(ctx, "create Meeting coach")
-			err = associate(ctx, coachKey, meeting)
+			err = Associate(ctx, coachKey, meeting)
 			if err != nil {
 				return err
 			}

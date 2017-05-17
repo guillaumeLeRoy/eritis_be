@@ -1,4 +1,4 @@
-package api
+package model
 
 import (
 	"google.golang.org/appengine/datastore"
@@ -31,7 +31,7 @@ func create(ctx context.Context, coachKey *datastore.Key, meetingCoacheeKey *dat
 	return &meetingCoach, nil
 }
 
-func getMeetingCoach(ctx context.Context, meetingCoachKey *datastore.Key) (*MeetingCoach, error) {
+func GetMeetingCoach(ctx context.Context, meetingCoachKey *datastore.Key) (*MeetingCoach, error) {
 	log.Debugf(ctx, "getMeetingCoach for key %s", meetingCoachKey)
 
 	var meeting MeetingCoach
@@ -54,7 +54,7 @@ func (m *MeetingCoach) update(ctx context.Context) error {
 	return nil
 }
 
-func (m *MeetingCoach) delete(ctx context.Context) error {
+func (m *MeetingCoach) Delete(ctx context.Context) error {
 	log.Debugf(ctx, "delete meeting", m)
 	err := datastore.Delete(ctx, m.Key)
 	return err
@@ -64,12 +64,12 @@ func (m *MeetingCoach) delete(ctx context.Context) error {
 func (m *MeetingCoach)GetAPIMeeting(ctx context.Context) (*ApiMeeting, error) {
 	log.Debugf(ctx, "GetAPIMeeting", m)
 
-	meetingCoachee, err := getMeeting(ctx, m.MeetingCoacheeKey)
+	meetingCoachee, err := GetMeeting(ctx, m.MeetingCoacheeKey)
 	if err != nil {
 		return nil, err
 	}
 
-	apiMeeting, err := meetingCoachee.convertToAPIMeeting(ctx)
+	apiMeeting, err := meetingCoachee.ConvertToAPIMeeting(ctx)
 	if err != nil {
 		return nil, err
 	}
