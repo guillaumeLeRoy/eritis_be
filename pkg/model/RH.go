@@ -15,6 +15,7 @@ type Rh struct {
 	FirebaseId  string `json:"firebase_id"`
 	DisplayName string `json:"display_name"`
 	StartDate   time.Time `json:"start_date"`
+	AvatarURL   string`json:"avatar_url"`
 }
 
 func CreateRhFromFirebaseUser(ctx context.Context, fbUser *FirebaseUser) (*Rh, error) {
@@ -28,6 +29,7 @@ func CreateRhFromFirebaseUser(ctx context.Context, fbUser *FirebaseUser) (*Rh, e
 	rh.Email = fbUser.Email
 	rh.DisplayName = fbUser.Email
 	rh.StartDate = time.Now()
+	rh.AvatarURL = gravatarURL(fbUser.Email)
 
 	log.Debugf(ctx, "saving new rh, firebase id  : %s, email : %s ", fbUser.UID, fbUser.Email)
 
@@ -52,7 +54,7 @@ func GetRhFromFirebaseId(ctx context.Context, fbId string) (*Rh, error) {
 		return nil, ErrNoUser
 	}
 
-	rh, err := get(ctx, keys[0])
+	rh, err := GetRh(ctx, keys[0])
 	if err != nil {
 		return nil, err
 	}
@@ -60,7 +62,9 @@ func GetRhFromFirebaseId(ctx context.Context, fbId string) (*Rh, error) {
 	return rh, nil
 }
 
-func get(ctx context.Context, key *datastore.Key) (*Rh, error) {
+func GetRh(ctx context.Context, key *datastore.Key) (*Rh, error) {
+	log.Debugf(ctx, "GetRh")
+
 	var rh Rh
 	err := datastore.Get(ctx, key, &rh)
 	if err != nil {

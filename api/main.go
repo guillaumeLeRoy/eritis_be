@@ -74,6 +74,9 @@ func init() {
 	//coachee
 	http.HandleFunc("/api/coachees/", authHandler(handler.HandleCoachees))
 
+	//rh
+	http.HandleFunc("/api/v1/rhs/", authHandler(handler.HandlerRH))
+
 	//contact, no need to be authenticated to send a contact request
 	http.HandleFunc("/api/v1/contact/", nonAuthHandler(handler.HandleContact))
 
@@ -84,7 +87,7 @@ func init() {
 	http.HandleFunc("/api/v1/cron/", nonAuthHandler(handler.HandleCron))
 
 	//test email
-	http.HandleFunc("/api/email/", handler.SendTestEmail)
+	//http.HandleFunc("/api/email/", handler.SendTestEmail)
 
 	//update Service Account file to datastore
 	http.Handle("/api/upload_service_account/", &templateHandler{filename: "upload.html"})
@@ -128,8 +131,6 @@ func getFirebaseJsonReader(ctx context.Context) (*storage.Reader, error) {
 	}
 	return rdr, nil
 }
-
-
 
 func authHandler(handler func(w http.ResponseWriter, r *http.Request)) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {

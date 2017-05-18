@@ -78,9 +78,9 @@ func handleCreateCoachee(w http.ResponseWriter, r *http.Request) {
 	ctx := appengine.NewContext(r)
 	log.Debugf(ctx, "handleCreateCoachee")
 
+	//TODO maybe pass a plan_id
 	var newCoachee struct {
 		model.FirebaseUser
-		PlanId model.PlanInt `json:"plan_id"`
 	}
 	err := response.Decode(r, &newCoachee)
 	if err != nil {
@@ -88,11 +88,27 @@ func handleCreateCoachee(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	coachee, err := model.CreateCoachee(ctx, &newCoachee.FirebaseUser, newCoachee.PlanId)
+	//get potential coachee : email must mach
+	potentialCoachee, err := model.GetPotentialCoacheeForEmail(ctx, newCoachee.Email)
 	if err != nil {
 		response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
 		return
 	}
+
+	//we have 1 potential Coachee
+	coachee, err := model.CreateCoachee(ctx, &newCoachee.FirebaseUser, potentialCoachee.PlanId, potentialCoachee.Key.Parent())
+	if err != nil {
+		response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
+		return
+	}
+
+	//remove potential
+	model.DeletePotentialCoachee(ctx, potentialCoachee.Key)
+	if err != nil {
+		response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
+		return
+	}
+
 	//construct response
 	var res = &model.Login{Coachee:coachee}
 	response.Respond(ctx, w, r, res, http.StatusCreated)

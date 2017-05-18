@@ -23,6 +23,7 @@ type Coachee struct {
 	AvailableSessionsCount  int `json:"available_sessions_count"`
 	UpdateSessionsCountDate time.Time `json:"update_sessions_count_date"`
 	SelectedCoach           *datastore.Key `json:"-"`
+	AssociatedRh            *datastore.Key `json:"-"`
 	PlanId                  PlanInt`json:"-"`
 }
 
@@ -30,13 +31,15 @@ type Coachee struct {
 type APICoachee struct {
 	Coachee
 	SelectedCoach *Coach `json:"selectedCoach"`
+	AssociatedRh  *Rh `json:"associatedRh"`
 	Plan          *Plan `json:"plan"`
 }
 
-func (c Coachee) toAPI(coach *Coach, plan *Plan) APICoachee {
+func (c Coachee) toAPI(coach *Coach, rh *Rh, plan *Plan) APICoachee {
 	return APICoachee{
 		Coachee  : c,
 		SelectedCoach: coach,
+		AssociatedRh : rh,
 		Plan: plan,
 	}
 }
@@ -55,6 +58,25 @@ func (c *Coachee) getSelectedCoach(ctx context.Context) (*Coach, error) {
 	return coach, nil
 }
 
+// get all coachees for this RH
+func GetCoacheesForRh(ctx context.Context, rhKey *datastore.Key) ([]*Coachee, error) {
+	log.Debugf(ctx, "getCoacheesForRh")
+
+	var coachees []*Coachee
+	keys, err := datastore.NewQuery(COACHEE_ENTITY).Filter("AssociatedRh =", rhKey).GetAll(ctx, &coachees)
+	if err != nil {
+		return nil, err
+	}
+
+	//get Keys
+	for i, coachee := range coachees {
+		coachee.Key = keys[i]
+	}
+
+	return coachees, nil
+
+}
+
 func GetCoachee(ctx context.Context, key *datastore.Key) (*Coachee, error) {
 	var coachee Coachee
 	err := datastore.Get(ctx, key, &coachee)
@@ -71,23 +93,43 @@ func GetAPICoachee(ctx context.Context, key *datastore.Key) (*APICoachee, error)
 
 	//get from Datastore
 	coachee, err := GetCoachee(ctx, key)
-
-	//now get selected Coach if any
-	coach, err := coachee.getSelectedCoach(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	//get the plan
-	plan := createPlanFromId(coachee.PlanId)
-
 	//convert to API object
-	var apiCoachee = coachee.toAPI(coach, plan)
+	apiCoachee, err := coachee.GetAPICoachee(ctx)
+	if err != nil {
+		return nil, err
+	}
 
 	log.Debugf(ctx, "getCoachee, response %s", apiCoachee)
 
+	return apiCoachee, nil
+}
+
+func (c *Coachee)GetAPICoachee(ctx context.Context) (*APICoachee, error) {
+
+	//now get selected Coach if any
+	coach, err := c.getSelectedCoach(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	//get the Rh
+	rh, err := GetRh(ctx, c.AssociatedRh)
+
+	//get the plan
+	plan := createPlanFromId(c.PlanId)
+
+	//convert to API object
+	var apiCoachee = c.toAPI(coach, rh, plan)
+
+	log.Debugf(ctx, "GetAPICoachee, response %s", apiCoachee)
+
 	return &apiCoachee, nil
 }
+
 
 //get all coachees
 func GetAllCoachees(ctx context.Context) ([]*Coachee, error) {
@@ -127,7 +169,7 @@ func GetAllAPICoachees(ctx context.Context) ([]*APICoachee, error) {
 	return response, nil
 }
 
-func createCoacheeFromFirebaseUser(ctx context.Context, fbUser *FirebaseUser, planId PlanInt) (*APICoachee, error) {
+func createCoacheeFromFirebaseUser(ctx context.Context, fbUser *FirebaseUser, planId PlanInt, rhKey *datastore.Key) (*APICoachee, error) {
 	log.Debugf(ctx, "CoacheeFromFirebaseUser, fbUser %s, planId %s", fbUser, planId)
 
 	var coachee Coachee
@@ -140,6 +182,7 @@ func createCoacheeFromFirebaseUser(ctx context.Context, fbUser *FirebaseUser, pl
 	coachee.AvatarURL = gravatarURL(fbUser.Email)
 	coachee.StartDate = time.Now()
 	coachee.PlanId = planId
+	coachee.AssociatedRh = rhKey
 
 	//calculate available sessions
 	var count = getSessionsCount(planId)
@@ -153,20 +196,19 @@ func createCoacheeFromFirebaseUser(ctx context.Context, fbUser *FirebaseUser, pl
 	if err != nil {
 		return nil, err
 	}
+	//convert to API object
+	apiCoachee, err := coachee.GetAPICoachee(ctx)
+	if err != nil {
+		return nil, err
+	}
 
-	//get the plan
-	plan := createPlanFromId(coachee.PlanId)
-
-	//no coach selected now
-	var coacheeForApi = coachee.toAPI(nil, plan)
-	return &coacheeForApi, nil
+	return apiCoachee, nil
 }
 
 func GetCoacheeFromFirebaseId(ctx context.Context, fbId string) (*APICoachee, error) {
 	log.Debugf(ctx, "getCoacheeFromFirebaseId id : %s", fbId)
 
 	var coachees []*Coachee
-
 	keys, err := datastore.NewQuery(COACHEE_ENTITY).Filter("FirebaseId =", fbId).GetAll(ctx, &coachees)
 	if err != nil {
 		return nil, err
@@ -182,18 +224,13 @@ func GetCoacheeFromFirebaseId(ctx context.Context, fbId string) (*APICoachee, er
 	var key = keys[0]
 	coachee.Key = key
 
-	//now get selected Coach if any
-	coach, err := coachee.getSelectedCoach(ctx)
+	//convert to API object
+	apiCoachee, err := coachee.GetAPICoachee(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	//get the Plan
-	plan := createPlanFromId(coachee.PlanId)
-
-	res := coachee.toAPI(coach, plan)
-
-	return &res, nil
+	return apiCoachee, nil
 }
 
 func (c *Coachee)Update(ctx context.Context) (error) {
@@ -228,13 +265,13 @@ func (c *Coachee) UpdateSelectedCoach(ctx context.Context, coach *Coach) (*APICo
 		return nil, err
 	}
 
-	//get the plan
-	plan := createPlanFromId(c.PlanId)
+	//convert to API object
+	apiCoachee, err := c.GetAPICoachee(ctx)
+	if err != nil {
+		return nil, err
+	}
 
-	//convert to APICoachee
-	apiCoachee := c.toAPI(coach, plan)
-
-	return &apiCoachee, nil
+	return apiCoachee, nil
 }
 
 func (c *Coachee) RefreshAvailableSessionsCount(ctx context.Context) (error) {

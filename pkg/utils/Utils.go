@@ -6,6 +6,7 @@ import (
 	"google.golang.org/appengine/log"
 	"strings"
 	"errors"
+	"google.golang.org/appengine/mail"
 )
 
 const LIVE_ENV_PROJECT_ID string = "eritis-150320"
@@ -43,4 +44,24 @@ func GetFirebaseJsonPath(ctx context.Context) (string, error) {
 	log.Debugf(ctx, "getFirebaseJsonPath path %s", pathToJson)
 
 	return pathToJson, nil
+}
+
+const CONTACT_ERITIS = "diana@eritis.co.uk";
+
+func SendEmailToGivenEmail(ctx context.Context, emailAddress string, subject string, message string) error {
+	addrs := []string{emailAddress}
+
+	msg := &mail.Message{
+		Sender:  CONTACT_ERITIS,
+		To:      addrs,
+		Subject: subject,
+		Body:    message,
+	}
+
+	if err := mail.Send(ctx, msg); err != nil {
+		log.Errorf(ctx, "Couldn't send email: %v", err)
+		return err
+	}
+
+	return nil
 }

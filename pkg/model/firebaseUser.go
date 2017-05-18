@@ -4,6 +4,7 @@ import (
 	"errors"
 	"golang.org/x/net/context"
 	"google.golang.org/appengine/log"
+	"google.golang.org/appengine/datastore"
 )
 
 type FirebaseUser struct {
@@ -53,7 +54,7 @@ func CreateCoach(ctx context.Context, u *FirebaseUser) (*Coach, error) {
 
 }
 
-func CreateCoachee(ctx context.Context, u *FirebaseUser, planId PlanInt) (*APICoachee, error) {
+func CreateCoachee(ctx context.Context, u *FirebaseUser, planId PlanInt, rhKey *datastore.Key) (*APICoachee, error) {
 	log.Debugf(ctx, "CreateCoachee, create, %s", u)
 
 	coachee, err := GetCoacheeFromFirebaseId(ctx, u.UID)
@@ -66,7 +67,7 @@ func CreateCoachee(ctx context.Context, u *FirebaseUser, planId PlanInt) (*APICo
 	}
 
 	//create a new coachee
-	coachee, err = createCoacheeFromFirebaseUser(ctx, u, planId)
+	coachee, err = createCoacheeFromFirebaseUser(ctx, u, planId, rhKey)
 	if err != nil {
 		return nil, err
 	}

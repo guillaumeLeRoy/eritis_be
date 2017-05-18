@@ -2,19 +2,18 @@ package handler
 
 import (
 	"fmt"
-	"google.golang.org/appengine/mail"
 	"google.golang.org/appengine/log"
 	"net/http"
 	"google.golang.org/appengine"
 	"golang.org/x/net/context"
 	"eritis_be/pkg/model"
 	"eritis_be/pkg/response"
+	"eritis_be/pkg/utils"
 )
-
-const CONTACT_ERITIS = "diana@eritis.co.uk";
 
 const COACH_WELCOME_MSG = `Bienvenue dans la famille Eritis`
 const COACH_SELECTED_MSG = `Vous avez été sélectionné par %s pour une séance de coaching`
+const COACHEE_SELECTED_MSG = `Vous avez été sélectionné pour bénéficier de séances de coaching. Cliquez ici pour continuer %s`
 
 func HandleContact(w http.ResponseWriter, r *http.Request) {
 	ctx := appengine.NewContext(r)
@@ -51,80 +50,45 @@ func HandleContact(w http.ResponseWriter, r *http.Request) {
 
 //send an email to contact@eritis.co.uk
 func contactEritis(ctx context.Context, name string, email string, message string) error {
-	//send an email to ourself
-	addrs := []string{CONTACT_ERITIS}
 
 	subject := fmt.Sprintf("Demande de contact : %s", name)
 	body := fmt.Sprintf("Contact \n name : %s \n email : %s \n content : %s", name, email, message)
 
 	log.Debugf(ctx, "contactEritis, body %s", body)
+	//send an email to ourself
 
-	msg := &mail.Message{
-		Sender:  CONTACT_ERITIS,
-		To:      addrs,
-		Subject: subject,
-		Body:    body,
-	}
-
-	if err := mail.Send(ctx, msg); err != nil {
-		log.Errorf(ctx, "Couldn't send contact email: %v", err)
+	err := utils.SendEmailToGivenEmail(ctx, utils.CONTACT_ERITIS, subject, body)
+	if err != nil {
+		log.Errorf(ctx, "Couldn't send email: %v", err)
 		return err
 	}
-
 	return nil
 }
 
 func sendWelcomeEmailToCoach(ctx context.Context, coach *model.Coach) error {
-	addrs := []string{coach.Email}
-
-	msg := &mail.Message{
-		Sender:  CONTACT_ERITIS,
-		To:      addrs,
-		Subject: "Vous avez été sélectionné",
-		Body:    fmt.Sprintf(COACH_WELCOME_MSG),
-	}
-
-	if err := mail.Send(ctx, msg); err != nil {
+	err := utils.SendEmailToGivenEmail(ctx, coach.Email, "Vous avez été sélectionné", fmt.Sprintf(COACH_WELCOME_MSG))
+	if err != nil {
 		log.Errorf(ctx, "Couldn't send email: %v", err)
 		return err
 	}
-
 	return nil
-}
-func SendTestEmail(w http.ResponseWriter, r *http.Request) {
-	ctx := appengine.NewContext(r)
-
-	addrs := []string{"gleroy78@gmail.com, theo@eritis.co.uk"}
-
-	msg := &mail.Message{
-		Sender:  CONTACT_ERITIS,
-		To:      addrs,
-		Subject: "Vous avez été sélectionné",
-		Body:    fmt.Sprintf(COACH_WELCOME_MSG),
-	}
-
-	if err := mail.Send(ctx, msg); err != nil {
-		log.Errorf(ctx, "Couldn't send email: %v", err)
-		response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
-		return
-	}
-	w.WriteHeader(http.StatusOK)
 }
 
 func sendEmailToSelectedCoach(ctx context.Context, coach *model.Coach, coachee *model.Coachee) error {
-	addrs := []string{coach.Email}
-
-	msg := &mail.Message{
-		Sender:  CONTACT_ERITIS,
-		To:      addrs,
-		Subject: "Vous avez été sélectionné",
-		Body:    fmt.Sprintf(COACH_SELECTED_MSG, coachee.DisplayName),
-	}
-
-	if err := mail.Send(ctx, msg); err != nil {
+	err := utils.SendEmailToGivenEmail(ctx, coach.Email, "Vous avez été sélectionné", fmt.Sprintf(COACH_SELECTED_MSG, coachee.DisplayName))
+	if err != nil {
 		log.Errorf(ctx, "Couldn't send email: %v", err)
 		return err
 	}
+	return nil
+}
 
+func SendEmailToNewCoachee(ctx context.Context, email string) error {
+	var link = "eritis/welcome?email=" + email
+	err := utils.SendEmailToGivenEmail(ctx, email, "Votre RH vous offre des séances de coaching", fmt.Sprintf(COACHEE_SELECTED_MSG, link))
+	if err != nil {
+		log.Errorf(ctx, "Couldn't send email: %v", err)
+		return err
+	}
 	return nil
 }
