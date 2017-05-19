@@ -93,11 +93,11 @@ func CreateInviteLink(ctx context.Context, emailAddress string) (string, error) 
 	if appengine.IsDevAppServer() {
 		baseUrl = "http://localhost:4200"
 	} else if strings.EqualFold(LIVE_ENV_PROJECT_ID, appId) {
-		baseUrl = "https://localhost:4200"
+		baseUrl = "https://eritis.com"
 	} else if strings.EqualFold(DEV_ENV_PROJECT_ID, appId) {
-		baseUrl = "https://localhost:4200"
+		baseUrl = "https://eritis-be-dev.appspot.com"
 	} else if strings.EqualFold(GLR_ENV_PROJECT_ID, appId) {
-		baseUrl = "https://localhost:4200"
+		baseUrl = "https://eritis-be-glr.appspot.com"
 	} else {
 		return "", errors.New("createInviteLink, AppId doesn't match any environment")
 	}
