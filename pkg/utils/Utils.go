@@ -7,6 +7,12 @@ import (
 	"strings"
 	"errors"
 	"google.golang.org/appengine/mail"
+	"crypto/aes"
+	"encoding/base64"
+	"io"
+	"crypto/cipher"
+	"crypto/rand"
+	"fmt"
 )
 
 const LIVE_ENV_PROJECT_ID string = "eritis-150320"
@@ -64,4 +70,106 @@ func SendEmailToGivenEmail(ctx context.Context, emailAddress string, subject str
 	}
 
 	return nil
+}
+
+const INVITE_KEY = "a very very very very secret key"
+
+//create a link to invite a Coachee. it generates a token to hide coachee's email in the link
+func CreateInviteLink(ctx context.Context, emailAddress string) (string, error) {
+	key := []byte(INVITE_KEY) // 32 bytes
+	plaintext := []byte(emailAddress)
+	ciphertext, err := encrypt(key, plaintext)
+	if err != nil {
+		return "", err
+	}
+	baseToken := base64.StdEncoding.EncodeToString(ciphertext)
+
+	log.Debugf(ctx, "createInviteLink, baseToken %s", baseToken)
+
+	appId := appengine.AppID(ctx)
+	log.Debugf(ctx, "createInviteLink, appId %s", appId)
+
+	var baseUrl string
+	if appengine.IsDevAppServer() {
+		baseUrl = "http://localhost:4200"
+	} else if strings.EqualFold(LIVE_ENV_PROJECT_ID, appId) {
+		baseUrl = "https://localhost:4200"
+	} else if strings.EqualFold(DEV_ENV_PROJECT_ID, appId) {
+		baseUrl = "https://localhost:4200"
+	} else if strings.EqualFold(GLR_ENV_PROJECT_ID, appId) {
+		baseUrl = "https://localhost:4200"
+	} else {
+		return "", errors.New("createInviteLink, AppId doesn't match any environment")
+	}
+
+	var finalLink = fmt.Sprintf("%s/signup_coachee?token=%s", baseUrl, baseToken)
+	return finalLink, nil
+}
+
+func GetEmailFromInviteToken(ctx context.Context, token string) (string, error) {
+	key := []byte(INVITE_KEY) // 32 bytes
+
+	decodedToken, err := base64.StdEncoding.DecodeString(token)
+	if err != nil {
+		return "", err
+	}
+
+	log.Debugf(ctx, "GetEmailFromInviteToken, decodedToken %s", decodedToken)
+
+	plaintext, err := decrypt(key, decodedToken)
+	if err != nil {
+		return "", err
+	}
+	log.Debugf(ctx, "GetEmailFromInviteToken, plaintext %s", plaintext)
+
+	return string(plaintext), nil
+}
+
+//func main() {
+//	fmt.Printf("%s\n", plaintext)
+//	ciphertext, err := encrypt(key, plaintext)
+//	if err != nil {
+//		log.Fatal(err)
+//	}
+//	fmt.Printf("%0x\n", ciphertext)
+//	result, err := decrypt(key, ciphertext)
+//	if err != nil {
+//		log.Fatal(err)
+//	}
+//	fmt.Printf("%s\n", result)
+//}
+
+func encrypt(key, text []byte) ([]byte, error) {
+	block, err := aes.NewCipher(key)
+	if err != nil {
+		return nil, err
+	}
+	b := base64.StdEncoding.EncodeToString(text)
+	ciphertext := make([]byte, aes.BlockSize + len(b))
+	iv := ciphertext[:aes.BlockSize]
+	if _, err := io.ReadFull(rand.Reader, iv); err != nil {
+		return nil, err
+	}
+	cfb := cipher.NewCFBEncrypter(block, iv)
+	cfb.XORKeyStream(ciphertext[aes.BlockSize:], []byte(b))
+	return ciphertext, nil
+}
+
+func decrypt(key, text []byte) ([]byte, error) {
+	block, err := aes.NewCipher(key)
+	if err != nil {
+		return nil, err
+	}
+	if len(text) < aes.BlockSize {
+		return nil, errors.New("ciphertext too short")
+	}
+	iv := text[:aes.BlockSize]
+	text = text[aes.BlockSize:]
+	cfb := cipher.NewCFBDecrypter(block, iv)
+	cfb.XORKeyStream(text, text)
+	data, err := base64.StdEncoding.DecodeString(string(text))
+	if err != nil {
+		return nil, err
+	}
+	return data, nil
 }

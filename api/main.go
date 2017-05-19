@@ -86,8 +86,12 @@ func init() {
 	//cron
 	http.HandleFunc("/api/v1/cron/", nonAuthHandler(handler.HandleCron))
 
+	//potentialCoachee
+	http.HandleFunc("/api/v1/potential/", nonAuthHandler(handler.HandlePotential))
+
+
 	//test email
-	//http.HandleFunc("/api/email/", handler.SendTestEmail)
+	http.HandleFunc("/api/email/", handler.HandlerTestEmail)
 
 	//update Service Account file to datastore
 	http.Handle("/api/upload_service_account/", &templateHandler{filename: "upload.html"})

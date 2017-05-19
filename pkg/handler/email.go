@@ -84,11 +84,21 @@ func sendEmailToSelectedCoach(ctx context.Context, coach *model.Coach, coachee *
 }
 
 func SendEmailToNewCoachee(ctx context.Context, email string) error {
-	var link = "eritis/welcome?email=" + email
-	err := utils.SendEmailToGivenEmail(ctx, email, "Votre RH vous offre des séances de coaching", fmt.Sprintf(COACHEE_SELECTED_MSG, link))
+	link, err := utils.CreateInviteLink(ctx, email)
 	if err != nil {
-		log.Errorf(ctx, "Couldn't send email: %v", err)
+		return err
+	}
+
+	err = utils.SendEmailToGivenEmail(ctx, email, "Votre RH vous offre des séances de coaching", fmt.Sprintf(COACHEE_SELECTED_MSG, link))
+	if err != nil {
 		return err
 	}
 	return nil
+}
+
+func HandlerTestEmail(w http.ResponseWriter, r *http.Request) {
+	ctx := appengine.NewContext(r)
+	log.Debugf(ctx, "HandlerTestEmail")
+
+	SendEmailToNewCoachee(ctx, "gleroy78@gmail.com")
 }

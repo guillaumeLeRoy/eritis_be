@@ -41,6 +41,7 @@ func HandleLogin(w http.ResponseWriter, r *http.Request) {
 			handleGetUser(w, r, uid)// GET /api/login/:firebaseId
 			return
 		}
+
 		http.NotFound(w, r)
 		return
 	default:
@@ -140,6 +141,7 @@ func handleCreateRh(w http.ResponseWriter, r *http.Request) {
 
 func handleGetUser(w http.ResponseWriter, r *http.Request, firebaseId string) {
 	ctx := appengine.NewContext(r)
+	log.Debugf(ctx, "handleGetUser, FBid %s", firebaseId)
 
 	var fbUser model.FirebaseUser
 	fbUser.UID = firebaseId
@@ -151,3 +153,5 @@ func handleGetUser(w http.ResponseWriter, r *http.Request, firebaseId string) {
 
 	response.Respond(ctx, w, r, res, http.StatusOK)
 }
+
+
