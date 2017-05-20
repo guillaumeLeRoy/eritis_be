@@ -19,6 +19,10 @@ const LIVE_ENV_PROJECT_ID string = "eritis-150320"
 const DEV_ENV_PROJECT_ID string = "eritis-be-dev"
 const GLR_ENV_PROJECT_ID string = "eritis-be-glr"
 
+const CONTACT_ERITIS = "diana@eritis.co.uk";
+
+const INVITE_KEY = "a very very very very secret key"
+
 func IsLiveEnvironment(ctx context.Context) bool {
 	appId := appengine.AppID(ctx)
 	log.Debugf(ctx, "isLiveEnvironment, appId : %s", appId)
@@ -52,8 +56,6 @@ func GetFirebaseJsonPath(ctx context.Context) (string, error) {
 	return pathToJson, nil
 }
 
-const CONTACT_ERITIS = "diana@eritis.co.uk";
-
 func SendEmailToGivenEmail(ctx context.Context, emailAddress string, subject string, message string) error {
 	addrs := []string{emailAddress}
 
@@ -72,7 +74,6 @@ func SendEmailToGivenEmail(ctx context.Context, emailAddress string, subject str
 	return nil
 }
 
-const INVITE_KEY = "a very very very very secret key"
 
 //create a link to invite a Coachee. it generates a token to hide coachee's email in the link
 func CreateInviteLink(ctx context.Context, emailAddress string) (string, error) {

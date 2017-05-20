@@ -10,6 +10,7 @@ import (
 
 const POTENTIAL_COACHEE_ENTITY string = "PotentialCoachee"
 
+// ancestor : Rh
 type PotentialCoachee struct {
 	Key          *datastore.Key `json:"id" datastore:"-"`
 	Email        string `json:"email"`
@@ -44,6 +45,23 @@ func DeletePotentialCoachee(ctx context.Context, key *datastore.Key) error {
 	}
 
 	return nil
+}
+
+func GetPotentialCoacheeForRh(ctx context.Context, Rhkey *datastore.Key) ([]*PotentialCoachee, error) {
+	log.Debugf(ctx, "GetPotentialCoacheeForRh")
+
+	var potentials []*PotentialCoachee
+	keys, err := datastore.NewQuery(POTENTIAL_COACHEE_ENTITY).Ancestor(Rhkey).GetAll(ctx, potentials)
+	if err != nil {
+		return nil, err
+	}
+
+	//get Keys
+	for i, pot := range potentials {
+		pot.Key = keys[i]
+	}
+
+	return potentials, nil
 }
 
 func GetPotentialCoacheeForEmail(ctx context.Context, coacheeEmail string) (*PotentialCoachee, error) {

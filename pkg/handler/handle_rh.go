@@ -34,7 +34,21 @@ func HandlerRH(w http.ResponseWriter, r *http.Request) {
 			//get uid param
 			uid, ok := params[":uid"]
 			if ok {
-				handleGetAllCoacheesForRH(w, r, uid)// GET /api/v1/rhs/:uid
+				handleGetAllCoacheesForRH(w, r, uid)// GET /api/v1/rhs/:uid/coachees
+				return
+			}
+		}
+
+		/**
+		 GET all potential coachees for a specific RH
+		 */
+		contains = strings.Contains(r.URL.Path, "potentials")
+		if contains {
+			params := response.PathParams(ctx, r, "/api/v1/rhs/:uid/potentials")
+			//get uid param
+			uid, ok := params[":uid"]
+			if ok {
+				handleGetAllPotentialsForRH(w, r, uid)// GET /api/v1/rhs/:uid/potentials
 				return
 			}
 		}
@@ -55,6 +69,26 @@ func handleGetAllCoacheesForRH(w http.ResponseWriter, r *http.Request, rhId stri
 	}
 
 	coachees, err := model.GetCoacheesForRh(ctx, rhKey)
+	if err != nil {
+		response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
+		return
+	}
+
+	response.Respond(ctx, w, r, &coachees, http.StatusCreated)
+
+}
+
+func handleGetAllPotentialsForRH(w http.ResponseWriter, r *http.Request, rhId string) {
+	ctx := appengine.NewContext(r)
+	log.Debugf(ctx, "handleGetAllPotentialsForRH")
+
+	rhKey, err := datastore.DecodeKey(rhId)
+	if err != nil {
+		response.RespondErr(ctx, w, r, err, http.StatusBadRequest)
+		return
+	}
+
+	coachees, err := model.GetPotentialCoacheeForRh(ctx, rhKey)
 	if err != nil {
 		response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
 		return
