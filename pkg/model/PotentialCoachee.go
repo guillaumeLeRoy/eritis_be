@@ -18,6 +18,21 @@ type PotentialCoachee struct {
 	PlanId       PlanInt `json:"plan_id"`
 }
 
+type PotentialCoacheeAPI struct {
+	Id           string `json:"id"`
+	Email        string `json:"email"`
+	CreationDate time.Time `json:"create_date"`
+	PlanId       PlanInt `json:"plan_id"`
+}
+
+func (pot *PotentialCoachee)ToPotentCoacheeAPI() (*PotentialCoacheeAPI) {
+	var res PotentialCoacheeAPI
+	res.Id = pot.Key.Encode()
+	res.Email = pot.Email
+	res.CreationDate = pot.CreationDate
+	res.PlanId = pot.PlanId
+	return &res
+}
 func CreatePotentialCoachee(ctx context.Context, rhKey *datastore.Key, coacheeEmail string, plan PlanInt) (*PotentialCoachee, error) {
 	log.Debugf(ctx, "Create createReview")
 
@@ -47,11 +62,11 @@ func DeletePotentialCoachee(ctx context.Context, key *datastore.Key) error {
 	return nil
 }
 
-func GetPotentialCoacheeForRh(ctx context.Context, Rhkey *datastore.Key) ([]*PotentialCoachee, error) {
-	log.Debugf(ctx, "GetPotentialCoacheeForRh")
+func GetPotentialCoacheesForRh(ctx context.Context, Rhkey *datastore.Key) ([]*PotentialCoachee, error) {
+	log.Debugf(ctx, "GetPotentialCoacheesForRh, Rhkey %s", Rhkey)
 
 	var potentials []*PotentialCoachee
-	keys, err := datastore.NewQuery(POTENTIAL_COACHEE_ENTITY).Ancestor(Rhkey).GetAll(ctx, potentials)
+	keys, err := datastore.NewQuery(POTENTIAL_COACHEE_ENTITY).Ancestor(Rhkey).GetAll(ctx, &potentials)
 	if err != nil {
 		return nil, err
 	}

@@ -134,8 +134,12 @@ func handleCreateRh(w http.ResponseWriter, r *http.Request) {
 		response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
 		return
 	}
+
+	//convert into API object
+	api := rh.ToRhAPI()
+
 	//construct response
-	var res = &model.Login{Rh:rh}
+	var res = &model.Login{Rh:api}
 	response.Respond(ctx, w, r, res, http.StatusCreated)
 }
 

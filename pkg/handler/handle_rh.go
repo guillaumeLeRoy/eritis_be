@@ -60,7 +60,7 @@ func HandlerRH(w http.ResponseWriter, r *http.Request) {
 
 func handleGetAllCoacheesForRH(w http.ResponseWriter, r *http.Request, rhId string) {
 	ctx := appengine.NewContext(r)
-	log.Debugf(ctx, "handleGetAllCoacheesForRH")
+	log.Debugf(ctx, "handleGetAllCoacheesForRH, rhId %s", rhId)
 
 	rhKey, err := datastore.DecodeKey(rhId)
 	if err != nil {
@@ -80,7 +80,7 @@ func handleGetAllCoacheesForRH(w http.ResponseWriter, r *http.Request, rhId stri
 
 func handleGetAllPotentialsForRH(w http.ResponseWriter, r *http.Request, rhId string) {
 	ctx := appengine.NewContext(r)
-	log.Debugf(ctx, "handleGetAllPotentialsForRH")
+	log.Debugf(ctx, "handleGetAllPotentialsForRH, %s", rhId)
 
 	rhKey, err := datastore.DecodeKey(rhId)
 	if err != nil {
@@ -88,7 +88,13 @@ func handleGetAllPotentialsForRH(w http.ResponseWriter, r *http.Request, rhId st
 		return
 	}
 
-	coachees, err := model.GetPotentialCoacheeForRh(ctx, rhKey)
+	log.Debugf(ctx, "handleGetAllPotentialsForRH, rhKey %s", rhKey)
+
+	//intId := rhKey.IntID()
+	//log.Debugf(ctx, "handleGetAllPotentialsForRH, intId %s", intId)
+
+
+	coachees, err := model.GetPotentialCoacheesForRh(ctx, rhKey)
 	if err != nil {
 		response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
 		return
@@ -132,7 +138,10 @@ func handleCreatePotentialCoachee(w http.ResponseWriter, r *http.Request, rhId s
 		return
 	}
 
-	response.Respond(ctx, w, r, &pot, http.StatusCreated)
+	//create API respose
+	res := pot.ToPotentCoacheeAPI()
+
+	response.Respond(ctx, w, r, &res, http.StatusCreated)
 
 }
 

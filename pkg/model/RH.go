@@ -18,6 +18,25 @@ type Rh struct {
 	AvatarURL   string`json:"avatar_url"`
 }
 
+type RhAPI struct {
+	Id          string `json:"id"`
+	Email       string `json:"email"`
+	DisplayName string `json:"display_name"`
+	StartDate   time.Time `json:"start_date"`
+	AvatarURL   string`json:"avatar_url"`
+}
+
+func (rh *Rh) ToRhAPI() *RhAPI {
+	var res RhAPI
+	res.Id = rh.Key.Encode()
+	res.Email = rh.Email
+	res.DisplayName = rh.DisplayName
+	res.StartDate = rh.StartDate
+	res.AvatarURL = rh.AvatarURL
+
+	return &res
+}
+
 func CreateRhFromFirebaseUser(ctx context.Context, fbUser *FirebaseUser) (*Rh, error) {
 	log.Debugf(ctx, "CreateRhFromFirebaseUser")
 
