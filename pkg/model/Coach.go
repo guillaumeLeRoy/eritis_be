@@ -24,6 +24,29 @@ type Coach struct {
 	Description string `json:"description"`
 }
 
+type CoachAPI struct {
+	Id          string`json:"id"`
+	Email       string `json:"email"`
+	DisplayName string `json:"display_name"`
+	AvatarURL   string`json:"avatar_url"`
+	Score       string `json:"score"`
+	StartDate   time.Time `json:"start_date"`
+	Description string `json:"description"`
+}
+
+func (c *Coach) ToCoachAPI() *CoachAPI {
+	var res CoachAPI
+	res.Id = c.Key.Encode()
+	res.Email = c.Email
+	res.DisplayName = c.DisplayName
+	res.AvatarURL = c.AvatarURL
+	res.Score = c.Score
+	res.StartDate = c.StartDate
+	res.Description = c.Description
+
+	return &res
+}
+
 func gravatarURL(email string) string {
 	m := md5.New()
 	io.WriteString(m, strings.ToLower(email))
@@ -56,6 +79,23 @@ func GetAllCoach(ctx context.Context) ([]*Coach, error) {
 	}
 
 	return coachs, nil
+}
+
+func GetAllAPICoachs(ctx context.Context) ([]*CoachAPI, error) {
+	log.Debugf(ctx, "GetAllAPICoachs")
+
+	coachs, err := GetAllCoach(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	var response []*CoachAPI = make([]*CoachAPI, len(coachs))
+	for i, coach := range coachs {
+		log.Debugf(ctx, "GetAllAPICoach, coach %s, index %s", coach, i)
+		response[i] = coach.ToCoachAPI()
+	}
+
+	return response, nil
 }
 
 func CreateCoachFromFirebaseUser(ctx context.Context, fbUser *FirebaseUser) (*Coach, error) {

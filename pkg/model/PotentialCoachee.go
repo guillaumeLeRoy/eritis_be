@@ -22,19 +22,19 @@ type PotentialCoacheeAPI struct {
 	Id           string `json:"id"`
 	Email        string `json:"email"`
 	CreationDate time.Time `json:"create_date"`
-	PlanId       PlanInt `json:"plan_id"`
+	Plan         *Plan `json:"plan"`
 }
 
-func (pot *PotentialCoachee)ToPotentCoacheeAPI() (*PotentialCoacheeAPI) {
+func (pot *PotentialCoachee)ToPotentialCoacheeAPI(plan *Plan) (*PotentialCoacheeAPI) {
 	var res PotentialCoacheeAPI
 	res.Id = pot.Key.Encode()
 	res.Email = pot.Email
 	res.CreationDate = pot.CreationDate
-	res.PlanId = pot.PlanId
+	res.Plan = plan
 	return &res
 }
 func CreatePotentialCoachee(ctx context.Context, rhKey *datastore.Key, coacheeEmail string, plan PlanInt) (*PotentialCoachee, error) {
-	log.Debugf(ctx, "Create createReview")
+	log.Debugf(ctx, "CreatePotentialCoachee, key %s", rhKey)
 
 	var pot PotentialCoachee
 	pot.Email = coacheeEmail
@@ -79,6 +79,9 @@ func GetPotentialCoacheesForRh(ctx context.Context, Rhkey *datastore.Key) ([]*Po
 	return potentials, nil
 }
 
+var ErrNoPotentialCoachee = errors.New("Potential Coachee : No Potential Coachee found")
+
+
 func GetPotentialCoacheeForEmail(ctx context.Context, coacheeEmail string) (*PotentialCoachee, error) {
 	log.Debugf(ctx, "GetPotentialCoacheeForEmail, email %s", coacheeEmail)
 
@@ -98,7 +101,7 @@ func GetPotentialCoacheeForEmail(ctx context.Context, coacheeEmail string) (*Pot
 	}
 
 	if len(potentials) == 0 {
-		return nil, errors.New("No potential coachee for this email")
+		return nil, ErrNoPotentialCoachee
 	}
 
 	return potentials[0], nil

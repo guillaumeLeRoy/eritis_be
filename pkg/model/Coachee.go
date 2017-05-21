@@ -14,8 +14,8 @@ const COACHEE_ENTITY string = "Coachee"
 
 /* Internal struct */
 type Coachee struct {
-	Key                     *datastore.Key `json:"id" datastore:"-"`
-	FirebaseId              string `json:"firebase_id"`
+	Key                     *datastore.Key `json:"-" datastore:"-"`
+	FirebaseId              string `json:"-"`
 	Email                   string `json:"email"`
 	DisplayName             string `json:"display_name"`
 	AvatarURL               string`json:"avatar_url"`
@@ -29,19 +29,32 @@ type Coachee struct {
 
 /* API struct */
 type APICoachee struct {
-	Coachee
-	SelectedCoach *Coach `json:"selectedCoach"`
-	AssociatedRh  *Rh `json:"associatedRh"`
-	Plan          *Plan `json:"plan"`
+	Id                      string `json:"id"`
+	Email                   string `json:"email"`
+	DisplayName             string `json:"display_name"`
+	AvatarURL               string`json:"avatar_url"`
+	StartDate               time.Time `json:"start_date"`
+	AvailableSessionsCount  int `json:"available_sessions_count"`
+	UpdateSessionsCountDate time.Time `json:"update_sessions_count_date"`
+	SelectedCoach           *Coach `json:"selectedCoach"`
+	AssociatedRh            *Rh `json:"associatedRh"`
+	Plan                    *Plan `json:"plan"`
 }
 
-func (c Coachee) toAPI(coach *Coach, rh *Rh, plan *Plan) APICoachee {
-	return APICoachee{
-		Coachee  : c,
-		SelectedCoach: coach,
-		AssociatedRh : rh,
-		Plan: plan,
-	}
+func (c *Coachee) ToCoacheeAPI(coach *Coach, rh *Rh, plan *Plan) *APICoachee {
+	var res APICoachee
+	res.Id = c.Key.Encode()
+	res.Email = c.Email
+	res.DisplayName = c.DisplayName
+	res.AvatarURL = c.AvatarURL
+	res.StartDate = c.StartDate
+	res.AvailableSessionsCount = c.AvailableSessionsCount
+	res.UpdateSessionsCountDate = c.UpdateSessionsCountDate
+	res.SelectedCoach = coach
+	res.AssociatedRh = rh
+	res.Plan = plan
+
+	return &res
 }
 
 func (c *Coachee) getSelectedCoach(ctx context.Context) (*Coach, error) {
@@ -120,14 +133,14 @@ func (c *Coachee)GetAPICoachee(ctx context.Context) (*APICoachee, error) {
 	rh, err := GetRh(ctx, c.AssociatedRh)
 
 	//get the plan
-	plan := createPlanFromId(c.PlanId)
+	plan := CreatePlanFromId(c.PlanId)
 
 	//convert to API object
-	var apiCoachee = c.toAPI(coach, rh, plan)
+	var apiCoachee = c.ToCoacheeAPI(coach, rh, plan)
 
 	log.Debugf(ctx, "GetAPICoachee, response %s", apiCoachee)
 
-	return &apiCoachee, nil
+	return apiCoachee, nil
 }
 
 
@@ -249,33 +262,27 @@ func (c *Coachee)Update(ctx context.Context) (error) {
  Associate the given coach with this Coachee
  Update coachee's meetings with the selected coach.
  */
-func (c *Coachee) UpdateSelectedCoach(ctx context.Context, coach *Coach) (*APICoachee, error) {
+func (c *Coachee) UpdateSelectedCoach(ctx context.Context, coach *Coach) (error) {
 	log.Debugf(ctx, "UpdateSelectedCoach : %s", coach)
 
 	//associate the coachee with the given coach
 	c.SelectedCoach = coach.Key
 	err := c.Update(ctx)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	//update meetings with selected coach
 	err = associateCoachWithMeetings(ctx, c.Key, coach.Key)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	//convert to API object
-	apiCoachee, err := c.GetAPICoachee(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	return apiCoachee, nil
+	return nil
 }
 
 func (c *Coachee) RefreshAvailableSessionsCount(ctx context.Context) (error) {
-	plan := createPlanFromId(c.PlanId)
+	plan := CreatePlanFromId(c.PlanId)
 
 	//check if we can refresh
 	if (canResetAvailableSessionsCount(ctx, c)) {

@@ -8,6 +8,7 @@ import (
 	"eritis_be/pkg/response"
 	"google.golang.org/appengine/datastore"
 	"eritis_be/pkg/model"
+	"errors"
 )
 
 func HandlerRH(w http.ResponseWriter, r *http.Request) {
@@ -106,13 +107,16 @@ func handleGetAllPotentialsForRH(w http.ResponseWriter, r *http.Request, rhId st
 
 func handleCreatePotentialCoachee(w http.ResponseWriter, r *http.Request, rhId string) {
 	ctx := appengine.NewContext(r)
-	log.Debugf(ctx, "handleCreatePotentialCoachee")
+	log.Debugf(ctx, "handleCreatePotentialCoachee, rhID %s",rhId)
 
 	rhKey, err := datastore.DecodeKey(rhId)
 	if err != nil {
 		response.RespondErr(ctx, w, r, err, http.StatusBadRequest)
 		return
 	}
+
+	log.Debugf(ctx, "handleCreatePotentialCoachee, rhKey %s",rhKey)
+
 
 	var ctxPotentialCoachee struct {
 		Email  string `json:"email"`
@@ -123,6 +127,17 @@ func handleCreatePotentialCoachee(w http.ResponseWriter, r *http.Request, rhId s
 		response.RespondErr(ctx, w, r, err, http.StatusBadRequest)
 		return
 	}
+
+	//check if there is already a PotentialCoachee for this email
+	_, err = model.GetPotentialCoacheeForEmail(ctx, ctxPotentialCoachee.Email)
+	if err == nil || err != model.ErrNoPotentialCoachee{
+		//it means there is already a Potential
+		response.RespondErr(ctx, w, r, errors.New("There is already a Potential Coachee for this email"), http.StatusInternalServerError)
+		return
+	}
+
+	log.Debugf(ctx, "handleCreatePotentialCoachee")
+
 
 	//create potential
 	pot, err := model.CreatePotentialCoachee(ctx, rhKey, ctxPotentialCoachee.Email, ctxPotentialCoachee.PlanId)
@@ -138,8 +153,11 @@ func handleCreatePotentialCoachee(w http.ResponseWriter, r *http.Request, rhId s
 		return
 	}
 
+	//get plan
+	plan := model.CreatePlanFromId(pot.PlanId)
+
 	//create API respose
-	res := pot.ToPotentCoacheeAPI()
+	res := pot.ToPotentialCoacheeAPI(plan)
 
 	response.Respond(ctx, w, r, &res, http.StatusCreated)
 

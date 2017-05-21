@@ -39,7 +39,7 @@ func handleGetAllCoachs(w http.ResponseWriter, r *http.Request) {
 	ctx := appengine.NewContext(r)
 	log.Debugf(ctx, "handleGetAllCoachs")
 
-	coachs, err := model.GetAllCoach(ctx)
+	coachs, err := model.GetAllAPICoachs(ctx)
 	if err != nil {
 		response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
 		return
@@ -62,7 +62,11 @@ func handleGetCoachForId(w http.ResponseWriter, r *http.Request, id string) {
 		response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
 		return
 	}
-	response.Respond(ctx, w, r, coach, http.StatusOK)
+
+	//to api
+	api := coach.ToCoachAPI()
+
+	response.Respond(ctx, w, r, api, http.StatusOK)
 }
 
 func handleUpdateCoachForId(w http.ResponseWriter, r *http.Request, id string) {
@@ -94,7 +98,10 @@ func handleUpdateCoachForId(w http.ResponseWriter, r *http.Request, id string) {
 
 	coach.Update(ctx, updateCoach.DisplayName, updateCoach.Description, updateCoach.AvatarUrl)
 
-	response.Respond(ctx, w, r, coach, http.StatusOK)
+	//to api
+	api := coach.ToCoachAPI()
+
+	response.Respond(ctx, w, r, api, http.StatusOK)
 }
 
 

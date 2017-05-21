@@ -66,11 +66,14 @@ func handleCreateCoach(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	//convert to API obj
+	api := coach.ToCoachAPI()
+
 	//send welcome email
 	sendWelcomeEmailToCoach(ctx, coach)//TODO could be on a thread
 
 	//construct response
-	var res = &model.Login{Coach:coach}
+	var res = &model.Login{Coach:api}
 
 	response.Respond(ctx, w, r, res, http.StatusCreated)
 }

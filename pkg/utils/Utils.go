@@ -79,13 +79,22 @@ func SendEmailToGivenEmail(ctx context.Context, emailAddress string, subject str
 func CreateInviteLink(ctx context.Context, emailAddress string) (string, error) {
 	key := []byte(INVITE_KEY) // 32 bytes
 	plaintext := []byte(emailAddress)
-	ciphertext, err := encrypt(key, plaintext)
-	if err != nil {
-		return "", err
-	}
-	baseToken := base64.StdEncoding.EncodeToString(ciphertext)
 
-	log.Debugf(ctx, "createInviteLink, baseToken %s", baseToken)
+	var baseToken string
+	for {
+		//generate token
+		ciphertext, err := encrypt(key, plaintext)
+		if err != nil {
+			return "", err
+		}
+		baseToken = base64.StdEncoding.EncodeToString(ciphertext)
+		log.Debugf(ctx, "createInviteLink, baseToken %s", baseToken)
+		if !strings.Contains(baseToken,"/"){
+			break;
+		}
+	}
+
+	log.Debugf(ctx, "createInviteLink, final baseToken %s", baseToken)
 
 	appId := appengine.AppID(ctx)
 	log.Debugf(ctx, "createInviteLink, appId %s", appId)

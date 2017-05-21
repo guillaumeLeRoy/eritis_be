@@ -56,12 +56,12 @@ func handleGetCoacheeForId(w http.ResponseWriter, r *http.Request, id string) {
 		return
 	}
 
-	coach, err := model.GetAPICoachee(ctx, key)
+	apiCoachee, err := model.GetAPICoachee(ctx, key)
 	if err != nil {
 		response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
 		return
 	}
-	response.Respond(ctx, w, r, coach, http.StatusOK)
+	response.Respond(ctx, w, r, apiCoachee, http.StatusOK)
 }
 
 func handleGetAllCoachees(w http.ResponseWriter, r *http.Request) {
@@ -86,7 +86,7 @@ func handleUpdateCoacheeForId(w http.ResponseWriter, r *http.Request, id string)
 		return
 	}
 
-	coachee, err := model.GetAPICoachee(ctx, key)
+	coachee, err := model.GetCoachee(ctx, key)
 	if err != nil {
 		response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
 		return
@@ -111,7 +111,14 @@ func handleUpdateCoacheeForId(w http.ResponseWriter, r *http.Request, id string)
 		return
 	}
 
-	response.Respond(ctx, w, r, coachee, http.StatusOK)
+	//return API object
+	api, err := coachee.GetAPICoachee(ctx)
+	if err != nil {
+		response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
+		return
+	}
+
+	response.Respond(ctx, w, r, api, http.StatusOK)
 }
 
 /*
@@ -128,7 +135,7 @@ func handleUpdateSelectedCoach(w http.ResponseWriter, r *http.Request, coacheeId
 		return
 	}
 
-	coachee, err := model.GetAPICoachee(ctx, coacheeKey)
+	coachee, err := model.GetCoachee(ctx, coacheeKey)
 	if err != nil {
 		response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
 		return
@@ -148,18 +155,25 @@ func handleUpdateSelectedCoach(w http.ResponseWriter, r *http.Request, coacheeId
 
 	//update Coachee selected coach
 	//update coachee's meeting with the selected coach
-	apiCoachee, err := coachee.UpdateSelectedCoach(ctx, coach)
+	err = coachee.UpdateSelectedCoach(ctx, coach)
 	if err != nil {
 		response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
 		return
 	}
 
 	//send an email to the Coach to notify that he was selected
-	err = sendEmailToSelectedCoach(ctx, coach, &coachee.Coachee)
+	err = sendEmailToSelectedCoach(ctx, coach, coachee)
 	if err != nil {
 		response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
 		return
 	}
 
-	response.Respond(ctx, w, r, apiCoachee, http.StatusOK)
+	//return API object
+	api, err := coachee.GetAPICoachee(ctx)
+	if err != nil {
+		response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
+		return
+	}
+
+	response.Respond(ctx, w, r, api, http.StatusOK)
 }

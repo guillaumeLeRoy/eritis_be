@@ -13,7 +13,7 @@ type FirebaseUser struct {
 }
 
 type Login struct {
-	Coach   *Coach `json:"coach"`
+	Coach   *CoachAPI `json:"coach"`
 	Coachee *APICoachee `json:"coachee"`
 	Rh      *RhAPI `json:"rh"`
 }
@@ -112,8 +112,10 @@ func (u *FirebaseUser) GetUser(ctx context.Context) (*Login, error) {
 
 	if err == nil {
 		log.Debugf(ctx, "GetUser, found a coach")
+		//convert to API object
+		api := coach.ToCoachAPI()
 		//we have a coach
-		return &Login{Coach:coach}, nil
+		return &Login{Coach:api}, nil
 	}
 
 	//no coach
