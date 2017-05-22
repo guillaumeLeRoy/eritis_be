@@ -78,7 +78,7 @@ func handleGetAllCoacheesForRH(w http.ResponseWriter, r *http.Request, rhId stri
 	log.Debugf(ctx, "handleGetAllCoacheesForRH, convert to API objects")
 
 	//convert to API objects
-	var apiCoachees []*model.APICoachee
+	var apiCoachees []*model.APICoachee = make([]*model.APICoachee, len(coachees))
 	for i, coachee := range coachees {
 		apiCoachees[i], err = coachee.GetAPICoachee(ctx)
 		if err != nil {
@@ -110,7 +110,7 @@ func handleGetAllPotentialsForRH(w http.ResponseWriter, r *http.Request, rhId st
 	}
 
 	//convert to API objects
-	var apiPotCoachees []*model.PotentialCoacheeAPI
+	var apiPotCoachees []*model.PotentialCoacheeAPI = make([]*model.PotentialCoacheeAPI, len(potCoachees))
 	for i, potCoachee := range potCoachees {
 		//get plan
 		plan := model.CreatePlanFromId(potCoachee.PlanId)
