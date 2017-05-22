@@ -46,6 +46,11 @@ func handleGetPotentialCoacheeForToken(w http.ResponseWriter, r *http.Request, t
 		return
 	}
 
-	response.Respond(ctx, w, r, potentialCoachee, http.StatusOK)
+	//get plan
+	plan := model.CreatePlanFromId(potentialCoachee.PlanId)
+	//convert to api
+	api := potentialCoachee.ToPotentialCoacheeAPI(plan)
+
+	response.Respond(ctx, w, r, &api, http.StatusOK)
 
 }
