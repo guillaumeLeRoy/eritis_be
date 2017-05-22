@@ -33,7 +33,6 @@ func (rh *Rh) ToRhAPI() *RhAPI {
 	res.DisplayName = rh.DisplayName
 	res.StartDate = rh.StartDate
 	res.AvatarURL = rh.AvatarURL
-
 	return &res
 }
 

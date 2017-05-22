@@ -75,7 +75,19 @@ func handleGetAllCoacheesForRH(w http.ResponseWriter, r *http.Request, rhId stri
 		return
 	}
 
-	response.Respond(ctx, w, r, &coachees, http.StatusCreated)
+	log.Debugf(ctx, "handleGetAllCoacheesForRH, convert to API objects")
+
+	//convert to API objects
+	var apiCoachees []*model.APICoachee
+	for i, coachee := range coachees {
+		apiCoachees[i], err = coachee.GetAPICoachee(ctx)
+		if err != nil {
+			response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
+			return
+		}
+	}
+
+	response.Respond(ctx, w, r, &apiCoachees, http.StatusCreated)
 
 }
 
@@ -91,23 +103,28 @@ func handleGetAllPotentialsForRH(w http.ResponseWriter, r *http.Request, rhId st
 
 	log.Debugf(ctx, "handleGetAllPotentialsForRH, rhKey %s", rhKey)
 
-	//intId := rhKey.IntID()
-	//log.Debugf(ctx, "handleGetAllPotentialsForRH, intId %s", intId)
-
-
-	coachees, err := model.GetPotentialCoacheesForRh(ctx, rhKey)
+	potCoachees, err := model.GetPotentialCoacheesForRh(ctx, rhKey)
 	if err != nil {
 		response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
 		return
 	}
 
-	response.Respond(ctx, w, r, &coachees, http.StatusCreated)
+	//convert to API objects
+	var apiPotCoachees []*model.PotentialCoacheeAPI
+	for i, potCoachee := range potCoachees {
+		//get plan
+		plan := model.CreatePlanFromId(potCoachee.PlanId)
+		//convert to api
+		apiPotCoachees[i] = potCoachee.ToPotentialCoacheeAPI(plan)
+	}
+
+	response.Respond(ctx, w, r, &apiPotCoachees, http.StatusCreated)
 
 }
 
 func handleCreatePotentialCoachee(w http.ResponseWriter, r *http.Request, rhId string) {
 	ctx := appengine.NewContext(r)
-	log.Debugf(ctx, "handleCreatePotentialCoachee, rhID %s",rhId)
+	log.Debugf(ctx, "handleCreatePotentialCoachee, rhID %s", rhId)
 
 	rhKey, err := datastore.DecodeKey(rhId)
 	if err != nil {
@@ -115,8 +132,7 @@ func handleCreatePotentialCoachee(w http.ResponseWriter, r *http.Request, rhId s
 		return
 	}
 
-	log.Debugf(ctx, "handleCreatePotentialCoachee, rhKey %s",rhKey)
-
+	log.Debugf(ctx, "handleCreatePotentialCoachee, rhKey %s", rhKey)
 
 	var ctxPotentialCoachee struct {
 		Email  string `json:"email"`
@@ -130,7 +146,7 @@ func handleCreatePotentialCoachee(w http.ResponseWriter, r *http.Request, rhId s
 
 	//check if there is already a PotentialCoachee for this email
 	_, err = model.GetPotentialCoacheeForEmail(ctx, ctxPotentialCoachee.Email)
-	if err == nil || err != model.ErrNoPotentialCoachee{
+	if err == nil || err != model.ErrNoPotentialCoachee {
 		//it means there is already a Potential
 		response.RespondErr(ctx, w, r, errors.New("There is already a Potential Coachee for this email"), http.StatusInternalServerError)
 		return
@@ -156,7 +172,7 @@ func handleCreatePotentialCoachee(w http.ResponseWriter, r *http.Request, rhId s
 	//get plan
 	plan := model.CreatePlanFromId(pot.PlanId)
 
-	//create API respose
+	//create API response
 	res := pot.ToPotentialCoacheeAPI(plan)
 
 	response.Respond(ctx, w, r, &res, http.StatusCreated)
