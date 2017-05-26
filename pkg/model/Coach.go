@@ -12,6 +12,7 @@ import (
 )
 
 const COACH_ENTITY string = "Coach"
+const ROOM_APPEAR_IN_BASE_URL string = "https://appear.in/eritis"
 
 type Coach struct {
 	Key         *datastore.Key `json:"id" datastore:"-"`
@@ -19,6 +20,7 @@ type Coach struct {
 	FirebaseId  string `json:"firebase_id"`
 	DisplayName string `json:"display_name"`
 	AvatarURL   string`json:"avatar_url"`
+	ChatRoomURL string`json:"chat_room_url"`
 	Score       string `json:"score"`
 	StartDate   time.Time `json:"start_date"`
 	Description string `json:"description"`
@@ -29,6 +31,7 @@ type CoachAPI struct {
 	Email       string `json:"email"`
 	DisplayName string `json:"display_name"`
 	AvatarURL   string`json:"avatar_url"`
+	ChatRoomURL string`json:"chat_room_url"`
 	Score       string `json:"score"`
 	StartDate   time.Time `json:"start_date"`
 	Description string `json:"description"`
@@ -40,6 +43,7 @@ func (c *Coach) ToCoachAPI() *CoachAPI {
 	res.Email = c.Email
 	res.DisplayName = c.DisplayName
 	res.AvatarURL = c.AvatarURL
+	res.ChatRoomURL = c.ChatRoomURL
 	res.Score = c.Score
 	res.StartDate = c.StartDate
 	res.Description = c.Description
@@ -51,6 +55,12 @@ func gravatarURL(email string) string {
 	m := md5.New()
 	io.WriteString(m, strings.ToLower(email))
 	return fmt.Sprintf("//www.gravatar.com/avatar/%x", m.Sum(nil))
+}
+
+func appearInUrl(email string) string {
+	m := md5.New()
+	io.WriteString(m, strings.ToLower(email))
+	return fmt.Sprintf("%s/%x", ROOM_APPEAR_IN_BASE_URL, m.Sum(nil))
 }
 
 //get User for the given user id
@@ -109,6 +119,7 @@ func CreateCoachFromFirebaseUser(ctx context.Context, fbUser *FirebaseUser) (*Co
 	coach.Email = fbUser.Email
 	coach.DisplayName = fbUser.Email
 	coach.AvatarURL = gravatarURL(fbUser.Email)
+	coach.ChatRoomURL = appearInUrl(fbUser.Email)
 	coach.StartDate = time.Now()
 
 	//log.Infof(ctx, "saving new user: %s", aeuser.String())

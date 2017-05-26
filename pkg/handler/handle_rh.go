@@ -107,7 +107,7 @@ func handleGetAllPotentialsForRH(w http.ResponseWriter, r *http.Request, rhId st
 
 func handleCreatePotentialCoachee(w http.ResponseWriter, r *http.Request, rhId string) {
 	ctx := appengine.NewContext(r)
-	log.Debugf(ctx, "handleCreatePotentialCoachee, rhID %s",rhId)
+	log.Debugf(ctx, "handleCreatePotentialCoachee, rhID %s", rhId)
 
 	rhKey, err := datastore.DecodeKey(rhId)
 	if err != nil {
@@ -115,8 +115,7 @@ func handleCreatePotentialCoachee(w http.ResponseWriter, r *http.Request, rhId s
 		return
 	}
 
-	log.Debugf(ctx, "handleCreatePotentialCoachee, rhKey %s",rhKey)
-
+	log.Debugf(ctx, "handleCreatePotentialCoachee, rhKey %s", rhKey)
 
 	var ctxPotentialCoachee struct {
 		Email  string `json:"email"`
@@ -130,14 +129,23 @@ func handleCreatePotentialCoachee(w http.ResponseWriter, r *http.Request, rhId s
 
 	//check if there is already a PotentialCoachee for this email
 	_, err = model.GetPotentialCoacheeForEmail(ctx, ctxPotentialCoachee.Email)
-	if err == nil || err != model.ErrNoPotentialCoachee{
+	if err == nil || err != model.ErrNoPotentialCoachee {
 		//it means there is already a Potential
 		response.RespondErr(ctx, w, r, errors.New("There is already a Potential Coachee for this email"), http.StatusInternalServerError)
 		return
 	}
 
-	log.Debugf(ctx, "handleCreatePotentialCoachee")
+	log.Debugf(ctx, "handleCreatePotentialCoachee, no potential with this email")
 
+	//check this email is not used by a Coachee
+	coachees, err := model.GetCoacheeForEmail(ctx, ctxPotentialCoachee.Email)
+	if err != nil || len(coachees) > 0 {
+		//it means there is already a Coachee with this email
+		response.RespondErr(ctx, w, r, errors.New("There is already a Coachee for this email"), http.StatusInternalServerError)
+		return
+	}
+
+	log.Debugf(ctx, "handleCreatePotentialCoachee, no Coachee with this email")
 
 	//create potential
 	pot, err := model.CreatePotentialCoachee(ctx, rhKey, ctxPotentialCoachee.Email, ctxPotentialCoachee.PlanId)

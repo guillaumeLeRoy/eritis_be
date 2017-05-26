@@ -182,6 +182,23 @@ func GetAllAPICoachees(ctx context.Context) ([]*APICoachee, error) {
 	return response, nil
 }
 
+func GetCoacheeForEmail(ctx context.Context, email string) ([]*Coachee, error) {
+	log.Debugf(ctx, "GetCoacheeForEmail %s", email)
+
+	var coachees []*Coachee
+	keys, err := datastore.NewQuery(COACHEE_ENTITY).Filter("Email =", email).GetAll(ctx, &coachees)
+	if err != nil {
+		return nil, err
+	}
+
+	//get Keys
+	for i, coachee := range coachees {
+		coachee.Key = keys[i]
+	}
+
+	return coachees, nil
+}
+
 func createCoacheeFromFirebaseUser(ctx context.Context, fbUser *FirebaseUser, planId PlanInt, rhKey *datastore.Key) (*APICoachee, error) {
 	log.Debugf(ctx, "CoacheeFromFirebaseUser, fbUser %s, planId %s", fbUser, planId)
 
