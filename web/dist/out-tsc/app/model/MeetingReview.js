@@ -1,5 +1,0 @@
-export var MEETING_REVIEW_TYPE_SESSION_CONTEXT = "SESSION_CONTEXT";
-export var MEETING_REVIEW_TYPE_SESSION_GOAL = "SESSION_GOAL";
-export var MEETING_REVIEW_TYPE_SESSION_VALUE = "SESSION_VALUE";
-export var MEETING_REVIEW_TYPE_SESSION_NEXT_STEP = "SESSION_NEXT_STEP";
-//# sourceMappingURL=/Users/guillaume/angular/eritis_fe/src/app/model/MeetingReview.js.map
