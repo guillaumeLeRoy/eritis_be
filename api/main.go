@@ -2,16 +2,19 @@ package api
 
 import (
 	"net/http"
+	"eritis_be/pkg/handler"
+	"golang.org/x/net/context"
 	"google.golang.org/appengine"
 	"google.golang.org/appengine/log"
-	"errors"
 	"strings"
-	"golang.org/x/net/context"
-	"eritis_be/firebase"
-	"path/filepath"
-	"html/template"
+	"errors"
 	"cloud.google.com/go/storage"
+	"eritis_be/pkg/response"
+	"path/filepath"
+	"eritis_be/firebase"
 	"google.golang.org/appengine/user"
+	"html/template"
+	"eritis_be/pkg/utils"
 )
 
 /* ######## HOW TO SERVE DIFFERENT ENVIRONMENTS #######
@@ -46,59 +49,58 @@ appcfg.py -A eritis-be-glr update_dispatch .
 appcfg.py update_indexes -A eritis-be-glr ./default
 
 
-
 CRON :
 gcloud app deploy cron.yaml
-
 
 rollback :
 appcfg.py rollback /Users/guillaume/go_path_appengine/src/eritis_be/firebase/ -A eritis-be-dev -V 1
 
-
 */
-
-const LIVE_ENV_PROJECT_ID string = "eritis-150320"
-const DEV_ENV_PROJECT_ID string = "eritis-be-dev"
-const GLR_ENV_PROJECT_ID string = "eritis-be-glr"
 
 // keep a ref to init the app only once
 var firebaseApp *firebase.App
 
 func init() {
 
-	http.HandleFunc("/api/login/", authHandler(HandleLogin))
+	http.HandleFunc("/api/login/", authHandler(handler.HandleLogin))
 
 	//meetings
-	http.HandleFunc("/api/meeting/", authHandler(HandleMeeting))
-	http.HandleFunc("/api/meetings/", authHandler(HandleMeeting))
+	http.HandleFunc("/api/meeting/", authHandler(handler.HandleMeeting))
+	http.HandleFunc("/api/meetings/", authHandler(handler.HandleMeeting))
 
 	//coach
-	http.HandleFunc("/api/coachs/", authHandler(HandleCoachs))
+	http.HandleFunc("/api/coachs/", authHandler(handler.HandleCoachs))
 
 	//coachee
-	http.HandleFunc("/api/coachees/", authHandler(HandleCoachees))
+	http.HandleFunc("/api/coachees/", authHandler(handler.HandleCoachees))
+
+	//rh
+	http.HandleFunc("/api/v1/rhs/", authHandler(handler.HandlerRH))
 
 	//contact, no need to be authenticated to send a contact request
-	http.HandleFunc("/api/v1/contact/", nonAuthHandler(handleContact))
+	http.HandleFunc("/api/v1/contact/", nonAuthHandler(handler.HandleContact))
 
 	//get contract plan
-	http.HandleFunc("/api/v1/plans/", nonAuthHandler(handleContractPlan))
+	http.HandleFunc("/api/v1/plans/", nonAuthHandler(handler.HandleContractPlan))
 
 	//cron
-	http.HandleFunc("/api/v1/cron/", nonAuthHandler(handleCron))
+	http.HandleFunc("/api/v1/cron/", nonAuthHandler(handler.HandleCron))
+
+	//potentialCoachee
+	http.HandleFunc("/api/v1/potential/", nonAuthHandler(handler.HandlePotential))
+
 
 	//test email
-	http.HandleFunc("/api/email/", sendTestEmail)
+	http.HandleFunc("/api/email/", handler.HandlerTestEmail)
 
 	//update Service Account file to datastore
 	http.Handle("/api/upload_service_account/", &templateHandler{filename: "upload.html"})
-	http.HandleFunc("/api/upload_service_account/uploader", serviceAccountUploaderHandler)
-	http.HandleFunc("/api/read_service_account/", serviceAccountGetHandler)
+	http.HandleFunc("/api/upload_service_account/uploader", handler.ServiceAccountUploaderHandler)
+	http.HandleFunc("/api/read_service_account/", handler.ServiceAccountGetHandler)
 }
 
 func nonAuthHandler(handler func(w http.ResponseWriter, r *http.Request)) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-
 		ctx := appengine.NewContext(r)
 
 		log.Debugf(ctx, "nonAuthHandler start")
@@ -117,54 +119,21 @@ func nonAuthHandler(handler func(w http.ResponseWriter, r *http.Request)) http.H
 	}
 }
 
-//returns a firebase admin json
-func getFirebaseJsonPath(ctx context.Context) (string, error) {
-	appId := appengine.AppID(ctx)
-	log.Debugf(ctx, "appId %s", appId)
-
-	pathToJson := ""
-
-	if strings.EqualFold(LIVE_ENV_PROJECT_ID, appId) {
-		pathToJson = "eritis-be-live-firebase.json"
-	} else if strings.EqualFold(DEV_ENV_PROJECT_ID, appId) {
-		pathToJson = "eritis-be-dev-firebase.json"
-	} else if strings.EqualFold(GLR_ENV_PROJECT_ID, appId) {
-		pathToJson = "eritis-be-glr-firebase.json"
-	} else {
-		return "", errors.New("AppId doesn't match any environment")
-	}
-
-	log.Debugf(ctx, "getFirebaseJsonPath path %s", pathToJson)
-
-	return pathToJson, nil
-}
-
 
 //returns a firebase admin json
 func getFirebaseJsonReader(ctx context.Context) (*storage.Reader, error) {
 	appId := appengine.AppID(ctx)
 	log.Debugf(ctx, "appId %s", appId)
 
-	pathToJson, err := getFirebaseJsonPath(ctx)
+	pathToJson, err := utils.GetFirebaseJsonPath(ctx)
 	if err != nil {
 		return nil, err
 	}
-	rdr, err := getReaderFromBucket(ctx, pathToJson)
+	rdr, err := handler.GetReaderFromBucket(ctx, pathToJson)
 	if err != nil {
 		return nil, err
 	}
 	return rdr, nil
-}
-
-func isLiveEnvironment(ctx context.Context) bool {
-	appId := appengine.AppID(ctx)
-	log.Debugf(ctx, "isLiveEnvironment, appId : %s", appId)
-
-	if strings.EqualFold(LIVE_ENV_PROJECT_ID, appId) {
-		return true
-	} else {
-		return false
-	}
 }
 
 func authHandler(handler func(w http.ResponseWriter, r *http.Request)) http.HandlerFunc {
@@ -198,7 +167,7 @@ func authHandler(handler func(w http.ResponseWriter, r *http.Request)) http.Hand
 					handler(w, r)
 					return
 				} else {
-					RespondErr(ctx, w, r, errors.New("Need to be an admin"), http.StatusUnauthorized)
+					response.RespondErr(ctx, w, r, errors.New("Need to be an admin"), http.StatusUnauthorized)
 					return
 				}
 			}
@@ -207,7 +176,7 @@ func authHandler(handler func(w http.ResponseWriter, r *http.Request)) http.Hand
 			if !appengine.IsDevAppServer() {
 				err := verifyFirebaseAuth(ctx, w, r)
 				if err != nil {
-					RespondErr(ctx, w, r, err, http.StatusUnauthorized)
+					response.RespondErr(ctx, w, r, err, http.StatusUnauthorized)
 					return
 				}
 			}
@@ -217,7 +186,6 @@ func authHandler(handler func(w http.ResponseWriter, r *http.Request)) http.Hand
 		}
 	}
 }
-
 func verifyFirebaseAuth(ctx context.Context, w http.ResponseWriter, r *http.Request) error {
 	token := r.Header.Get("Authorization")
 	log.Debugf(ctx, "authHandler auth token: %s", token)
