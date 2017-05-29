@@ -12,8 +12,12 @@ import (
 )
 
 const COACH_WELCOME_MSG = `Bienvenue dans la famille Eritis`
-const COACH_SELECTED_MSG = `Vous avez été sélectionné par %s pour une séance de coaching`
-const COACHEE_SELECTED_MSG = `Vous avez été sélectionné pour bénéficier de séances de coaching. Cliquez ici pour continuer %s`
+const COACHEE_WELCOME_MSG = `Bienvenue dans la famille Eritis`
+const RH_WELCOME_MSG = `Bienvenue dans la famille Eritis`
+
+const INVITE_COACHEE_MSG = `Vous avez été sélectionné pour bénéficier de séances de coaching. Cliquez ici pour continuer %s`
+const INVITE_COACH_MSG = `Vous avez été sélectionné pour être un coach Eritis. Cliquez ici pour continuer %s`
+const INVITE_RH_MSG = `Eritis. Cliquez ici pour continuer %s`
 
 func HandleContact(w http.ResponseWriter, r *http.Request) {
 	ctx := appengine.NewContext(r)
@@ -74,8 +78,8 @@ func sendWelcomeEmailToCoach(ctx context.Context, coach *model.Coach) error {
 	return nil
 }
 
-func sendEmailToSelectedCoach(ctx context.Context, coach *model.Coach, coachee *model.Coachee) error {
-	err := utils.SendEmailToGivenEmail(ctx, coach.Email, "Vous avez été sélectionné", fmt.Sprintf(COACH_SELECTED_MSG, coachee.DisplayName))
+func sendWelcomeEmailToCoachee(ctx context.Context, coachee *model.Coachee) error {
+	err := utils.SendEmailToGivenEmail(ctx, coachee.Email, "Vous avez été sélectionné", fmt.Sprintf(COACHEE_WELCOME_MSG))
 	if err != nil {
 		log.Errorf(ctx, "Couldn't send email: %v", err)
 		return err
@@ -83,13 +87,48 @@ func sendEmailToSelectedCoach(ctx context.Context, coach *model.Coach, coachee *
 	return nil
 }
 
-func SendEmailToNewCoachee(ctx context.Context, email string) error {
-	link, err := utils.CreateInviteLink(ctx, email)
+func sendWelcomeEmailToRh(ctx context.Context, rh *model.Rh) error {
+	err := utils.SendEmailToGivenEmail(ctx, rh.Email, "Vous avez été sélectionné", fmt.Sprintf(RH_WELCOME_MSG))
+	if err != nil {
+		log.Errorf(ctx, "Couldn't send email: %v", err)
+		return err
+	}
+	return nil
+}
+
+func SendInviteEmailToNewCoachee(ctx context.Context, email string) error {
+	link, err := utils.CreateInviteLink(ctx, email, utils.INVITE_COACHEE)
 	if err != nil {
 		return err
 	}
 
-	err = utils.SendEmailToGivenEmail(ctx, email, "Votre RH vous offre des séances de coaching", fmt.Sprintf(COACHEE_SELECTED_MSG, link))
+	err = utils.SendEmailToGivenEmail(ctx, email, "Votre RH vous offre des séances de coaching", fmt.Sprintf(INVITE_COACHEE_MSG, link))
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func SendInviteEmailToNewCoach(ctx context.Context, email string) error {
+	link, err := utils.CreateInviteLink(ctx, email, utils.INVITE_COACH)
+	if err != nil {
+		return err
+	}
+
+	err = utils.SendEmailToGivenEmail(ctx, email, "Inscription Eritis", fmt.Sprintf(INVITE_COACH_MSG, link))
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func SendInviteEmailToNewRh(ctx context.Context, email string) error {
+	link, err := utils.CreateInviteLink(ctx, email, utils.INVITE_RH)
+	if err != nil {
+		return err
+	}
+
+	err = utils.SendEmailToGivenEmail(ctx, email, "Inscription Eritis", fmt.Sprintf(INVITE_RH_MSG, link))
 	if err != nil {
 		return err
 	}
@@ -100,5 +139,5 @@ func HandlerTestEmail(w http.ResponseWriter, r *http.Request) {
 	ctx := appengine.NewContext(r)
 	log.Debugf(ctx, "HandlerTestEmail")
 
-	SendEmailToNewCoachee(ctx, "gleroy78@gmail.com")
+	SendInviteEmailToNewCoachee(ctx, "gleroy78@gmail.com")
 }

@@ -64,15 +64,20 @@ func init() {
 
 	http.HandleFunc("/api/login/", authHandler(handler.HandleLogin))
 
+	//admin
+	http.HandleFunc("/api/v1/admin/", adminHandler(handler.HandleAdmin))
+
 	//meetings
 	http.HandleFunc("/api/meeting/", authHandler(handler.HandleMeeting))
 	http.HandleFunc("/api/meetings/", authHandler(handler.HandleMeeting))
 
 	//coach
 	http.HandleFunc("/api/coachs/", authHandler(handler.HandleCoachs))
+	http.HandleFunc("/api/v1/coachs/", authHandler(handler.HandleCoachs))
 
 	//coachee
 	http.HandleFunc("/api/coachees/", authHandler(handler.HandleCoachees))
+	http.HandleFunc("/api/v1/coachees/", authHandler(handler.HandleCoachees))
 
 	//rh
 	http.HandleFunc("/api/v1/rhs/", authHandler(handler.HandlerRH))
@@ -86,8 +91,8 @@ func init() {
 	//cron
 	http.HandleFunc("/api/v1/cron/", nonAuthHandler(handler.HandleCron))
 
-	//potentialCoachee
-	http.HandleFunc("/api/v1/potential/", nonAuthHandler(handler.HandlePotential))
+	//potentials
+	http.HandleFunc("/api/v1/potentials/", nonAuthHandler(handler.HandlePotential))
 
 
 	//test email
@@ -97,6 +102,7 @@ func init() {
 	http.Handle("/api/upload_service_account/", &templateHandler{filename: "upload.html"})
 	http.HandleFunc("/api/upload_service_account/uploader", handler.ServiceAccountUploaderHandler)
 	http.HandleFunc("/api/read_service_account/", handler.ServiceAccountGetHandler)
+
 }
 
 func nonAuthHandler(handler func(w http.ResponseWriter, r *http.Request)) http.HandlerFunc {
@@ -273,6 +279,74 @@ func (t *templateHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	t.templ.Execute(w, data)
 }
+
+func adminHandler(handler func(w http.ResponseWriter, r *http.Request)) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ctx := appengine.NewContext(r)
+		log.Debugf(ctx, "adminHandler, url %s", r.URL.Path)
+
+		u := user.Current(ctx)
+
+		if u != nil {
+			log.Debugf(ctx, "adminHandler, is admin ? %s, email %s", u.Admin, u.Email)
+
+			if !u.Admin {
+				log.Debugf(ctx, "adminHandler, restricted access")
+				response.RespondErr(ctx, w, r, errors.New("restricted access"), http.StatusUnauthorized)
+				return
+			}
+
+			//auth ok, continue
+			handler(w, r)
+
+		} else {
+			log.Debugf(ctx, "adminHandler, no user")
+			//url, _ := user.LoginURL(ctx, "dist/index.html")
+			url, _ := user.LoginURL(ctx, "admin")
+			//fmt.Fprintf(w, `<a href="%s">Sign in or register</a>`, url)
+
+			//fmt.Fprint("sign in %s",url)
+			response.RespondErr(ctx, w, r, errors.New(url), http.StatusOK)
+
+			return
+		}
+	}
+
+}
+
+//// remember that http.HandlerFunc is a valid http.Handler too
+//func adminRemoteHandler() http.Handler {
+//	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+//		ctx := appengine.NewContext(r)
+//		log.Debugf(ctx, "adminHandler, url %s", r.URL.Path)
+//
+//		u := user.Current(ctx)
+//
+//		if u != nil {
+//			log.Debugf(ctx, "adminHandler, is admin ? %s, email %s", u.Admin, u.Email)
+//
+//			if !u.Admin {
+//				log.Debugf(ctx, "adminHandler, restricted access")
+//				fmt.Fprintf(w, `<h1>This is a restricted area</h1>`)
+//				return
+//			}
+//		} else {
+//			log.Debugf(ctx, "adminHandler, no user")
+//			//url, _ := user.LoginURL(ctx, "dist/index.html")
+//			url, _ := user.LoginURL(ctx, "admin")
+//			fmt.Fprintf(w, `<a href="%s">Sign in or register</a>`, url)
+//			return
+//		}
+//
+//		//log.Debugf(ctx, "adminHandler, serve index.html")
+//		//
+//		//http.ServeFile(w, r, "dist/index.html")
+//		//
+//		//log.Debugf(ctx, "adminHandler, DONE")
+//
+//	})
+//
+//}
 
 
 

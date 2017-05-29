@@ -54,20 +54,20 @@ func CreateCoach(ctx context.Context, u *FirebaseUser) (*Coach, error) {
 
 }
 
-func CreateCoachee(ctx context.Context, u *FirebaseUser, planId PlanInt, rhKey *datastore.Key) (*APICoachee, error) {
+func CreateCoachee(ctx context.Context, u *FirebaseUser, planId PlanInt, rhKey *datastore.Key) (*Coachee, error) {
 	log.Debugf(ctx, "CreateCoachee, create, %s", u)
 
-	coachee, err := GetCoacheeFromFirebaseId(ctx, u.UID)
+	coacheeAPI, err := GetCoacheeFromFirebaseId(ctx, u.UID)
 	if err != nil && err != ErrNoUser {
 		return nil, errors.New("Error trying to know if a user is already in the datastore")
 	}
 
-	if coachee != nil {
+	if coacheeAPI != nil {
 		return nil, errors.New("coachee already exists")
 	}
 
 	//create a new coachee
-	coachee, err = createCoacheeFromFirebaseUser(ctx, u, planId, rhKey)
+	coachee, err := createCoacheeFromFirebaseUser(ctx, u, planId, rhKey)
 	if err != nil {
 		return nil, err
 	}
@@ -80,24 +80,24 @@ func CreateCoachee(ctx context.Context, u *FirebaseUser, planId PlanInt, rhKey *
 func CreateRH(ctx context.Context, u *FirebaseUser) (*Rh, error) {
 	log.Debugf(ctx, "createRH, create, %s", u)
 
-	coach, err := GetRhFromFirebaseId(ctx, u.UID)
+	rh, err := GetRhFromFirebaseId(ctx, u.UID)
 	if err != nil && err != ErrNoUser {
 		return nil, errors.New("Error trying to know if a user is already in the datastore")
 	}
 
-	if coach != nil {
+	if rh != nil {
 		return nil, errors.New("Rh already exists")
 	}
 
 	//create a new user
-	coach, err = CreateRhFromFirebaseUser(ctx, u)
+	rh, err = CreateRhFromFirebaseUser(ctx, u)
 	if err != nil {
 		return nil, err
 	}
 
-	log.Debugf(ctx, "firebaseUser, Rh created %s", coach)
+	log.Debugf(ctx, "firebaseUser, Rh created %s", rh)
 
-	return coach, nil
+	return rh, nil
 
 }
 

@@ -101,3 +101,20 @@ func (rh *Rh) update(ctx context.Context) error {
 
 	return nil
 }
+
+func GetRhForEmail(ctx context.Context, email string) ([]*Rh, error) {
+	log.Debugf(ctx, "GetRhForEmail %s", email)
+
+	var rhs []*Rh
+	keys, err := datastore.NewQuery(RH_ENTITY).Filter("Email =", email).GetAll(ctx, &rhs)
+	if err != nil {
+		return nil, err
+	}
+
+	//get Keys
+	for i, rh := range rhs {
+		rh.Key = keys[i]
+	}
+
+	return rhs, nil
+}
