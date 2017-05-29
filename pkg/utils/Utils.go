@@ -74,9 +74,17 @@ func SendEmailToGivenEmail(ctx context.Context, emailAddress string, subject str
 	return nil
 }
 
+type InviteType int
+
+const (
+	INVITE_COACH InviteType = 1 + iota
+	INVITE_COACHEE
+	INVITE_RH
+)
+
 
 //create a link to invite a Coachee. it generates a token to hide coachee's email in the link
-func CreateInviteLink(ctx context.Context, emailAddress string) (string, error) {
+func CreateInviteLink(ctx context.Context, emailAddress string, invType InviteType) (string, error) {
 	key := []byte(INVITE_KEY) // 32 bytes
 	plaintext := []byte(emailAddress)
 
@@ -89,7 +97,7 @@ func CreateInviteLink(ctx context.Context, emailAddress string) (string, error) 
 		}
 		baseToken = base64.StdEncoding.EncodeToString(ciphertext)
 		log.Debugf(ctx, "createInviteLink, baseToken %s", baseToken)
-		if !strings.Contains(baseToken,"/"){
+		if !strings.Contains(baseToken, "/") {
 			break;
 		}
 	}
@@ -112,7 +120,17 @@ func CreateInviteLink(ctx context.Context, emailAddress string) (string, error) 
 		return "", errors.New("createInviteLink, AppId doesn't match any environment")
 	}
 
-	var finalLink = fmt.Sprintf("%s/signup_coachee?token=%s", baseUrl, baseToken)
+	var redirect string
+	switch invType {
+	case INVITE_COACH:
+		redirect = "signup_coach"
+	case INVITE_COACHEE:
+		redirect = "signup_coachee"
+	case INVITE_RH:
+		redirect = "signup_rh"
+	}
+
+	var finalLink = fmt.Sprintf("%s/%s?token=%s", baseUrl, redirect, baseToken)
 	return finalLink, nil
 }
 

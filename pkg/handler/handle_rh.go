@@ -8,7 +8,6 @@ import (
 	"eritis_be/pkg/response"
 	"google.golang.org/appengine/datastore"
 	"eritis_be/pkg/model"
-	"errors"
 )
 
 func HandlerRH(w http.ResponseWriter, r *http.Request) {
@@ -17,14 +16,14 @@ func HandlerRH(w http.ResponseWriter, r *http.Request) {
 
 	switch r.Method {
 	case "POST":
-		params := response.PathParams(ctx, r, "/api/v1/rhs/:uid/coachees")
-		//get uid param
-		uid, ok := params[":uid"]
-		if ok {
-			handleCreatePotentialCoachee(w, r, uid)
+
+		//try to detect a rh
+		if ok := strings.Contains(r.URL.Path, "rh"); ok {
+			handleCreateRh(w, r)
 			return
 		}
 		http.NotFound(w, r)
+
 	case "GET":
 		/**
 		 GET all coachee for a specific RH
@@ -136,69 +135,6 @@ func handleGetAllPotentialsForRH(w http.ResponseWriter, r *http.Request, rhId st
 
 }
 
-func handleCreatePotentialCoachee(w http.ResponseWriter, r *http.Request, rhId string) {
-	ctx := appengine.NewContext(r)
-	log.Debugf(ctx, "handleCreatePotentialCoachee, rhID %s", rhId)
-
-	rhKey, err := datastore.DecodeKey(rhId)
-	if err != nil {
-		response.RespondErr(ctx, w, r, err, http.StatusBadRequest)
-		return
-	}
-
-	var ctxPotentialCoachee struct {
-		Email  string `json:"email"`
-		PlanId model.PlanInt `json:"plan_id"`
-	}
-	err = response.Decode(r, &ctxPotentialCoachee)
-	if err != nil {
-		response.RespondErr(ctx, w, r, err, http.StatusBadRequest)
-		return
-	}
-
-	//check if there is already a PotentialCoachee for this email
-	_, err = model.GetPotentialCoacheeForEmail(ctx, ctxPotentialCoachee.Email)
-	if err == nil || err != model.ErrNoPotentialCoachee {
-		//it means there is already a Potential
-		response.RespondErr(ctx, w, r, errors.New("There is already a Potential Coachee for this email"), http.StatusInternalServerError)
-		return
-	}
-
-	log.Debugf(ctx, "handleCreatePotentialCoachee, no potential with this email")
-
-	//check this email is not used by a Coachee
-	coachees, err := model.GetCoacheeForEmail(ctx, ctxPotentialCoachee.Email)
-	if err != nil || len(coachees) > 0 {
-		//it means there is already a Coachee with this email
-		response.RespondErr(ctx, w, r, errors.New("There is already a Coachee for this email"), http.StatusInternalServerError)
-		return
-	}
-
-	log.Debugf(ctx, "handleCreatePotentialCoachee, no Coachee with this email")
-
-	//create potential
-	pot, err := model.CreatePotentialCoachee(ctx, rhKey, ctxPotentialCoachee.Email, ctxPotentialCoachee.PlanId)
-	if err != nil {
-		response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
-		return
-	}
-
-	//send email
-	err = SendEmailToNewCoachee(ctx, pot.Email)
-	if err != nil {
-		response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
-		return
-	}
-
-	//get plan
-	plan := model.CreatePlanFromId(pot.PlanId)
-
-	//create API response
-	res := pot.ToPotentialCoacheeAPI(plan)
-
-	response.Respond(ctx, w, r, &res, http.StatusCreated)
-}
-
 func handleGetRHusageRate(w http.ResponseWriter, r *http.Request, rhId string) {
 	ctx := appengine.NewContext(r)
 	log.Debugf(ctx, "handleCreatePotentialCoachee, rhID %s", rhId)
@@ -237,6 +173,51 @@ func handleGetRHusageRate(w http.ResponseWriter, r *http.Request, rhId string) {
 	res.UsageRate = rate
 
 	response.Respond(ctx, w, r, &res, http.StatusOK)
+}
+
+func handleCreateRh(w http.ResponseWriter, r *http.Request) {
+	ctx := appengine.NewContext(r)
+	log.Debugf(ctx, "handleCreateRh")
+
+	var body struct {
+		model.FirebaseUser
+	}
+
+	err := response.Decode(r, &body)
+	if err != nil {
+		response.RespondErr(ctx, w, r, err, http.StatusBadRequest)
+		return
+	}
+
+	//get potential Rh : email must mach
+	potential, err := model.GetPotentialRhForEmail(ctx, body.Email)
+	if err != nil {
+		response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
+		return
+	}
+
+	rh, err := model.CreateRH(ctx, &body.FirebaseUser)
+	if err != nil {
+		response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
+		return
+	}
+
+	//remove potential
+	model.DeletePotentialRh(ctx, potential.Key)
+	if err != nil {
+		response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
+		return
+	}
+
+	//send welcome email
+	sendWelcomeEmailToRh(ctx, rh)//TODO could be on a thread
+
+	//convert into API object
+	api := rh.ToRhAPI()
+
+	//construct response
+	var res = &model.Login{Rh:api}
+	response.Respond(ctx, w, r, res, http.StatusCreated)
 }
 
 

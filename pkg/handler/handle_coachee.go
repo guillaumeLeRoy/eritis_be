@@ -7,6 +7,7 @@ import (
 	"google.golang.org/appengine/datastore"
 	"eritis_be/pkg/model"
 	"eritis_be/pkg/response"
+	"strings"
 )
 
 func HandleCoachees(w http.ResponseWriter, r *http.Request) {
@@ -14,6 +15,16 @@ func HandleCoachees(w http.ResponseWriter, r *http.Request) {
 	log.Debugf(ctx, "handle coach")
 
 	switch r.Method {
+
+	case "POST":
+		//try to detect a coachee
+		///api/coachees
+		if ok := strings.Contains(r.URL.Path, "coachee"); ok {
+			handleCreateCoachee(w, r)
+			return
+		}
+		http.NotFound(w, r)
+
 	case "GET":
 		params := response.PathParams(ctx, r, "/api/coachees/:id")
 		userId, ok := params[":id"]
@@ -24,20 +35,13 @@ func HandleCoachees(w http.ResponseWriter, r *http.Request) {
 		handleGetAllCoachees(w, r)// GET /api/coachees/
 		return
 	case "PUT":
-		////update selected coach
-		//params := response.PathParams(ctx, r, "/api/coachees/:coacheeId/coach/:coachId")
-		//coacheeId, ok := params[":coacheeId"]
-		//if ok {
-		//	//read a coach id
-		//	coachId, ok := params[":coachId"]
-		//	if ok {
-		//		handleUpdateSelectedCoach(w, r, coacheeId, coachId)// PUT /api/coachees/coacheeId/coach/coachId
-		//		return
-		//	}
-		//	//just update coachee
-		//	handleUpdateCoacheeForId(w, r, coacheeId)// PUT /api/coachees/ID
-		//	return
-		//}
+		//update selected coach
+		params := response.PathParams(ctx, r, "/api/coachees/:coacheeId")
+		coacheeId, ok := params[":coacheeId"]
+		if ok {
+			handleUpdateCoacheeForId(w, r, coacheeId)// PUT /api/coachees/ID
+			return
+		}
 
 		http.NotFound(w, r)
 
@@ -177,3 +181,52 @@ func handleUpdateCoacheeForId(w http.ResponseWriter, r *http.Request, id string)
 //
 //	response.Respond(ctx, w, r, api, http.StatusOK)
 //}
+
+func handleCreateCoachee(w http.ResponseWriter, r *http.Request) {
+	ctx := appengine.NewContext(r)
+	log.Debugf(ctx, "handleCreateCoachee")
+
+	//TODO maybe pass a plan_id
+	var body struct {
+		model.FirebaseUser
+	}
+	err := response.Decode(r, &body)
+	if err != nil {
+		response.RespondErr(ctx, w, r, err, http.StatusBadRequest)
+		return
+	}
+
+	//get potential coachee : email must mach
+	potentialCoachee, err := model.GetPotentialCoacheeForEmail(ctx, body.Email)
+	if err != nil {
+		response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
+		return
+	}
+
+	//we have 1 potential Coachee
+	coachee, err := model.CreateCoachee(ctx, &body.FirebaseUser, potentialCoachee.PlanId, potentialCoachee.Key.Parent())
+	if err != nil {
+		response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
+		return
+	}
+
+	//remove potential
+	model.DeletePotentialCoachee(ctx, potentialCoachee.Key)
+	if err != nil {
+		response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
+		return
+	}
+
+	//send welcome email
+	sendWelcomeEmailToCoachee(ctx, coachee)//TODO could be on a thread
+
+	//construct response
+	apiCoachee, err := coachee.GetAPICoachee(ctx)
+	if err != nil {
+		response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
+		return
+	}
+
+	var res = &model.Login{Coachee:apiCoachee}
+	response.Respond(ctx, w, r, res, http.StatusCreated)
+}

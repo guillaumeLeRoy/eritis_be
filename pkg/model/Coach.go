@@ -186,3 +186,20 @@ func (c *Coach)update(ctx context.Context) (error) {
 	return nil
 }
 
+func GetCoachForEmail(ctx context.Context, email string) ([]*Coach, error) {
+	log.Debugf(ctx, "GetCoachForEmail %s", email)
+
+	var coachs []*Coach
+	keys, err := datastore.NewQuery(COACH_ENTITY).Filter("Email =", email).GetAll(ctx, &coachs)
+	if err != nil {
+		return nil, err
+	}
+
+	//get Keys
+	for i, coach := range coachs {
+		coach.Key = keys[i]
+	}
+
+	return coachs, nil
+}
+

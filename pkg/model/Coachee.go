@@ -200,7 +200,7 @@ func GetCoacheeForEmail(ctx context.Context, email string) ([]*Coachee, error) {
 	return coachees, nil
 }
 
-func createCoacheeFromFirebaseUser(ctx context.Context, fbUser *FirebaseUser, planId PlanInt, rhKey *datastore.Key) (*APICoachee, error) {
+func createCoacheeFromFirebaseUser(ctx context.Context, fbUser *FirebaseUser, planId PlanInt, rhKey *datastore.Key) (*Coachee, error) {
 	log.Debugf(ctx, "CoacheeFromFirebaseUser, fbUser %s, planId %s", fbUser, planId)
 
 	var coachee Coachee
@@ -227,13 +227,8 @@ func createCoacheeFromFirebaseUser(ctx context.Context, fbUser *FirebaseUser, pl
 	if err != nil {
 		return nil, err
 	}
-	//convert to API object
-	apiCoachee, err := coachee.GetAPICoachee(ctx)
-	if err != nil {
-		return nil, err
-	}
 
-	return apiCoachee, nil
+	return &coachee, nil
 }
 
 func GetCoacheeFromFirebaseId(ctx context.Context, fbId string) (*APICoachee, error) {

@@ -33,6 +33,7 @@ func (pot *PotentialCoachee)ToPotentialCoacheeAPI(plan *Plan) (*PotentialCoachee
 	res.Plan = plan
 	return &res
 }
+
 func CreatePotentialCoachee(ctx context.Context, rhKey *datastore.Key, coacheeEmail string, plan PlanInt) (*PotentialCoachee, error) {
 	log.Debugf(ctx, "CreatePotentialCoachee, key %s", rhKey)
 
@@ -80,7 +81,6 @@ func GetPotentialCoacheesForRh(ctx context.Context, Rhkey *datastore.Key) ([]*Po
 }
 
 var ErrNoPotentialCoachee = errors.New("Potential Coachee : No Potential Coachee found")
-
 
 func GetPotentialCoacheeForEmail(ctx context.Context, coacheeEmail string) (*PotentialCoachee, error) {
 	log.Debugf(ctx, "GetPotentialCoacheeForEmail, email %s", coacheeEmail)

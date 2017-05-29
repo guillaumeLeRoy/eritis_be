@@ -7,6 +7,9 @@ import (
 	"eritis_be/pkg/response"
 	"eritis_be/pkg/utils"
 	"eritis_be/pkg/model"
+	"strings"
+	"google.golang.org/appengine/datastore"
+	"errors"
 )
 
 func HandlePotential(w http.ResponseWriter, r *http.Request) {
@@ -14,13 +17,51 @@ func HandlePotential(w http.ResponseWriter, r *http.Request) {
 	log.Debugf(ctx, "handle login")
 
 	switch r.Method {
-	case "GET":
-		//get potential Coachee for this token
-		params := response.PathParams(ctx, r, "/api/v1/potential/:token")
-		token, ok := params[":token"]
-		if ok {
-			handleGetPotentialCoacheeForToken(w, r, token)// GET /api/v1/potential/:token
+	case "POST":
+		if ok := strings.Contains(r.URL.Path, "coachees"); ok {
+			handleCreatePotentialCoachee(w, r)
 			return
+		}
+
+		if ok := strings.Contains(r.URL.Path, "rhs"); ok {
+			handleCreatePotentialRh(w, r)
+			return
+		}
+
+		if ok := strings.Contains(r.URL.Path, "coachs"); ok {
+			handleCreatePotentialCoach(w, r)
+			return
+		}
+		http.NotFound(w, r)
+	case "GET":
+		if ok := strings.Contains(r.URL.Path, "coachees"); ok {
+			//get potential Coachee for this token
+			params := response.PathParams(ctx, r, "/api/v1/potentials/coachees/:token")
+			token, ok := params[":token"]
+			if ok {
+				handleGetPotentialCoacheeForToken(w, r, token)// GET /api/v1/potentials/coachees/:token
+				return
+			}
+		}
+
+		if ok := strings.Contains(r.URL.Path, "rhs"); ok {
+			//get potential Rh for this token
+			params := response.PathParams(ctx, r, "/api/v1/potentials/rhs/:token")
+			token, ok := params[":token"]
+			if ok {
+				handleGetPotentialRhForToken(w, r, token)// GET /api/v1/potentials/rhs/:token
+				return
+			}
+		}
+
+		if ok := strings.Contains(r.URL.Path, "coachs"); ok {
+			//get potential Rh for this token
+			params := response.PathParams(ctx, r, "/api/v1/potentials/coachs/:token")
+			token, ok := params[":token"]
+			if ok {
+				handleGetPotentialCoachForToken(w, r, token)// GET /api/v1/potentials/coachs/:token
+				return
+			}
 		}
 
 		http.NotFound(w, r)
@@ -52,5 +93,225 @@ func handleGetPotentialCoacheeForToken(w http.ResponseWriter, r *http.Request, t
 	api := potentialCoachee.ToPotentialCoacheeAPI(plan)
 
 	response.Respond(ctx, w, r, &api, http.StatusOK)
-
 }
+
+func handleGetPotentialRhForToken(w http.ResponseWriter, r *http.Request, token string) {
+	ctx := appengine.NewContext(r)
+	log.Debugf(ctx, "handleGetPotentialRhForToken, token %s", token)
+
+	email, err := utils.GetEmailFromInviteToken(ctx, token)
+	if err != nil {
+		response.RespondErr(ctx, w, r, err, http.StatusBadRequest)
+		return
+	}
+
+	potential, err := model.GetPotentialRhForEmail(ctx, email)
+	if err != nil {
+		response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
+		return
+	}
+
+	//convert to api
+	api := potential.ToPotentialRhAPI()
+
+	response.Respond(ctx, w, r, &api, http.StatusOK)
+}
+
+func handleGetPotentialCoachForToken(w http.ResponseWriter, r *http.Request, token string) {
+	ctx := appengine.NewContext(r)
+	log.Debugf(ctx, "handleGetPotentialCoachForToken, token %s", token)
+
+	email, err := utils.GetEmailFromInviteToken(ctx, token)
+	if err != nil {
+		response.RespondErr(ctx, w, r, err, http.StatusBadRequest)
+		return
+	}
+
+	potential, err := model.GetPotentialCoachForEmail(ctx, email)
+	if err != nil {
+		response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
+		return
+	}
+
+	//convert to api
+	api := potential.ToPotentialCoachAPI()
+
+	response.Respond(ctx, w, r, &api, http.StatusOK)
+}
+
+func handleCreatePotentialCoachee(w http.ResponseWriter, r *http.Request) {
+	ctx := appengine.NewContext(r)
+
+	var body struct {
+		RhId   string `json:"rh_id"`
+		Email  string `json:"email"`
+		PlanId model.PlanInt `json:"plan_id"`
+	}
+
+	err := response.Decode(r, &body)
+	if err != nil {
+		response.RespondErr(ctx, w, r, err, http.StatusBadRequest)
+		return
+	}
+
+	log.Debugf(ctx, "handleCreatePotentialCoachee, body %s", body)
+
+	rhKey, err := datastore.DecodeKey(body.RhId)
+	if err != nil {
+		response.RespondErr(ctx, w, r, err, http.StatusBadRequest)
+		return
+	}
+
+	//check if there is already a PotentialCoachee for this email
+	_, err = model.GetPotentialCoacheeForEmail(ctx, body.Email)
+	if err == nil || err != model.ErrNoPotentialCoachee {
+		//it means there is already a Potential
+		response.RespondErr(ctx, w, r, errors.New("There is already a Potential Coachee for this email"), http.StatusInternalServerError)
+		return
+	}
+
+	log.Debugf(ctx, "handleCreatePotentialCoachee, no potential with this email")
+
+	//check this email is not used by a Coachee
+	coachees, err := model.GetCoacheeForEmail(ctx, body.Email)
+	if err != nil || len(coachees) > 0 {
+		//it means there is already a Coachee with this email
+		response.RespondErr(ctx, w, r, errors.New("There is already a Coachee for this email"), http.StatusInternalServerError)
+		return
+	}
+
+	log.Debugf(ctx, "handleCreatePotentialCoachee, no Coachee with this email")
+
+	//create potential
+	pot, err := model.CreatePotentialCoachee(ctx, rhKey, body.Email, body.PlanId)
+	if err != nil {
+		response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
+		return
+	}
+
+	//send email
+	err = SendInviteEmailToNewCoachee(ctx, pot.Email)
+	if err != nil {
+		response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
+		return
+	}
+
+	//get plan
+	plan := model.CreatePlanFromId(pot.PlanId)
+
+	//create API response
+	res := pot.ToPotentialCoacheeAPI(plan)
+
+	response.Respond(ctx, w, r, &res, http.StatusCreated)
+}
+
+func handleCreatePotentialCoach(w http.ResponseWriter, r *http.Request) {
+	ctx := appengine.NewContext(r)
+
+	var body struct {
+		Email string `json:"email"`
+	}
+
+	log.Debugf(ctx, "handleCreatePotentialCoach, rhID %s", body)
+
+	err := response.Decode(r, &body)
+	if err != nil {
+		response.RespondErr(ctx, w, r, err, http.StatusBadRequest)
+		return
+	}
+
+	//check if there is already a PotentialCoach for this email
+	_, err = model.GetPotentialCoachForEmail(ctx, body.Email)
+	if err == nil || err != model.ErrNoPotentialCoach {
+		//it means there is already a Potential
+		response.RespondErr(ctx, w, r, errors.New("There is already a Potential Coach for this email"), http.StatusInternalServerError)
+		return
+	}
+
+	log.Debugf(ctx, "handleCreatePotentialCoach, no potential with this email")
+
+	//check this email is not used by a Coach
+	coachs, err := model.GetCoachForEmail(ctx, body.Email)
+	if err != nil || len(coachs) > 0 {
+		//it means there is already a Coach with this email
+		response.RespondErr(ctx, w, r, errors.New("There is already a Coachee for this email"), http.StatusInternalServerError)
+		return
+	}
+
+	log.Debugf(ctx, "handleCreatePotentialCoachee, no Coachee with this email")
+
+	//create potential
+	pot, err := model.CreatePotentialCoach(ctx, body.Email)
+	if err != nil {
+		response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
+		return
+	}
+
+	//send email
+	err = SendInviteEmailToNewCoach(ctx, pot.Email)
+	if err != nil {
+		response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
+		return
+	}
+
+	//create API response
+	res := pot.ToPotentialCoachAPI()
+
+	response.Respond(ctx, w, r, &res, http.StatusCreated)
+}
+
+func handleCreatePotentialRh(w http.ResponseWriter, r *http.Request) {
+	ctx := appengine.NewContext(r)
+
+	var body struct {
+		Email string `json:"email"`
+	}
+
+	log.Debugf(ctx, "handleCreatePotentialRh, %s", body)
+
+	err := response.Decode(r, &body)
+	if err != nil {
+		response.RespondErr(ctx, w, r, err, http.StatusBadRequest)
+		return
+	}
+
+	//check if there is already a PotentialCoach for this email
+	_, err = model.GetPotentialRhForEmail(ctx, body.Email)
+	if err == nil || err != model.ErrNoPotentialRh {
+		//it means there is already a Potential
+		response.RespondErr(ctx, w, r, errors.New("There is already a Potential Rh for this email"), http.StatusInternalServerError)
+		return
+	}
+
+	log.Debugf(ctx, "handleCreatePotentialRh, no potential with this email")
+
+	//check this email is not used by a Rh
+	coachs, err := model.GetRhForEmail(ctx, body.Email)
+	if err != nil || len(coachs) > 0 {
+		//it means there is already a Coach with this email
+		response.RespondErr(ctx, w, r, errors.New("There is already a Rh for this email"), http.StatusInternalServerError)
+		return
+	}
+
+	log.Debugf(ctx, "handleCreatePotentialRh, no Rh with this email")
+
+	//create potential
+	pot, err := model.CreatePotentialRh(ctx, body.Email)
+	if err != nil {
+		response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
+		return
+	}
+
+	//send email
+	err = SendInviteEmailToNewRh(ctx, pot.Email)
+	if err != nil {
+		response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
+		return
+	}
+
+	//create API response
+	res := pot.ToPotentialRhAPI()
+
+	response.Respond(ctx, w, r, &res, http.StatusCreated)
+}
+
