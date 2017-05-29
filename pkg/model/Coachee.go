@@ -22,7 +22,6 @@ type Coachee struct {
 	StartDate               time.Time `json:"start_date"`
 	AvailableSessionsCount  int `json:"available_sessions_count"`
 	UpdateSessionsCountDate time.Time `json:"update_sessions_count_date"`
-	SelectedCoach           *datastore.Key `json:"-"`
 	AssociatedRh            *datastore.Key `json:"-"`
 	PlanId                  PlanInt`json:"-"`
 }
@@ -36,12 +35,11 @@ type APICoachee struct {
 	StartDate               time.Time `json:"start_date"`
 	AvailableSessionsCount  int `json:"available_sessions_count"`
 	UpdateSessionsCountDate time.Time `json:"update_sessions_count_date"`
-	SelectedCoach           *Coach `json:"selectedCoach"`
 	AssociatedRh            *Rh `json:"associatedRh"`
 	Plan                    *Plan `json:"plan"`
 }
 
-func (c *Coachee) ToCoacheeAPI(coach *Coach, rh *Rh, plan *Plan) *APICoachee {
+func (c *Coachee) ToCoacheeAPI(rh *Rh, plan *Plan) *APICoachee {
 	var res APICoachee
 	res.Id = c.Key.Encode()
 	res.Email = c.Email
@@ -50,26 +48,26 @@ func (c *Coachee) ToCoacheeAPI(coach *Coach, rh *Rh, plan *Plan) *APICoachee {
 	res.StartDate = c.StartDate
 	res.AvailableSessionsCount = c.AvailableSessionsCount
 	res.UpdateSessionsCountDate = c.UpdateSessionsCountDate
-	res.SelectedCoach = coach
+	//res.SelectedCoach = coach
 	res.AssociatedRh = rh
 	res.Plan = plan
 
 	return &res
 }
 
-func (c *Coachee) getSelectedCoach(ctx context.Context) (*Coach, error) {
-	log.Debugf(ctx, "getSelectedCoach")
-
-	var coach *Coach
-	if c.SelectedCoach != nil {
-		var err error
-		coach, err = GetCoach(ctx, c.SelectedCoach)
-		if err != nil {
-			return nil, err
-		}
-	}
-	return coach, nil
-}
+//func (c *Coachee) getSelectedCoach(ctx context.Context) (*Coach, error) {
+//	log.Debugf(ctx, "getSelectedCoach")
+//
+//	var coach *Coach
+//	if c.SelectedCoach != nil {
+//		var err error
+//		coach, err = GetCoach(ctx, c.SelectedCoach)
+//		if err != nil {
+//			return nil, err
+//		}
+//	}
+//	return coach, nil
+//}
 
 // get all coachees for this RH
 func GetCoacheesForRh(ctx context.Context, rhKey *datastore.Key) ([]*Coachee, error) {
@@ -123,20 +121,23 @@ func GetAPICoachee(ctx context.Context, key *datastore.Key) (*APICoachee, error)
 
 func (c *Coachee)GetAPICoachee(ctx context.Context) (*APICoachee, error) {
 
-	//now get selected Coach if any
-	coach, err := c.getSelectedCoach(ctx)
-	if err != nil {
-		return nil, err
-	}
+	////now get selected Coach if any
+	//coach, err := c.getSelectedCoach(ctx)
+	//if err != nil {
+	//	return nil, err
+	//}
 
 	//get the Rh
 	rh, err := GetRh(ctx, c.AssociatedRh)
+	if err != nil {
+		return nil, err
+	}
 
 	//get the plan
 	plan := CreatePlanFromId(c.PlanId)
 
 	//convert to API object
-	var apiCoachee = c.ToCoacheeAPI(coach, rh, plan)
+	var apiCoachee = c.ToCoacheeAPI(rh, plan)
 
 	log.Debugf(ctx, "GetAPICoachee, response %s", apiCoachee)
 
@@ -269,29 +270,29 @@ func (c *Coachee)Update(ctx context.Context) (error) {
 
 	return nil
 }
-
-/**
- Associate the given coach with this Coachee
- Update coachee's meetings with the selected coach.
- */
-func (c *Coachee) UpdateSelectedCoach(ctx context.Context, coach *Coach) (error) {
-	log.Debugf(ctx, "UpdateSelectedCoach : %s", coach)
-
-	//associate the coachee with the given coach
-	c.SelectedCoach = coach.Key
-	err := c.Update(ctx)
-	if err != nil {
-		return err
-	}
-
-	//update meetings with selected coach
-	err = associateCoachWithMeetings(ctx, c.Key, coach.Key)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
+//
+///**
+// Associate the given coach with this Coachee
+// Update coachee's meetings with the selected coach.
+// */
+//func (c *Coachee) UpdateSelectedCoach(ctx context.Context, coach *Coach) (error) {
+//	log.Debugf(ctx, "UpdateSelectedCoach : %s", coach)
+//
+//	//associate the coachee with the given coach
+//	c.SelectedCoach = coach.Key
+//	err := c.Update(ctx)
+//	if err != nil {
+//		return err
+//	}
+//
+//	//update meetings with selected coach
+//	err = associateCoachWithMeetings(ctx, c.Key, coach.Key)
+//	if err != nil {
+//		return err
+//	}
+//
+//	return nil
+//}
 
 func (c *Coachee) RefreshAvailableSessionsCount(ctx context.Context) (error) {
 	plan := CreatePlanFromId(c.PlanId)

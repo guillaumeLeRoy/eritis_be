@@ -51,7 +51,7 @@ func HandleMeeting(w http.ResponseWriter, r *http.Request) {
 		//add coach to meeting
 		contains := strings.Contains(r.URL.Path, "coach")
 		if contains {
-			params := response.PathParams(ctx, r, "/api/meeting/:meetingId/coach/:coachId")
+			params := response.PathParams(ctx, r, "/api/v1/meeting/:meetingId/coach/:coachId")
 			meetingId, ok := params[":meetingId"]
 			coachId, ok := params[":coachId"]
 			if ok {
@@ -164,7 +164,7 @@ func HandleMeeting(w http.ResponseWriter, r *http.Request) {
 		//}
 
 		//get all reviews for a meeting
-		contains = strings.Contains(r.URL.Path, "/api/meeting/")
+		contains = strings.Contains(r.URL.Path, "reviews")
 		if contains {
 			params := response.PathParams(ctx, r, "/api/meeting/:meetingId/reviews")
 			//verify url contains meeting
@@ -176,6 +176,14 @@ func HandleMeeting(w http.ResponseWriter, r *http.Request) {
 					return
 				}
 			}
+		}
+
+		//get all Meetings with no Coach associated
+		contains = strings.Contains(r.URL.Path, "/api/v1/meetings")
+		if contains {
+			getMeetingsWithNoAssociatedCoach(w, r)// GET /api/v1/meetings
+			return
+
 		}
 
 		http.NotFound(w, r)
@@ -262,15 +270,15 @@ func handleCreateMeeting(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	//if this coachee already have a coach associated then auto associate this new meeting
-	if coachee.SelectedCoach != nil {
-		//associate a MeetingCoach with meetingCoachee
-		err = model.Associate(ctx, coachee.SelectedCoach, meeting)
-		if err != nil {
-			response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
-			return
-		}
-	}
+	////if this coachee already have a coach associated then auto associate this new meeting
+	//if coachee.SelectedCoach != nil {
+	//	//associate a MeetingCoach with meetingCoachee
+	//	err = model.Associate(ctx, coachee.SelectedCoach, meeting)
+	//	if err != nil {
+	//		response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
+	//		return
+	//	}
+	//}
 
 	//decrease number of available sessions and save
 	err = coachee.DecreaseAvailableSessionsCount(ctx)
@@ -836,4 +844,28 @@ func updateMeetingPotentialTime(w http.ResponseWriter, r *http.Request, potentia
 
 	//return new meetingTime
 	response.Respond(ctx, w, r, meetingTime, http.StatusOK)
+}
+
+func getMeetingsWithNoAssociatedCoach(w http.ResponseWriter, r *http.Request) {
+	ctx := appengine.NewContext(r)
+	log.Debugf(ctx, "getMeetingsWithNoAssociatedCoach")
+
+	meetings, err := model.GetMeetingsWithNoCoach(ctx)
+	if err != nil {
+		response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
+		return
+	}
+
+	//convert to API object
+	var apiMeetings []*model.ApiMeeting = make([]*model.ApiMeeting, len(meetings))
+	for i, meeting := range meetings {
+		apiMeetings[i], err = meeting.ConvertToAPIMeeting(ctx)
+		if err != nil {
+			response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
+			return
+		}
+	}
+
+	//return
+	response.Respond(ctx, w, r, &apiMeetings, http.StatusOK)
 }

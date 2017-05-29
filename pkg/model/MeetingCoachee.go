@@ -209,28 +209,46 @@ func GetMeetingsForCoachee(ctx context.Context, coacheeKey *datastore.Key) ([]*A
 	return apiMeetings, nil
 }
 
-func associateCoachWithMeetings(ctx context.Context, coacheeKey *datastore.Key, coachKey *datastore.Key) error {
-	log.Debugf(ctx, "associateCoachWithMeeting, coacheeKey %s, coach %s", coacheeKey, coachKey)
-
-	//get meetings for this coachee
+func GetMeetingsWithNoCoach(ctx context.Context) ([]*MeetingCoachee, error) {
 	var meetings []*MeetingCoachee
-	keys, err := datastore.NewQuery(MEETING_COACHEE_ENTITY).Ancestor(coacheeKey).GetAll(ctx, &meetings)
+	keys, err := datastore.NewQuery(MEETING_COACHEE_ENTITY).Filter("MeetingCoachKey = ", nil).GetAll(ctx, &meetings)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	//where NO coach is associated to a meeting, set a coach
+	log.Debugf(ctx, "GetMeetingsWithNoCoach, size %s", len(meetings))
+
 	for i, meeting := range meetings {
 		meeting.Key = keys[i]
-
-		if meeting.MeetingCoachKey == nil {
-			log.Debugf(ctx, "create Meeting coach")
-			err = Associate(ctx, coachKey, meeting)
-			if err != nil {
-				return err
-			}
-		}
 	}
 
-	return nil
+	//log.Debugf(ctx, "GetMeetingsWithNoCoach, res %s", meetings)
+
+	return meetings, nil
 }
+
+//func associateCoachWithMeetings(ctx context.Context, coacheeKey *datastore.Key, coachKey *datastore.Key) error {
+//	log.Debugf(ctx, "associateCoachWithMeeting, coacheeKey %s, coach %s", coacheeKey, coachKey)
+//
+//	//get meetings for this coachee
+//	var meetings []*MeetingCoachee
+//	keys, err := datastore.NewQuery(MEETING_COACHEE_ENTITY).Ancestor(coacheeKey).GetAll(ctx, &meetings)
+//	if err != nil {
+//		return err
+//	}
+//
+//	//where NO coach is associated to a meeting, set a coach
+//	for i, meeting := range meetings {
+//		meeting.Key = keys[i]
+//
+//		if meeting.MeetingCoachKey == nil {
+//			log.Debugf(ctx, "create Meeting coach")
+//			err = Associate(ctx, coachKey, meeting)
+//			if err != nil {
+//				return err
+//			}
+//		}
+//	}
+//
+//	return nil
+//}
