@@ -58,6 +58,23 @@ func CreateRhFromFirebaseUser(ctx context.Context, fbUser *FirebaseUser) (*Rh, e
 	return &rh, nil
 }
 
+func GetAllRhs(ctx context.Context) ([]*Rh, error) {
+	log.Debugf(ctx, "GetAllRhs")
+
+	var rhs []*Rh
+	keys, err := datastore.NewQuery(RH_ENTITY).GetAll(ctx, &rhs)
+	if err != nil {
+		return nil, err
+	}
+
+	//get Keys
+	for i, rh := range rhs {
+		rh.Key = keys[i]
+	}
+
+	return rhs, nil
+}
+
 func GetRhFromFirebaseId(ctx context.Context, fbId string) (*Rh, error) {
 	log.Debugf(ctx, "getFromFirebaseId, rh id : %s", fbId)
 

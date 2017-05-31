@@ -48,7 +48,6 @@ func (c *Coachee) ToCoacheeAPI(rh *Rh, plan *Plan) *APICoachee {
 	res.StartDate = c.StartDate
 	res.AvailableSessionsCount = c.AvailableSessionsCount
 	res.UpdateSessionsCountDate = c.UpdateSessionsCountDate
-	//res.SelectedCoach = coach
 	res.AssociatedRh = rh
 	res.Plan = plan
 
@@ -147,6 +146,8 @@ func (c *Coachee)GetAPICoachee(ctx context.Context) (*APICoachee, error) {
 
 //get all coachees
 func GetAllCoachees(ctx context.Context) ([]*Coachee, error) {
+	log.Debugf(ctx, "GetAllCoachees")
+
 	var coachees []*Coachee
 	keys, err := datastore.NewQuery(COACHEE_ENTITY).GetAll(ctx, &coachees)
 	if err != nil {
