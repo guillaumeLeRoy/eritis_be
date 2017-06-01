@@ -16,14 +16,13 @@ type MeetingCoachee struct {
 	IsOpen          bool `json:"isOpen"`
 }
 
-
 /**
 Visual representation of a meeting
  */
 type ApiMeeting struct {
 	Key        *datastore.Key `json:"id" datastore:"-"`
 	AgreedTime *MeetingTime `json:"agreed_date"`
-	Coach      *Coach `json:"coach"`
+	Coach      *CoachAPI `json:"coach"`
 	Coachee    *APICoachee `json:"coachee"`
 	IsOpen     bool `json:"isOpen"`
 }
@@ -103,7 +102,7 @@ func (m *MeetingCoachee)ConvertToAPIMeeting(ctx context.Context) (*ApiMeeting, e
 		if err != nil {
 			return nil, err
 		}
-		ApiMeeting.Coach = coach
+		ApiMeeting.Coach = coach.ToCoachAPI()
 	}
 
 	//get coachee
