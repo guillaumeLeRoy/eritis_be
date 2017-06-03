@@ -72,6 +72,24 @@ func HandlerRH(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func handleGetAllRHs(w http.ResponseWriter, r *http.Request) {
+	ctx := appengine.NewContext(r)
+	log.Debugf(ctx, "handleGetAllRHs")
+
+	rhs, err := model.GetAllRhs(ctx)
+	if err != nil {
+		response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
+		return
+	}
+	var rhsAPI []*model.RhAPI = make([]*model.RhAPI, len(rhs))
+	for i, rh := range rhs {
+		rhsAPI[i] = rh.ToRhAPI()
+	}
+
+	response.Respond(ctx, w, r, &rhsAPI, http.StatusOK)
+
+}
+
 func handleGetAllCoacheesForRH(w http.ResponseWriter, r *http.Request, rhId string) {
 	ctx := appengine.NewContext(r)
 	log.Debugf(ctx, "handleGetAllCoacheesForRH, rhId %s", rhId)

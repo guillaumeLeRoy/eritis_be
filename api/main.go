@@ -65,7 +65,8 @@ func init() {
 	http.HandleFunc("/api/login/", authHandler(handler.HandleLogin))
 
 	//admin
-	http.HandleFunc("/api/v1/admin/", adminHandler(handler.HandleAdmin))
+	//http.HandleFunc("/api/v1/admins/", adminHandler(nonAuthHandler(handler.HandleAdmin)))
+	http.HandleFunc("/api/v1/admins/", nonAuthHandler(handler.HandleAdmin))
 
 	//meetings
 	http.HandleFunc("/api/meeting/", authHandler(handler.HandleMeeting))
