@@ -11,13 +11,116 @@ import (
 	"eritis_be/pkg/utils"
 )
 
-const COACH_WELCOME_MSG = `Bienvenue dans la famille Eritis`
-const COACHEE_WELCOME_MSG = `Bienvenue dans la famille Eritis`
-const RH_WELCOME_MSG = `Bienvenue dans la famille Eritis`
+const INVITE_RH_TITLE = `Accédez à votre espace Eritis`
+const INVITE_RH_MSG = `
+<html style="color:black;">
+	<body>
+		<p>Bonjour,</p>
 
-const INVITE_COACHEE_MSG = `Vous avez été sélectionné pour bénéficier de séances de coaching. Cliquez ici pour continuer %s`
-const INVITE_COACH_MSG = `Vous avez été sélectionné pour être un coach Eritis. Cliquez ici pour continuer %s`
-const INVITE_RH_MSG = `Eritis. Cliquez ici pour continuer %s`
+		<p>Commencez votre inscription sur Eritis en cliquant ici pour accéder à nos services. Dès lors que celle-ci sera confirmée, vous pourrez :
+		<ul>
+			<li>Sélectionner les managers auxquels vous souhaitez faire bénéficier la plateforme.</li>
+			<li>Suivre chaque manager coaché de manière détaillée grâce à des comptes rendus.</li>
+			<li>Résilier à tout moment car notre service est sans engagement.</li>
+		</ul>
+		</p>
+
+		<p>A très bientôt sur notre plateforme,</p>
+
+		<p>L'équipe Eritis</p>
+	</body>
+</html>`
+
+const RH_WELCOME_TITLE = `Bienvenue sur Eritis !`
+const RH_WELCOME_MSG = `
+<html style="color:black;">
+	<body>
+		<p>Bonjour,</p>
+
+		<p>Nous vous remercions d'avoir rejoint la communauté Eritis. Votre inscription sur notre plateforme est confirmée.</p>
+
+		<p>Afin de commencer à utiliser nos services connectez-vous sur Eritis.co.uk avec vos identifiants.</p>
+
+		<p>A très bientôt sur notre plateforme,</p>
+
+		<p>L'équipe Eritis</p>
+	</body>
+</html>`
+
+const INVITE_COACHEE_TITLE = `Commencez vos séances de coaching Eritis`
+const INVITE_COACHEE_MSG = `
+<html style="color:black;">
+	<body>
+		<p>Bonjour,
+
+		<p>Afin de débuter vos séances de coaching, inscrivez-vous sur notre plateforme en cliquant ici.
+		<p>Dès que celle-ci sera confirmée, vous pourrez :
+		<ul>
+			<li>Définir vos besoins en organisant vos séances.</li>
+			<li>Réserver des créneaux avec des coaches certifiés.</li>
+			<li>Commencer vos séances de coaching par vidéo-conférence où que vous soyez.</li>
+			<li>Suivre votre progression avec des compte rendus de fin de séance.</li>
+		</ul>
+		</p>
+		<p>A très bientôt sur notre plateforme,</p>
+
+		<p>L'équipe Eritis</p>
+
+	</body>
+</html>`
+
+const COACHEE_WELCOME_TITLE = `Bienvenue sur Eritis !`
+const COACHEE_WELCOME_MSG = `
+<html style="color:black;">
+	<body>
+		<p>Bonjour,</p>
+
+		<p>Nous vous remercions d'avoir rejoint la communauté Eritis. Votre inscription sur notre plateforme est confirmée.</p>
+
+		<p>Afin de commencer à utiliser nos services, connectez-vous sur Eritis.co.uk avec vos identifiants.</p>
+
+		<p>A très bientôt sur notre plateforme,</p>
+
+		<p>L'équipe Eritis</p>
+	</body>
+</html>`
+
+const COACH_WELCOME_TITLE = `Bienvenue sur Eritis !`
+const COACH_WELCOME_MSG = `
+<html style="color:black;">
+	<body>
+		<p>Bonjour,</p>
+
+		<p>Nous vous remercions d'avoir rejoint la communauté Eritis. Votre inscription sur notre plateforme est confirmée.</p>
+
+		<p>Afin de commencer à utiliser nos services, connectez-vous sur Eritis.co.uk avec vos identifiants.</p>
+
+		<p>A très bientôt sur notre plateforme,</p>
+
+		<p>L'équipe Eritis</p>
+	</body>
+</html>`
+
+const INVITE_COACH_TITLE = `Devenez Coach Eritis !`
+const INVITE_COACH_MSG = `
+<html style="color:black;">
+	<body>
+		<p>Bonjour,</p>
+		<p>Vous avez été retenu afin de faire partie de l'équipe de coaches Eritis.</p>
+		<p>Veuillez cliquer <a href="%s">ici</a> afin de commencer votre inscription et de réaliser vos premières séances.</p>
+		<p>Dès lors que celle-ci sera confirmée, vous pourrez :</p>
+		<ul>
+			<li>Avoir accès à de nouveaux clients et de nouvelles problématiques.</li>
+			<li>Réaliser vos séances de coaching par vidéo-conférence où que vous soyez.</li>
+			<li>Suivre vos clients grâce à des comptes rendus.</li>
+			<li>Vous former avec la supervision mensuelle d'un coach sénior.</li>
+		</ul>
+		<p>A très bientôt sur notre plateforme,</p>
+		<p>
+		L'équipe Eritis
+		</p>
+	</body>
+</html>`
 
 func HandleContact(w http.ResponseWriter, r *http.Request) {
 	ctx := appengine.NewContext(r)
@@ -70,7 +173,7 @@ func contactEritis(ctx context.Context, name string, email string, message strin
 }
 
 func sendWelcomeEmailToCoach(ctx context.Context, coach *model.Coach) error {
-	err := utils.SendEmailToGivenEmail(ctx, coach.Email, "Vous avez été sélectionné", fmt.Sprintf(COACH_WELCOME_MSG))
+	err := utils.SendEmailToGivenEmail(ctx, coach.Email, COACH_WELCOME_TITLE, fmt.Sprintf(COACH_WELCOME_MSG))
 	if err != nil {
 		log.Errorf(ctx, "Couldn't send email: %v", err)
 		return err
@@ -79,7 +182,7 @@ func sendWelcomeEmailToCoach(ctx context.Context, coach *model.Coach) error {
 }
 
 func sendWelcomeEmailToCoachee(ctx context.Context, coachee *model.Coachee) error {
-	err := utils.SendEmailToGivenEmail(ctx, coachee.Email, "Vous avez été sélectionné", fmt.Sprintf(COACHEE_WELCOME_MSG))
+	err := utils.SendEmailToGivenEmail(ctx, coachee.Email, COACHEE_WELCOME_TITLE, fmt.Sprintf(COACHEE_WELCOME_MSG))
 	if err != nil {
 		log.Errorf(ctx, "Couldn't send email: %v", err)
 		return err
@@ -88,7 +191,7 @@ func sendWelcomeEmailToCoachee(ctx context.Context, coachee *model.Coachee) erro
 }
 
 func sendWelcomeEmailToRh(ctx context.Context, rh *model.Rh) error {
-	err := utils.SendEmailToGivenEmail(ctx, rh.Email, "Vous avez été sélectionné", fmt.Sprintf(RH_WELCOME_MSG))
+	err := utils.SendEmailToGivenEmail(ctx, rh.Email, RH_WELCOME_TITLE, fmt.Sprintf(RH_WELCOME_MSG))
 	if err != nil {
 		log.Errorf(ctx, "Couldn't send email: %v", err)
 		return err
@@ -102,7 +205,7 @@ func SendInviteEmailToNewCoachee(ctx context.Context, email string) error {
 		return err
 	}
 
-	err = utils.SendEmailToGivenEmail(ctx, email, "Votre RH vous offre des séances de coaching", fmt.Sprintf(INVITE_COACHEE_MSG, link))
+	err = utils.SendEmailToGivenEmail(ctx, email, INVITE_COACHEE_TITLE, fmt.Sprintf(INVITE_COACHEE_MSG, link))
 	if err != nil {
 		return err
 	}
@@ -115,7 +218,7 @@ func SendInviteEmailToNewCoach(ctx context.Context, email string) error {
 		return err
 	}
 
-	err = utils.SendEmailToGivenEmail(ctx, email, "Inscription Eritis", fmt.Sprintf(INVITE_COACH_MSG, link))
+	err = utils.SendEmailToGivenEmail(ctx, email, INVITE_COACH_TITLE, fmt.Sprintf(INVITE_COACH_MSG, link))
 	if err != nil {
 		return err
 	}
@@ -128,7 +231,7 @@ func SendInviteEmailToNewRh(ctx context.Context, email string) error {
 		return err
 	}
 
-	err = utils.SendEmailToGivenEmail(ctx, email, "Inscription Eritis", fmt.Sprintf(INVITE_RH_MSG, link))
+	err = utils.SendEmailToGivenEmail(ctx, email, INVITE_RH_TITLE, fmt.Sprintf(INVITE_RH_MSG, link))
 	if err != nil {
 		return err
 	}
