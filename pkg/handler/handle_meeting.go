@@ -620,6 +620,12 @@ func setCoachForMeeting(w http.ResponseWriter, r *http.Request, meetingId string
 	//associate a MeetingCoach with meetingCoachee
 	model.Associate(ctx, coachKey, meetingCoachee)
 
+	//TODO send email
+
+	//send notification
+	model.CreateNotification(ctx, "Un coach à accepter votre demande", meetingCoachee.Key.Parent())
+
+
 	//get API meeting
 	meetingApi, err := meetingCoachee.ConvertToAPIMeeting(ctx)
 	if err != nil {

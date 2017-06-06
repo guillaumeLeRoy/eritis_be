@@ -12,7 +12,7 @@ import (
 
 func HandleCoachees(w http.ResponseWriter, r *http.Request) {
 	ctx := appengine.NewContext(r)
-	log.Debugf(ctx, "handle coach")
+	log.Debugf(ctx, "handle coachees")
 
 	switch r.Method {
 
@@ -26,14 +26,47 @@ func HandleCoachees(w http.ResponseWriter, r *http.Request) {
 		http.NotFound(w, r)
 
 	case "GET":
-		params := response.PathParams(ctx, r, "/api/coachees/:id")
-		userId, ok := params[":id"]
-		if ok {
-			handleGetCoacheeForId(w, r, userId)// GET /api/coachees/ID
+
+		/**
+		 GET all notification for a specific coachee
+		 */
+		contains := strings.Contains(r.URL.Path, "notifications")
+		if contains {
+			log.Debugf(ctx, "handle coachees, notifications")
+
+			params := response.PathParams(ctx, r, "/api/v1/coachees/:uid/notifications")
+			//verify url contains coachee
+			if _, ok := params[":uid"]; ok {
+				//get uid param
+				uid, ok := params[":uid"]
+				if ok {
+					getAllNotificationsForCoachee(w, r, uid)// GET /api/v1/coachees/:uid/notifications
+					return
+				}
+			}
+		}
+
+		contains = strings.Contains(r.URL.Path, "coachees")
+		if contains {
+			log.Debugf(ctx, "handle coachees, coachees")
+
+			/**
+		 	GET a specific coachee
+		 	*/
+			params := response.PathParams(ctx, r, "/api/v1/coachees/:uid")
+			userId, ok := params[":uid"]
+			if ok {
+				handleGetCoacheeForId(w, r, userId)// GET /api/v1/coachees/:uid
+				return
+			}
+
+			/**
+			 GET all coachees
+			 */
+			handleGetAllCoachees(w, r)// GET /api/v1/coachees
 			return
 		}
-		handleGetAllCoachees(w, r)// GET /api/coachees/
-		return
+		http.NotFound(w, r)
 	case "PUT":
 		//update selected coach
 		params := response.PathParams(ctx, r, "/api/coachees/:coacheeId")
