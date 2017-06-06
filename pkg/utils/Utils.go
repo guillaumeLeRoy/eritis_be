@@ -59,14 +59,6 @@ func GetFirebaseJsonPath(ctx context.Context) (string, error) {
 func SendEmailToGivenEmail(ctx context.Context, emailAddress string, subject string, message string) error {
 	addrs := []string{emailAddress}
 
-	//msg := &mail.Message{
-	//	Sender:  CONTACT_ERITIS,
-	//	To:      addrs,
-	//	Subject: subject,
-	//	Body:    message,
-	//	HTMLBody:message
-	//}
-
 	msg := &mail.Message{
 		Sender:  CONTACT_ERITIS,
 		To:      addrs,

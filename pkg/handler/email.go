@@ -13,11 +13,16 @@ import (
 
 const INVITE_RH_TITLE = `Accédez à votre espace Eritis`
 const INVITE_RH_MSG = `
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html style="color:black;">
+
+	</head>
+
 	<body>
 		<p>Bonjour,</p>
 
-		<p>Commencez votre inscription sur Eritis en cliquant ici pour accéder à nos services. Dès lors que celle-ci sera confirmée, vous pourrez :
+		<p>Commencez votre inscription sur Eritis en <a href="%s">cliquant ici</a>  pour accéder à nos services. Dès lors que celle-ci sera confirmée, vous pourrez :
 		<ul>
 			<li>Sélectionner les managers auxquels vous souhaitez faire bénéficier la plateforme.</li>
 			<li>Suivre chaque manager coaché de manière détaillée grâce à des comptes rendus.</li>
@@ -33,7 +38,12 @@ const INVITE_RH_MSG = `
 
 const RH_WELCOME_TITLE = `Bienvenue sur Eritis !`
 const RH_WELCOME_MSG = `
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html style="color:black;">
+
+	</head>
+
 	<body>
 		<p>Bonjour,</p>
 
@@ -49,11 +59,16 @@ const RH_WELCOME_MSG = `
 
 const INVITE_COACHEE_TITLE = `Commencez vos séances de coaching Eritis`
 const INVITE_COACHEE_MSG = `
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html style="color:black;">
+
+	</head>
+
 	<body>
 		<p>Bonjour,
 
-		<p>Afin de débuter vos séances de coaching, inscrivez-vous sur notre plateforme en cliquant ici.
+		<p>Afin de débuter vos séances de coaching, inscrivez-vous sur notre plateforme en <a href="%s">cliquant ici</a>.
 		<p>Dès que celle-ci sera confirmée, vous pourrez :
 		<ul>
 			<li>Définir vos besoins en organisant vos séances.</li>
@@ -71,7 +86,12 @@ const INVITE_COACHEE_MSG = `
 
 const COACHEE_WELCOME_TITLE = `Bienvenue sur Eritis !`
 const COACHEE_WELCOME_MSG = `
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html style="color:black;">
+
+	</head>
+
 	<body>
 		<p>Bonjour,</p>
 
@@ -87,7 +107,12 @@ const COACHEE_WELCOME_MSG = `
 
 const COACH_WELCOME_TITLE = `Bienvenue sur Eritis !`
 const COACH_WELCOME_MSG = `
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html style="color:black;">
+
+	</head>
+
 	<body>
 		<p>Bonjour,</p>
 
@@ -103,11 +128,16 @@ const COACH_WELCOME_MSG = `
 
 const INVITE_COACH_TITLE = `Devenez Coach Eritis !`
 const INVITE_COACH_MSG = `
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html style="color:black;">
+
+	</head>
+
 	<body>
 		<p>Bonjour,</p>
 		<p>Vous avez été retenu afin de faire partie de l'équipe de coaches Eritis.</p>
-		<p>Veuillez cliquer <a href="%s">ici</a> afin de commencer votre inscription et de réaliser vos premières séances.</p>
+		<p>Veuillez <a href="%s">cliquer ici</a> afin de commencer votre inscription et de réaliser vos premières séances.</p>
 		<p>Dès lors que celle-ci sera confirmée, vous pourrez :</p>
 		<ul>
 			<li>Avoir accès à de nouveaux clients et de nouvelles problématiques.</li>
