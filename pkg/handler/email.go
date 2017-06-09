@@ -152,7 +152,6 @@ const INVITE_COACH_MSG = `
 	</body>
 </html>`
 
-
 const IMMINENT_MEETING_TITLE = `Vous avez bientôt une séance`
 const IMMINENT_MEETING_MSG = `
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
@@ -165,10 +164,41 @@ const IMMINENT_MEETING_MSG = `
 		<p>Bonjour,</p>
 		<p>Vous avez une séance dans 10min.</p>
 
-		L'équipe Eritis
-		</p>
+		<p>L'équipe Eritis</p>
 	</body>
 </html>`
+
+const COACH_SELECTED_FOR_SESSION_TITLE = `Votre séance de coaching est confirmée`
+const COACH_SELECTED_FOR_SESSION_MSG = `
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html style="color:black;">
+
+	</head>
+	<body>
+		<p>Bonjour,
+		<p>Le coach %s a accepté votre demande. Pour y accéder, connectez-vous à votre espace personnel sur Eritis.fr</p>
+		<p>A très bientôt sur notre plateforme,</p>
+		<p>L’équipe Eritis</p>
+	</body>
+</html>
+`
+
+const MEETING_TIME_SELECTED_FOR_SESSION_TITLE = `Votre coach Erits vient d'ajouter un horaire à votre séance`
+const MEETING_TIME_SELECTED_FOR_SESSION_MSG = `
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html style="color:black;">
+
+	</head>
+	<body>
+		<p>Bonjour,
+		<p>Le coach %s a accepté votre demande. Votre séance de coaching se tiendra donc le %s. Pour y accéder, connectez-vous à votre espace personnel sur Eritis.fr</p>
+		<p>A très bientôt sur notre plateforme,</p>
+		<p>L’équipe Eritis</p>
+	</body>
+</html>
+`
 
 func HandleContact(w http.ResponseWriter, r *http.Request) {
 	ctx := appengine.NewContext(r)

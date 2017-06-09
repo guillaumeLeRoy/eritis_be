@@ -4,12 +4,13 @@ import (
 	"google.golang.org/appengine/datastore"
 	"google.golang.org/appengine/log"
 	"golang.org/x/net/context"
+	"time"
 )
 
 const NOTIFICATION_ENTITY = "notification"
 
-const COACH_SELECTED_FOR_SESSION = "Un coach a accepté votre demande"
-const MEETING_TIME_SELECTED_FOR_SESSION = "Votre coach a défini un horaire pour votre séance"
+const COACH_SELECTED_FOR_SESSION = "Le coach  %s a accepté votre demande pour la séance du %s"
+const MEETING_TIME_SELECTED_FOR_SESSION = "Votre coach a défini un horaire pour votre séance"//TODO to improve
 const MEETING_CLOSED_BY_COACH = "Félicitation! N’hesitez pas à consulter le compte rendu de la séance."
 
 const MEETING_CANCELED_BY_COACHEE = "La séance a été annulée par votre coaché"
@@ -19,6 +20,7 @@ type Notification struct {
 	Key     *datastore.Key `json:"id" datastore:"-"`
 	IsRead  bool `json:"is_read"`
 	Message string `json:"message"`
+	Date    time.Time `json:"date"`
 }
 
 func CreateNotification(ctx context.Context, message string, parent *datastore.Key) (*Notification, error) {
@@ -28,6 +30,7 @@ func CreateNotification(ctx context.Context, message string, parent *datastore.K
 	notification.Key = datastore.NewIncompleteKey(ctx, NOTIFICATION_ENTITY, parent)
 	notification.IsRead = false
 	notification.Message = message
+	notification.Date = time.Now()
 
 	//save it
 	err := notification.Update(ctx)

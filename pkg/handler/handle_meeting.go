@@ -12,6 +12,8 @@ import (
 	"golang.org/x/net/context"
 	"eritis_be/pkg/model"
 	"eritis_be/pkg/response"
+	"fmt"
+	"eritis_be/pkg/utils"
 )
 
 func HandleMeeting(w http.ResponseWriter, r *http.Request) {
@@ -596,17 +598,21 @@ func setTimeForMeeting(w http.ResponseWriter, r *http.Request, meetingId string,
 		return
 	}
 
-	//TODO send email
-
-	//add notification to coachee
-	model.CreateNotification(ctx, model.MEETING_TIME_SELECTED_FOR_SESSION, meeting.Key.Parent())
-
 	//get API meeting
 	meetingApi, err := meeting.ConvertToAPIMeeting(ctx)
 	if err != nil {
 		response.RespondErr(ctx, w, r, err, http.StatusBadRequest)
 		return
 	}
+
+	//send email coachee
+	// TODO convert date
+	err = utils.SendEmailToGivenEmail(ctx, meetingApi.Coachee.Email,
+		MEETING_TIME_SELECTED_FOR_SESSION_TITLE, fmt.Sprintf(MEETING_TIME_SELECTED_FOR_SESSION_MSG, meetingApi.Coach.DisplayName, meetingApi.AgreedTime.StartDate))
+
+	//add notification to coachee
+	model.CreateNotification(ctx, model.MEETING_TIME_SELECTED_FOR_SESSION, meeting.Key.Parent())
+
 	response.Respond(ctx, w, r, meetingApi, http.StatusOK)
 
 }
@@ -632,18 +638,23 @@ func setCoachForMeeting(w http.ResponseWriter, r *http.Request, meetingId string
 	//associate a MeetingCoach with meetingCoachee
 	model.Associate(ctx, coachKey, meetingCoachee)
 
-	//TODO send email
-
-	//send notification
-	model.CreateNotification(ctx, model.COACH_SELECTED_FOR_SESSION, meetingCoachee.Key.Parent())
-
-
 	//get API meeting
 	meetingApi, err := meetingCoachee.ConvertToAPIMeeting(ctx)
 	if err != nil {
 		response.RespondErr(ctx, w, r, err, http.StatusBadRequest)
 		return
 	}
+
+	//send email coachee
+	// TODO convert date
+	err = utils.SendEmailToGivenEmail(ctx, meetingApi.Coachee.Email,
+		COACH_SELECTED_FOR_SESSION_TITLE, fmt.Sprintf(COACH_SELECTED_FOR_SESSION_MSG, meetingApi.Coach.DisplayName))
+
+	//send notification
+	content := fmt.Sprintf(model.COACH_SELECTED_FOR_SESSION, meetingApi.Coach.DisplayName, meetingApi.AgreedTime.StartDate)
+	model.CreateNotification(ctx, content, meetingCoachee.Key.Parent())
+
+	// send response
 	response.Respond(ctx, w, r, meetingApi, http.StatusOK)
 }
 
