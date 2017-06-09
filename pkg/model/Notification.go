@@ -8,6 +8,13 @@ import (
 
 const NOTIFICATION_ENTITY = "notification"
 
+const COACH_SELECTED_FOR_SESSION = "Un coach a accepté votre demande"
+const MEETING_TIME_SELECTED_FOR_SESSION = "Votre coach a défini un horaire pour votre séance"
+const MEETING_CLOSED_BY_COACH = "Félicitation! N’hesitez pas à consulter le compte rendu de la séance."
+
+const MEETING_CANCELED_BY_COACHEE = "La séance a été annulée par votre coaché"
+const MEETING_TIME_REMOVED = "Votre coach a supprimer l'horaire de votre séance"
+
 type Notification struct {
 	Key     *datastore.Key `json:"id" datastore:"-"`
 	IsRead  bool `json:"is_read"`
@@ -57,4 +64,20 @@ func GetNotifications(ctx context.Context, parent *datastore.Key) ([]*Notificati
 	}
 
 	return notifications, nil
+}
+
+func UpdateAllNotificationsToRead(ctx context.Context, parent *datastore.Key) error {
+	log.Debugf(ctx, "UpdateAllNotificationsToRead")
+
+	notifs, err := GetNotifications(ctx, parent)
+	if err != nil {
+		return err
+	}
+
+	for _, notif := range notifs {
+		notif.IsRead = true
+		notif.Update(ctx)
+	}
+
+	return nil
 }

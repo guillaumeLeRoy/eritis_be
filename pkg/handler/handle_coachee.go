@@ -68,6 +68,18 @@ func HandleCoachees(w http.ResponseWriter, r *http.Request) {
 		}
 		http.NotFound(w, r)
 	case "PUT":
+
+		//update "read" status for all Notifications
+		contains := strings.Contains(r.URL.Path, "notifications/read")
+		if contains {
+			params := response.PathParams(ctx, r, "/api/v1/coachees/:uid/notifications/read")
+			uid, ok := params[":uid"]
+			if ok {
+				updateAllNotificationToRead(w, r, uid)
+				return
+			}
+		}
+
 		//update selected coach
 		params := response.PathParams(ctx, r, "/api/coachees/:coacheeId")
 		coacheeId, ok := params[":coacheeId"]

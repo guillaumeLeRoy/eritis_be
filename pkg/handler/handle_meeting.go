@@ -132,7 +132,7 @@ func HandleMeeting(w http.ResponseWriter, r *http.Request) {
 		}
 
 		/**
-			GET all potential dates
+		   GET all potential dates
 		*/
 		contains = strings.Contains(r.URL.Path, "potentials")
 		if contains {
@@ -191,7 +191,8 @@ func HandleMeeting(w http.ResponseWriter, r *http.Request) {
 
 
 	case "DELETE":
-		//delete potential dates for a meeting
+		//delete potential dates for a meeting : can be call when a coachee wants to delete a potential date
+		// or when a coach want to delete a potential date
 		contains := strings.Contains(r.URL.Path, "potentials")
 		if contains {
 			params := response.PathParams(ctx, r, "/api/meeting/potentials/:potId")
@@ -488,6 +489,11 @@ func closeMeeting(w http.ResponseWriter, r *http.Request, meetingId string) {
 			return err
 		}
 
+		//TODO send email
+
+		//add notification to coachee
+		model.CreateNotification(ctx, model.MEETING_CLOSED_BY_COACH, meeting.Key.Parent())
+
 		return nil
 	}, &datastore.TransactionOptions{XG: true})
 	if err != nil {
@@ -565,6 +571,7 @@ func getPotentialsTimeForAMeeting(w http.ResponseWriter, r *http.Request, meetin
 	response.Respond(ctx, w, r, meetings, http.StatusOK)
 }
 
+// set this potentialMeetingTime as this meeting MeetingTime
 func setTimeForMeeting(w http.ResponseWriter, r *http.Request, meetingId string, potentialId string) {
 	ctx := appengine.NewContext(r)
 	log.Debugf(ctx, "setPotentialTimeForMeeting, meetingId %s", meetingId)
@@ -588,6 +595,11 @@ func setTimeForMeeting(w http.ResponseWriter, r *http.Request, meetingId string,
 		response.RespondErr(ctx, w, r, err, http.StatusBadRequest)
 		return
 	}
+
+	//TODO send email
+
+	//add notification to coachee
+	model.CreateNotification(ctx, model.MEETING_TIME_SELECTED_FOR_SESSION, meeting.Key.Parent())
 
 	//get API meeting
 	meetingApi, err := meeting.ConvertToAPIMeeting(ctx)
@@ -623,7 +635,7 @@ func setCoachForMeeting(w http.ResponseWriter, r *http.Request, meetingId string
 	//TODO send email
 
 	//send notification
-	model.CreateNotification(ctx, "Un coach à accepter votre demande", meetingCoachee.Key.Parent())
+	model.CreateNotification(ctx, model.COACH_SELECTED_FOR_SESSION, meetingCoachee.Key.Parent())
 
 
 	//get API meeting
@@ -635,11 +647,11 @@ func setCoachForMeeting(w http.ResponseWriter, r *http.Request, meetingId string
 	response.Respond(ctx, w, r, meetingApi, http.StatusOK)
 }
 
-func deletePotentialDate(w http.ResponseWriter, r *http.Request, meetinTimeId string) {
+func deletePotentialDate(w http.ResponseWriter, r *http.Request, meetingTimeId string) {
 	ctx := appengine.NewContext(r)
-	log.Debugf(ctx, "deletePotentialDate, meetinTimeId %s", meetinTimeId)
+	log.Debugf(ctx, "deletePotentialDate, meetinTimeId %s", meetingTimeId)
 
-	meetingTimeKey, err := datastore.DecodeKey(meetinTimeId)
+	meetingTimeKey, err := datastore.DecodeKey(meetingTimeId)
 	if err != nil {
 		response.RespondErr(ctx, w, r, err, http.StatusBadRequest)
 		return
@@ -658,6 +670,7 @@ func deletePotentialDate(w http.ResponseWriter, r *http.Request, meetinTimeId st
 			return
 		}
 
+		// if this meetingTime was the AgreedTime, the we must clean the agreedTime
 		if meeting.AgreedTime.String() == meetingTimeKey.String() {
 			log.Debugf(ctx, "deletePotentialDate, remove agreed time")
 			meeting.AgreedTime = nil
@@ -675,6 +688,11 @@ func deletePotentialDate(w http.ResponseWriter, r *http.Request, meetinTimeId st
 		response.RespondErr(ctx, w, r, err, http.StatusBadRequest)
 		return
 	}
+
+	//TODO send email
+
+	//send notification
+	model.CreateNotification(ctx, model.MEETING_TIME_REMOVED, meetingKey.Parent())
 
 	response.Respond(ctx, w, r, nil, http.StatusOK)
 }
@@ -697,36 +715,6 @@ func handleDeleteMeetingReview(w http.ResponseWriter, r *http.Request, reviewId 
 
 	response.Respond(ctx, w, r, nil, http.StatusOK)
 }
-
-
-//func handleCoachCancelMeeting(w http.ResponseWriter, r *http.Request, meetingId string) {
-//	ctx := appengine.NewContext(r)
-//	log.Debugf(ctx, "handleCancelMeeting, meetingId %s", meetingId)
-//
-//	meetingKey, err := datastore.DecodeKey(meetingId)
-//	if err != nil {
-//		response.RespondErr(ctx, w, r, err, http.StatusBadRequest)
-//		return
-//	}
-//
-//	meeting, err := GetMeeting(ctx, meetingKey)
-//	if err != nil {
-//		response.RespondErr(ctx, w, r, err, http.StatusBadRequest)
-//		return
-//	}
-//
-//	//remove MeetingTime(s) set by coach
-//	clearMeetingTimeForCoach(ctx, meetingKey, meeting.CoachKey)
-//
-//	//remove Coach from Coachee
-//	err = meeting.removeMeetingCoach(ctx)
-//	if err != nil {
-//		response.RespondErr(ctx, w, r, err, http.StatusBadRequest)
-//		return
-//	}
-//	//remove agreed MeetingTime
-//	err = meeting.clearMeetingTime(ctx)
-//}
 
 func handleCoacheeCancelMeeting(w http.ResponseWriter, r *http.Request, meetingId string) {
 	ctx := appengine.NewContext(r)
@@ -778,6 +766,11 @@ func handleCoacheeCancelMeeting(w http.ResponseWriter, r *http.Request, meetingI
 				return err
 			}
 		}
+
+		//TODO send email
+
+		//add notification to coach
+		model.CreateNotification(ctx, model.MEETING_CANCELED_BY_COACHEE, meetingCoachee.MeetingCoachKey.Parent())
 
 		log.Debugf(ctx, "handleCoacheeCancelMeeting, RunInTransaction DONE")
 

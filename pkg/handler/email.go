@@ -152,6 +152,24 @@ const INVITE_COACH_MSG = `
 	</body>
 </html>`
 
+
+const IMMINENT_MEETING_TITLE = `Vous avez bientôt une séance`
+const IMMINENT_MEETING_MSG = `
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html style="color:black;">
+
+	</head>
+
+	<body>
+		<p>Bonjour,</p>
+		<p>Vous avez une séance dans 10min.</p>
+
+		L'équipe Eritis
+		</p>
+	</body>
+</html>`
+
 func HandleContact(w http.ResponseWriter, r *http.Request) {
 	ctx := appengine.NewContext(r)
 	log.Debugf(ctx, "handle contact")
@@ -263,6 +281,15 @@ func SendInviteEmailToNewRh(ctx context.Context, email string) error {
 
 	err = utils.SendEmailToGivenEmail(ctx, email, INVITE_RH_TITLE, fmt.Sprintf(INVITE_RH_MSG, link))
 	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func SendImminentMeeting(ctx context.Context, email string) error {
+	err := utils.SendEmailToGivenEmail(ctx, email, IMMINENT_MEETING_TITLE, fmt.Sprintf(IMMINENT_MEETING_MSG))
+	if err != nil {
+		log.Errorf(ctx, "Couldn't send email: %v", err)
 		return err
 	}
 	return nil

@@ -92,7 +92,7 @@ func init() {
 	http.HandleFunc("/api/v1/plans/", nonAuthHandler(handler.HandleContractPlan))
 
 	//cron
-	http.HandleFunc("/api/v1/cron/", nonAuthHandler(handler.HandleCron))
+	http.HandleFunc("/api/v1/crons/", nonAuthHandler(handler.HandleCron))
 
 	//potentials
 	http.HandleFunc("/api/v1/potentials/", nonAuthHandler(handler.HandlePotential))

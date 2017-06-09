@@ -9,7 +9,7 @@ import (
 
 const MEETING_TIME_ENTITY string = "MeetingTime"
 
-//Origin represent the user who created this MeetingTime
+// ancestor : a Meeting
 type MeetingTime struct {
 	Key       *datastore.Key `json:"id" datastore:"-"`
 	StartDate time.Time `json:"start_date"`
