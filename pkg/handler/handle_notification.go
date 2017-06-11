@@ -43,7 +43,7 @@ func getAllNotificationsForUser(w http.ResponseWriter, r *http.Request, uid stri
 		return
 	}
 
-	notifs, err := model.GetNotifications(ctx, coacheeKey)
+	notifs, err := model.GetUnreadNotifications(ctx, coacheeKey)
 	if err != nil {
 		response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
 		return

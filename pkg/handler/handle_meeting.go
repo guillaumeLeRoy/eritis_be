@@ -29,7 +29,7 @@ func HandleMeeting(w http.ResponseWriter, r *http.Request) {
 			params := response.PathParams(ctx, r, "/api/meeting/:uid/potential")
 			uid, ok := params[":uid"]
 			if ok {
-				createMeetingPotentialTime(w, r, uid)// POST /api/meeting/:uid/potential
+				createMeetingPotentialTime(w, r, uid) // POST /api/meeting/:uid/potential
 				return
 			}
 		}
@@ -39,7 +39,7 @@ func HandleMeeting(w http.ResponseWriter, r *http.Request) {
 			params := response.PathParams(ctx, r, "/api/meeting/:uid/review")
 			uid, ok := params[":uid"]
 			if ok {
-				createReviewForAMeeting(w, r, uid)// POST /api/meeting/:uid/review
+				createReviewForAMeeting(w, r, uid) // POST /api/meeting/:uid/review
 				return
 			}
 		}
@@ -91,7 +91,7 @@ func HandleMeeting(w http.ResponseWriter, r *http.Request) {
 			params := response.PathParams(ctx, r, "/api/meeting/:uid/close")
 			uid, ok := params[":uid"]
 			if ok {
-				closeMeeting(w, r, uid)// PUT /api/meeting/:uid/close
+				closeMeeting(w, r, uid) // PUT /api/meeting/:uid/close
 				return
 			}
 		}
@@ -110,7 +110,7 @@ func HandleMeeting(w http.ResponseWriter, r *http.Request) {
 				//get uid param
 				uid, ok := params[":uid"]
 				if ok {
-					getAllMeetingsForCoachee(w, r, uid)// GET /api/meeting/coachee/:uid
+					getAllMeetingsForCoachee(w, r, uid) // GET /api/meeting/coachee/:uid
 					return
 				}
 			}
@@ -127,7 +127,7 @@ func HandleMeeting(w http.ResponseWriter, r *http.Request) {
 				//get uid param
 				uid, ok := params[":uid"]
 				if ok {
-					getAllMeetingsForCoach(w, r, uid)// GET /api/meeting/coach/:uid
+					getAllMeetingsForCoach(w, r, uid) // GET /api/meeting/coach/:uid
 					return
 				}
 			}
@@ -144,7 +144,7 @@ func HandleMeeting(w http.ResponseWriter, r *http.Request) {
 				//get uid param
 				meetingId, ok := params[":meetingId"]
 				if ok {
-					getPotentialsTimeForAMeeting(w, r, meetingId)// GET /api/meeting/:meetingId/reviews
+					getPotentialsTimeForAMeeting(w, r, meetingId) // GET /api/meeting/:meetingId/reviews
 					return
 				}
 			}
@@ -174,7 +174,7 @@ func HandleMeeting(w http.ResponseWriter, r *http.Request) {
 				//get uid param
 				meetingId, ok := params[":meetingId"]
 				if ok {
-					getAllReviewsForAMeeting(w, r, meetingId, r.URL.Query().Get("type"))// GET /api/meeting/:meetingId/reviews
+					getAllReviewsForAMeeting(w, r, meetingId, r.URL.Query().Get("type")) // GET /api/meeting/:meetingId/reviews
 					return
 				}
 			}
@@ -183,14 +183,13 @@ func HandleMeeting(w http.ResponseWriter, r *http.Request) {
 		//get all Meetings with no Coach associated
 		contains = strings.Contains(r.URL.Path, "/api/v1/meetings")
 		if contains {
-			getMeetingsWithNoAssociatedCoach(w, r)// GET /api/v1/meetings
+			getMeetingsWithNoAssociatedCoach(w, r) // GET /api/v1/meetings
 			return
 
 		}
 
 		http.NotFound(w, r)
 		return
-
 
 	case "DELETE":
 		//delete potential dates for a meeting : can be call when a coachee wants to delete a potential date
@@ -303,7 +302,7 @@ func getAllMeetingsForCoach(w http.ResponseWriter, r *http.Request, uid string) 
 		return
 	}
 
-	var meetings[]*model.ApiMeeting
+	var meetings []*model.ApiMeeting
 	meetings, err = model.GetMeetingsForCoach(ctx, key);
 	if err != nil {
 		response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
@@ -324,7 +323,7 @@ func getAllMeetingsForCoachee(w http.ResponseWriter, r *http.Request, uid string
 		return
 	}
 
-	var meetings[]*model.ApiMeeting
+	var meetings []*model.ApiMeeting
 	err = datastore.RunInTransaction(ctx, func(ctx context.Context) error {
 		log.Debugf(ctx, "getAllMeetingsForCoachee, transaction start")
 
@@ -375,7 +374,6 @@ func createReviewForAMeeting(w http.ResponseWriter, r *http.Request, meetingId s
 		response.RespondErr(ctx, w, r, err, http.StatusBadRequest)
 		return
 	}
-
 
 	//check if a review already for this type
 	reviews, err := model.GetReviewsForMeetingAndForType(ctx, meetingKey, review.Type)
@@ -646,12 +644,11 @@ func setCoachForMeeting(w http.ResponseWriter, r *http.Request, meetingId string
 	}
 
 	//send email coachee
-	// TODO convert date
 	err = utils.SendEmailToGivenEmail(ctx, meetingApi.Coachee.Email,
 		COACH_SELECTED_FOR_SESSION_TITLE, fmt.Sprintf(COACH_SELECTED_FOR_SESSION_MSG, meetingApi.Coach.DisplayName))
 
 	//send notification
-	content := fmt.Sprintf(model.COACH_SELECTED_FOR_SESSION, meetingApi.Coach.DisplayName, meetingApi.AgreedTime.StartDate)
+	content := fmt.Sprintf(model.COACH_SELECTED_FOR_SESSION, meetingApi.Coach.DisplayName)
 	model.CreateNotification(ctx, content, meetingCoachee.Key.Parent())
 
 	// send response

@@ -55,6 +55,15 @@ gcloud app deploy cron.yaml
 rollback :
 appcfg.py rollback /Users/guillaume/go_path_appengine/src/eritis_be/firebase/ -A eritis-be-dev -V 1
 
+pwd : passwordEritis
+coach.2.eritis@gmail.com
+coach.1.eritis@gmail.com
+
+coachee.1.eritis@gmail.com
+coachee.2.eritis@gmail.com
+
+rh.1.eritis@gmail.com
+rh.2.eritis@gmail.com
 */
 
 // keep a ref to init the app only once

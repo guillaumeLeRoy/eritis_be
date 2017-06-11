@@ -9,7 +9,7 @@ import (
 
 const NOTIFICATION_ENTITY = "notification"
 
-const COACH_SELECTED_FOR_SESSION = "Le coach  %s a accepté votre demande pour la séance du %s"
+const COACH_SELECTED_FOR_SESSION = "Le coach  %s a accepté votre demande pour votre séance"
 const MEETING_TIME_SELECTED_FOR_SESSION = "Votre coach a défini un horaire pour votre séance"//TODO to improve
 const MEETING_CLOSED_BY_COACH = "Félicitation! N’hesitez pas à consulter le compte rendu de la séance."
 
@@ -56,6 +56,24 @@ func GetNotifications(ctx context.Context, parent *datastore.Key) ([]*Notificati
 
 	var notifications []*Notification
 	keys, err := datastore.NewQuery(NOTIFICATION_ENTITY).Ancestor(parent).GetAll(ctx, &notifications)
+
+	if err != nil {
+		return nil, err
+	}
+
+	//get Keys
+	for i, notif := range notifications {
+		notif.Key = keys[i]
+	}
+
+	return notifications, nil
+}
+
+func GetUnreadNotifications(ctx context.Context, parent *datastore.Key) ([]*Notification, error) {
+	log.Debugf(ctx, "GetUnreadNotifications")
+
+	var notifications []*Notification
+	keys, err := datastore.NewQuery(NOTIFICATION_ENTITY).Ancestor(parent).Filter("IsRead =", false).GetAll(ctx, &notifications)
 
 	if err != nil {
 		return nil, err

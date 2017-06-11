@@ -15,7 +15,6 @@
       <root url="file://$PROJECT_DIR$/../cloud.google.com" />
       <root url="file://$PROJECT_DIR$/../test" />
     </CLASSES>
-    <JAVADOC />
     <SOURCES>
       <root url="file://$USER_HOME$/goWork/src/cloud.google.com" />
       <root url="file://$USER_HOME$/goWork/src/sourcegraph.com" />
