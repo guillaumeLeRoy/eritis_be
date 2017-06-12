@@ -56,7 +56,7 @@ func GetObjectiveForCoachee(ctx context.Context, coacheeKey *datastore.Key) (*Co
 	log.Debugf(ctx, "GetObjectiveForCoachee, key : %s ", coacheeKey)
 
 	var entities []*CoacheeObjective
-	keys, err := datastore.NewQuery(COACHEE_OBJECTIVE_ENTITY).Ancestor(coacheeKey).GetAll(ctx, &entities)
+	keys, err := datastore.NewQuery(COACHEE_OBJECTIVE_ENTITY).Ancestor(coacheeKey).Order("Date").GetAll(ctx, &entities)
 	if err != nil {
 		return nil, err
 	}

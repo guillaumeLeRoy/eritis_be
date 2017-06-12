@@ -18,6 +18,11 @@ indexes:
   - name: CTime
     direction: desc
 
+- kind: Coachee_objective
+  ancestor: yes
+  properties:
+  - name: Date
+
 - kind: Question
   properties:
   - name: AnswersCount
