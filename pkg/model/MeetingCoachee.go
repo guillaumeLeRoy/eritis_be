@@ -4,6 +4,7 @@ import (
 	"google.golang.org/appengine/datastore"
 	"golang.org/x/net/context"
 	"google.golang.org/appengine/log"
+	"time"
 )
 
 const MEETING_COACHEE_ENTITY string = "MeetingCoachee"
@@ -17,7 +18,7 @@ type MeetingCoachee struct {
 }
 
 /**
-Visual representation of a meeting
+    Visual representation of a meeting
  */
 type ApiMeeting struct {
 	Key        *datastore.Key `json:"id" datastore:"-"`
@@ -55,7 +56,7 @@ func (m *MeetingCoachee) Update(ctx context.Context) error {
 }
 
 func GetMeeting(ctx context.Context, meetingCoacheeKey *datastore.Key) (*MeetingCoachee, error) {
-	log.Debugf(ctx, "GetAPIMeeting for key %s", meetingCoacheeKey)
+	log.Debugf(ctx, "GetMeeting for key %s", meetingCoacheeKey)
 
 	var meeting MeetingCoachee
 	err := datastore.Get(ctx, meetingCoacheeKey, &meeting)
@@ -224,6 +225,55 @@ func GetMeetingsWithNoCoach(ctx context.Context) ([]*MeetingCoachee, error) {
 	//log.Debugf(ctx, "GetMeetingsWithNoCoach, res %s", meetings)
 
 	return meetings, nil
+}
+
+func GetAllOpenMeetingsAboutToHappen(ctx context.Context) ([]*MeetingCoachee, error) {
+	log.Debugf(ctx, "GetAllOpenMeetingsAboutToHappen")
+
+	var meetings []*MeetingCoachee
+	keys, err := datastore.NewQuery(MEETING_COACHEE_ENTITY).Filter("IsOpen = ", true).GetAll(ctx, &meetings)
+	if err != nil {
+		return nil, err
+	}
+
+	log.Debugf(ctx, "GetAllOpenMeetingsAboutToHappen, size %s", len(meetings))
+
+	now := time.Now()
+
+	var happeningMeetings []*MeetingCoachee
+	for i, meeting := range meetings {
+		meeting.Key = keys[i]
+
+		// check is they are about to happen
+		t, err := GetMeetingTime(ctx, meeting.AgreedTime)
+		if err != nil {
+			log.Debugf(ctx, "GetAllOpenMeetingsAboutToHappen, couldn't get meeting time")
+			continue
+		}
+		//returns startDate - now
+		duration := t.StartDate.Sub(now)
+
+		//should be > 0 if meeting is in the future
+		if duration < 0 {
+			log.Debugf(ctx, "GetAllOpenMeetingsAboutToHappen, meeting already passed")//TODO report this
+			continue
+		}
+
+		//// get minutes left
+		//if duration.Hours() > 0 {
+		//	log.Debugf(ctx, "GetAllOpenMeetingsAboutToHappen, meeting in a few hours")
+		//	continue
+		//}
+		//
+		//if duration.Minutes() <= 10 {
+		//	//send an email
+		//	happeningMeetings[0] = meeting
+		//}
+
+		happeningMeetings = append(happeningMeetings, meeting)
+	}
+
+	return happeningMeetings, nil
 }
 
 //func associateCoachWithMeetings(ctx context.Context, coacheeKey *datastore.Key, coachKey *datastore.Key) error {

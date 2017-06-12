@@ -42,11 +42,46 @@ func HandlerRH(w http.ResponseWriter, r *http.Request) {
 
 		http.NotFound(w, r)
 
+	case "PUT":
+
+		//update "read" status for all Notifications
+		contains := strings.Contains(r.URL.Path, "notifications/read")
+		if contains {
+			params := response.PathParams(ctx, r, "/api/v1/rhs/:uid/notifications/read")
+			uid, ok := params[":uid"]
+			if ok {
+				updateAllNotificationToRead(w, r, uid)
+				return
+			}
+		}
+
+		http.NotFound(w, r)
+
 	case "GET":
+
+		/**
+		 GET all notification for a specific rh
+		 */
+		contains := strings.Contains(r.URL.Path, "notifications")
+		if contains {
+			log.Debugf(ctx, "handle rhs, notifications")
+
+			params := response.PathParams(ctx, r, "/api/v1/rhs/:uid/notifications")
+			//verify url contains coach
+			if _, ok := params[":uid"]; ok {
+				//get uid param
+				uid, ok := params[":uid"]
+				if ok {
+					getAllNotificationsForRhs(w, r, uid)// GET /api/v1/rhs/:uid/notifications
+					return
+				}
+			}
+		}
+
 		/**
 		 GET all coachee for a specific RH
 		 */
-		contains := strings.Contains(r.URL.Path, "coachees")
+		contains = strings.Contains(r.URL.Path, "coachees")
 		if contains {
 			params := response.PathParams(ctx, r, "/api/v1/rhs/:uid/coachees")
 			//get uid param
