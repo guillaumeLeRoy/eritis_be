@@ -9,12 +9,18 @@ import (
 
 const NOTIFICATION_ENTITY = "notification"
 
-const COACH_SELECTED_FOR_SESSION = "Le coach  %s a accepté votre demande pour votre séance"
-const MEETING_TIME_SELECTED_FOR_SESSION = "Votre coach a défini un horaire pour votre séance"//TODO to improve
-const MEETING_CLOSED_BY_COACH = "Félicitation! N’hesitez pas à consulter le compte rendu de la séance."
+// to coachee
+const TO_COACHEE_COACH_SELECTED_FOR_SESSION = "Le coach  %s a accepté votre demande pour votre séance"
+const TO_COACHEE_MEETING_TIME_SELECTED_FOR_SESSION = "Votre coach a défini un horaire pour votre séance" //TODO to improve
+const TO_COACHEE_MEETING_CLOSED_BY_COACH = "Félicitation! N’hesitez pas à consulter le compte rendu de la séance."
 
-const MEETING_CANCELED_BY_COACHEE = "La séance a été annulée par votre coaché"
-const MEETING_TIME_REMOVED = "Votre coach a supprimer l'horaire de votre séance"
+// to coach
+const TO_COACH_MEETING_CANCELED_BY_COACHEE = "La séance a été annulée par votre coaché"
+const TO_COACH_MEETING_TIME_REMOVED = "Votre coach a supprimé l'horaire de votre séance"
+
+// to HR
+const TO_HR_MEETING_CREATED = "%s a créé une séance"
+const TO_HR_COACHEE_INVITE_ACCEPTED = "%s s'est inscrit sur Eritis"
 
 type Notification struct {
 	Key     *datastore.Key `json:"id" datastore:"-"`

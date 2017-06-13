@@ -1,9 +1,575 @@
 webpackJsonp([0,3],{
 
-/***/ 109:
-/***/ (function(module, exports, __webpack_require__) {
+/***/ 10:
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
 
-module.exports = __webpack_require__.p + "eritis-mountain-bg-2.cbc21344ba5faf2ce1c2.jpg";
+"use strict";
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_router__ = __webpack_require__(21);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__angular_core__ = __webpack_require__(1);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_rxjs__ = __webpack_require__(36);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_rxjs___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_2_rxjs__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_rxjs_observable_PromiseObservable__ = __webpack_require__(162);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_rxjs_observable_PromiseObservable___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_3_rxjs_observable_PromiseObservable__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__angular_http__ = __webpack_require__(83);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__environments_environment__ = __webpack_require__(61);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__firebase_service__ = __webpack_require__(85);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7__model_Coach__ = __webpack_require__(31);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_8__model_Coachee__ = __webpack_require__(48);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_9__model_Rh__ = __webpack_require__(52);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_10__model_PotentialCoachee__ = __webpack_require__(232);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return AuthService; });
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+
+
+
+
+
+
+
+
+
+
+
+var AuthService = AuthService_1 = (function () {
+    function AuthService(firebase, router, httpService) {
+        this.firebase = firebase;
+        this.router = router;
+        this.httpService = httpService;
+        this.onAuthStateChangedCalled = false;
+        // private user: User
+        this.isUserAuth = new __WEBPACK_IMPORTED_MODULE_2_rxjs__["BehaviorSubject"](false); //NOT auth by default
+        // private ApiUserSubject = new BehaviorSubject<ApiUser>(null);//NOT auth by default
+        this.ApiUserSubject = new __WEBPACK_IMPORTED_MODULE_2_rxjs__["Subject"](); //NOT auth by default
+        /* flag to know if we are in the sign in or sign up process. Block updateAuthStatus(FBuser) is true */
+        this.isSignInOrUp = false;
+        this.ApiUser = null;
+        firebase.auth().onAuthStateChanged(function (user) {
+            console.log("onAuthStateChanged, user : " + user);
+            this.onAuthStateChangedCalled = true;
+            this.updateAuthStatus(user);
+        }.bind(this));
+        console.log("ctr done");
+    }
+    /*
+     * Get connected user from backend
+     */
+    AuthService.prototype.refreshConnectedUser = function () {
+        console.log("refreshConnectedUser");
+        if (this.ApiUser != null) {
+            if (this.ApiUser instanceof __WEBPACK_IMPORTED_MODULE_7__model_Coach__["a" /* Coach */]) {
+                return this.fetchCoach(this.ApiUser.id);
+            }
+            else if (this.ApiUser instanceof __WEBPACK_IMPORTED_MODULE_8__model_Coachee__["a" /* Coachee */]) {
+                return this.fetchCoachee(this.ApiUser.id);
+            }
+            else if (this.ApiUser instanceof __WEBPACK_IMPORTED_MODULE_9__model_Rh__["a" /* Rh */]) {
+                return this.fetchRh(this.ApiUser.id);
+            }
+        }
+        else {
+            console.log("refreshConnectedUser, no connected user");
+        }
+        return __WEBPACK_IMPORTED_MODULE_2_rxjs__["Observable"].from(null);
+    };
+    AuthService.prototype.fetchCoach = function (userId) {
+        var _this = this;
+        var param = [userId];
+        var obs = this.get(AuthService_1.GET_COACH_FOR_ID, param);
+        return obs.map(function (res) {
+            console.log("fetchCoach, obtained from API : ", res);
+            var coach = _this.parseCoach(res.json());
+            _this.onAPIuserObtained(coach, _this.ApiUser.firebaseToken);
+            return coach;
+        });
+    };
+    AuthService.prototype.fetchCoachee = function (userId) {
+        var _this = this;
+        var param = [userId];
+        var obs = this.get(AuthService_1.GET_COACHEE_FOR_ID, param);
+        return obs.map(function (res) {
+            console.log("fetchCoachee, obtained from API : ", res);
+            var coachee = _this.parseCoachee(res.json());
+            _this.onAPIuserObtained(coachee, _this.ApiUser.firebaseToken);
+            return coachee;
+        });
+    };
+    AuthService.prototype.fetchRh = function (userId) {
+        var _this = this;
+        var param = [userId];
+        var obs = this.get(AuthService_1.GET_RH_FOR_ID, param);
+        return obs.map(function (res) {
+            console.log("fetchRh, obtained from API : ", res);
+            var rh = _this.parseRh(res.json());
+            _this.onAPIuserObtained(rh, _this.ApiUser.firebaseToken);
+            return rh;
+        });
+    };
+    AuthService.prototype.getConnectedUser = function () {
+        return this.ApiUser;
+    };
+    AuthService.prototype.getConnectedUserObservable = function () {
+        return this.ApiUserSubject.asObservable();
+    };
+    AuthService.prototype.isAuthenticated = function () {
+        return this.isUserAuth.asObservable();
+    };
+    AuthService.prototype.post = function (path, params, body) {
+        var _this = this;
+        var method = this.getConnectedApiUser().flatMap(function (firebaseUser) {
+            return _this.getHeader(firebaseUser).flatMap(function (headers) {
+                return _this.httpService.post(_this.generatePath(path, params), body, { headers: headers });
+            });
+        });
+        return method;
+    };
+    AuthService.prototype.postNotAuth = function (path, params, body) {
+        return this.httpService.post(this.generatePath(path, params), body);
+    };
+    AuthService.prototype.put = function (path, params, body) {
+        var _this = this;
+        var method = this.getConnectedApiUser().flatMap(function (firebaseUser) {
+            return _this.getHeader(firebaseUser).flatMap(function (headers) {
+                return _this.httpService.put(_this.generatePath(path, params), body, { headers: headers });
+            });
+        });
+        return method;
+    };
+    AuthService.prototype.get = function (path, params) {
+        return this.getWithSearchParams(path, params, null);
+    };
+    AuthService.prototype.getWithSearchParams = function (path, params, searchParams) {
+        var _this = this;
+        console.log("1. get");
+        var method = this.getConnectedApiUser().flatMap(function (firebaseUser) {
+            return _this.getHeader(firebaseUser).flatMap(function (headers) {
+                console.log("4. start request");
+                return _this.httpService.get(_this.generatePath(path, params), { headers: headers, search: searchParams });
+            });
+        });
+        return method;
+    };
+    AuthService.prototype.delete = function (path, params) {
+        var _this = this;
+        var method = this.getConnectedApiUser().flatMap(function (firebaseUser) {
+            return _this.getHeader(firebaseUser).flatMap(function (headers) {
+                console.log("4. start request");
+                return _this.httpService.delete(_this.generatePath(path, params), { headers: headers });
+            });
+        });
+        return method;
+    };
+    AuthService.prototype.getNotAuth = function (path, params) {
+        console.log("getNotAuth, start request");
+        return this.httpService.get(this.generatePath(path, params)).map(function (res) {
+            console.log("getNotAuth, got user", res);
+            return res;
+        }, function (error) {
+            console.log("getNotAuth, error", error);
+        });
+    };
+    AuthService.prototype.getPotentialCoachee = function (path, params) {
+        var _this = this;
+        return this.httpService.get(this.generatePath(path, params)).map(function (res) {
+            return _this.parsePotentialCoachee(res.json());
+        });
+    };
+    AuthService.prototype.getConnectedApiUser = function () {
+        console.log("2. getConnectedApiUser");
+        if (this.ApiUser) {
+            console.log("getConnectedApiUser, user OK");
+            return __WEBPACK_IMPORTED_MODULE_2_rxjs__["Observable"].of(this.ApiUser);
+        }
+        else {
+            console.log("getConnectedApiUser, NO user");
+            //check if onAuthStateChanged was called
+            if (this.onAuthStateChangedCalled) {
+                console.log("getConnectedApiUser, user state changed already call");
+                //now we know we really don't have a user
+                return __WEBPACK_IMPORTED_MODULE_2_rxjs__["Observable"].throw('No current user');
+            }
+            else {
+                console.log("getConnectedApiUser, wait for change state");
+                return this.ApiUserSubject.map(function (apiUser) {
+                    if (apiUser) {
+                        console.log("getConnectedApiUser, got event, with user");
+                        return apiUser;
+                    }
+                    else {
+                        console.log("getConnectedApiUser, got event, no user after state change");
+                        return __WEBPACK_IMPORTED_MODULE_2_rxjs__["Observable"].throw('No user after state changed');
+                    }
+                });
+            }
+        }
+    };
+    AuthService.prototype.getHeader = function (user) {
+        console.log("getHeader");
+        if (user) {
+            // console.log("getHeader, currentUser : ", user);
+            var token = user.firebaseToken;
+            if (token) {
+                // console.log("getHeader, token : ", token);
+                var headers = new __WEBPACK_IMPORTED_MODULE_4__angular_http__["d" /* Headers */]();
+                headers.append('Authorization', 'Bearer ' + token);
+                return __WEBPACK_IMPORTED_MODULE_2_rxjs__["Observable"].of(headers);
+            }
+            else {
+                return __WEBPACK_IMPORTED_MODULE_2_rxjs__["Observable"].throw('No token');
+            }
+        }
+        else {
+            console.log("getHeader, NO user");
+            return __WEBPACK_IMPORTED_MODULE_2_rxjs__["Observable"].throw('No current user');
+        }
+    };
+    AuthService.prototype.generatePath = function (path, params) {
+        // console.log("generatePath, path : ", path);
+        // console.log("generatePath, params : ", params);
+        var completedPath = "";
+        var segs = path.split("/");
+        var paramIndex = 0;
+        for (var _i = 0, segs_1 = segs; _i < segs_1.length; _i++) {
+            var seg = segs_1[_i];
+            if (seg == "" || seg == null) {
+                continue;
+            }
+            // console.log("generatePath, seg : ", seg);
+            // console.log("generatePath, paramIndex : ", paramIndex);
+            completedPath += "/";
+            if (seg.charAt(0) == ":") {
+                completedPath += params[paramIndex];
+                paramIndex++;
+            }
+            else {
+                completedPath += seg;
+            }
+        }
+        //always add a "/" at the end
+        completedPath += "/";
+        // console.log("generatePath, completedPath : ", completedPath);
+        // console.log("generatePath, BACKEND_BASE_URL : ", environment.BACKEND_BASE_URL);
+        var finalUrl = __WEBPACK_IMPORTED_MODULE_5__environments_environment__["a" /* environment */].BACKEND_BASE_URL + completedPath;
+        console.log("generatePath, finalUrl : ", finalUrl);
+        return finalUrl;
+    };
+    AuthService.prototype.updateAuthStatus = function (fbUser) {
+        var _this = this;
+        console.log("updateAuthStatus isSignInOrUp : ", this.isSignInOrUp);
+        if (this.isSignInOrUp) {
+            return;
+        }
+        console.log("updateAuthStatus user : ", fbUser);
+        if (fbUser) {
+            if (this.ApiUser == null) {
+                console.log("updateAuthStatus, get A USER");
+                var firebaseObs = __WEBPACK_IMPORTED_MODULE_3_rxjs_observable_PromiseObservable__["PromiseObservable"].create(fbUser.getToken());
+                firebaseObs.subscribe(function (token) {
+                    //get user from API
+                    _this.getUserForFirebaseId(fbUser.uid, token).subscribe();
+                });
+            }
+            else {
+                console.log("updateAuthStatus already have a user API");
+            }
+        }
+        else {
+            console.log("updateAuthStatus NO user");
+            this.ApiUser = null;
+            this.ApiUserSubject.next(null);
+            this.isUserAuth.next(false);
+        }
+    };
+    /* when we obtained a User from the API ( coach or coachee ) */
+    AuthService.prototype.onAPIuserObtained = function (user, firebaseToken) {
+        console.log("onAPIuserObtained, user : ", user);
+        if (user) {
+            //keep current user
+            this.ApiUser = user;
+            //save token
+            this.ApiUser.firebaseToken = firebaseToken;
+            //dispatch
+            this.ApiUserSubject.next(user);
+            this.isUserAuth.next(true);
+        }
+        else {
+            this.ApiUserSubject.next(null);
+            this.isUserAuth.next(false);
+        }
+        return user;
+    };
+    AuthService.prototype.getUserForFirebaseId = function (firebaseId, token) {
+        var _this = this;
+        console.log("getUserForFirebaseId : ", firebaseId);
+        var params = [firebaseId];
+        var headers = new __WEBPACK_IMPORTED_MODULE_4__angular_http__["d" /* Headers */]();
+        headers.append('Authorization', 'Bearer ' + token);
+        return this.httpService.get(this.generatePath(AuthService_1.LOGIN, params), { headers: headers }).map(function (response) {
+            var apiUser = response.json();
+            var res = _this.parseAPIuser(apiUser);
+            console.log("getUserForFirebaseId, apiUser : ", apiUser);
+            // console.log("getUserForFirebaseId, token : ", token);
+            return _this.onAPIuserObtained(res, token);
+        });
+    };
+    AuthService.prototype.signUpCoach = function (user) {
+        return this.signup(user, AuthService_1.POST_SIGN_UP_COACH);
+    };
+    AuthService.prototype.signUpCoachee = function (user) {
+        //add plan
+        return this.signup(user, AuthService_1.POST_SIGN_UP_COACHEE);
+    };
+    AuthService.prototype.signUpRh = function (user) {
+        return this.signup(user, AuthService_1.POST_SIGN_UP_RH);
+    };
+    AuthService.prototype.signup = function (user, path) {
+        var _this = this;
+        console.log("1. user signUp : ", user);
+        this.isSignInOrUp = true;
+        //create user with email and pwd
+        var firebasePromise = this.firebase.auth().createUserWithEmailAndPassword(user.email, user.password)
+            .then(function (fbUser) {
+            console.log("2. authService, user sign up, success : ", fbUser);
+            //user successfully sign up in Firebase
+            console.log("3. fb user, start getToken");
+            return fbUser.getToken();
+        });
+        var firebaseObs = __WEBPACK_IMPORTED_MODULE_3_rxjs_observable_PromiseObservable__["PromiseObservable"].create(firebasePromise);
+        return firebaseObs.flatMap(function (token) {
+            //user should be ok just after a sign up
+            var fbUser = _this.firebase.auth().currentUser;
+            var body = {
+                email: fbUser.email,
+                uid: fbUser.uid,
+                plan_id: user.contractPlanId
+            };
+            var params = [fbUser.uid];
+            var headers = new __WEBPACK_IMPORTED_MODULE_4__angular_http__["d" /* Headers */]();
+            headers.append('Authorization', 'Bearer ' + token);
+            // start sign up request
+            return _this.httpService.post(_this.generatePath(path, params), body, { headers: headers })
+                .map(function (response) {
+                var loginResponse = response.json();
+                console.log("signUp, loginResponse : ", loginResponse);
+                // return json;
+                _this.isSignInOrUp = false;
+                return _this.onAPIuserObtained(_this.parseAPIuser(loginResponse), token);
+            });
+        });
+    };
+    AuthService.prototype.parseAPIuser = function (response) {
+        console.log("parseAPIuser, response :", response);
+        if (response.coach) {
+            var coach = response.coach;
+            //coach
+            return this.parseCoach(coach);
+        }
+        else if (response.coachee) {
+            var coachee = response.coachee;
+            //coachee
+            return this.parseCoachee(coachee);
+        }
+        else if (response.rh) {
+            var rh = response.rh;
+            return this.parseRh(rh);
+        }
+        return null;
+    };
+    AuthService.prototype.parseCoach = function (json) {
+        var coach = new __WEBPACK_IMPORTED_MODULE_7__model_Coach__["a" /* Coach */](json.id);
+        coach.email = json.email;
+        coach.display_name = json.display_name;
+        coach.avatar_url = json.avatar_url;
+        coach.start_date = json.start_date;
+        coach.description = json.description;
+        coach.chat_room_url = json.chat_room_url;
+        return coach;
+    };
+    AuthService.prototype.parseCoachee = function (json) {
+        // TODO : don't really need to manually parse the received Json
+        var coachee = new __WEBPACK_IMPORTED_MODULE_8__model_Coachee__["a" /* Coachee */](json.id);
+        coachee.id = json.id;
+        coachee.email = json.email;
+        coachee.display_name = json.display_name;
+        coachee.avatar_url = json.avatar_url;
+        coachee.start_date = json.start_date;
+        coachee.selectedCoach = json.selectedCoach;
+        coachee.contractPlan = json.plan;
+        coachee.availableSessionsCount = json.available_sessions_count;
+        coachee.updateAvailableSessionCountDate = json.update_sessions_count_date;
+        coachee.associatedRh = json.associatedRh;
+        coachee.last_objective = json.last_objective;
+        return coachee;
+    };
+    AuthService.prototype.parseRh = function (json) {
+        var rh = new __WEBPACK_IMPORTED_MODULE_9__model_Rh__["a" /* Rh */](json.id);
+        rh.email = json.email;
+        rh.display_name = json.display_name;
+        rh.start_date = json.start_date;
+        rh.avatar_url = json.avatar_url;
+        return rh;
+    };
+    AuthService.prototype.parsePotentialCoachee = function (json) {
+        var potentialCoachee = new __WEBPACK_IMPORTED_MODULE_10__model_PotentialCoachee__["a" /* PotentialCoachee */](json.id);
+        potentialCoachee.email = json.email;
+        potentialCoachee.start_date = json.create_date;
+        potentialCoachee.plan = json.plan;
+        return potentialCoachee;
+    };
+    AuthService.prototype.signIn = function (user) {
+        var _this = this;
+        console.log("1. user signIn : ", user);
+        this.isSignInOrUp = true;
+        //fb sign in with email and pwd
+        var firebasePromise = this.firebase.auth().signInWithEmailAndPassword(user.email, user.password)
+            .then(function (fbUser) {
+            console.log("2. authService, user sign up, success : ", fbUser);
+            //user successfully sign up in Firebase
+            console.log("3. fb user, start getToken");
+            return fbUser.getToken();
+        });
+        var firebaseObs = __WEBPACK_IMPORTED_MODULE_3_rxjs_observable_PromiseObservable__["PromiseObservable"].create(firebasePromise);
+        return firebaseObs.flatMap(function (token) {
+            //user should be ok just after a sign up
+            var fbUser = _this.firebase.auth().currentUser;
+            //now sign up in AppEngine
+            _this.isSignInOrUp = false;
+            return _this.getUserForFirebaseId(fbUser.uid, token);
+        });
+    };
+    AuthService.prototype.loginOut = function () {
+        console.log("user loginOut");
+        this.firebase.auth().signOut();
+        this.updateAuthStatus(null);
+        this.router.navigate(['/welcome']);
+    };
+    AuthService.prototype.updateCoacheeForId = function (id, displayName, avatarUrl) {
+        var _this = this;
+        console.log("updateCoacheeForId, id", id);
+        var body = {
+            display_name: displayName,
+            avatar_url: avatarUrl,
+        };
+        var params = [id];
+        return this.put(AuthService_1.UPDATE_COACHEE, params, body).map(function (response) {
+            return _this.onUserResponse(response);
+        });
+    };
+    AuthService.prototype.updateCoachForId = function (id, displayName, description, avatarUrl) {
+        var _this = this;
+        console.log("updateCoachDisplayNameForId, id", id);
+        var body = {
+            display_name: displayName,
+            description: description,
+            avatar_url: avatarUrl,
+        };
+        var params = [id];
+        return this.put(AuthService_1.UPDATE_COACH, params, body).map(function (response) {
+            //convert to coach
+            return _this.onUserResponse(response);
+        });
+    };
+    // /**
+    //  *
+    //  * @param coacheeId
+    //  * @param coachId
+    //  * @returns {Observable<Coachee>}
+    //  */
+    // updateCoacheeSelectedCoach(coacheeId: string, coachId: string): Observable<Coachee> {
+    //   console.log("updateCoacheeSelectedCoach, coacheeId", coacheeId);
+    //   console.log("updateCoacheeSelectedCoach, coachId", coachId);
+    //
+    //   let params = [coacheeId, coachId];
+    //   return this.put(AuthService.UPDATE_COACHEE_SELECTED_COACH, params, null).map(
+    //     (response: Response) => {
+    //       //convert to coachee
+    //       return this.parseCoachee(response.json());
+    //     });
+    // }
+    /**
+     *
+     * @param response
+     * @returns {Coach|Coachee}
+     */
+    AuthService.prototype.onUserResponse = function (response) {
+        var json = response.json();
+        console.log("onUserResponse, response json : ", json);
+        var res = this.parseAPIuser(json);
+        console.log("onUserResponse, parsed user : ", res);
+        //dispatch
+        return this.onAPIuserObtained(res, this.ApiUser.firebaseToken);
+    };
+    return AuthService;
+}());
+/* contract plan*/
+AuthService.GET_CONTRACT_PLANS = "v1/plans/";
+AuthService.POST_POTENTIAL_COACHEE = "/v1/potentials/coachees";
+AuthService.POST_POTENTIAL_COACH = "/v1/potentials/coachs";
+AuthService.POST_POTENTIAL_RH = "/v1/potentials/rhs";
+AuthService.LOGIN = "/login/:firebaseId";
+AuthService.GET_POTENTIAL_COACHEE_FOR_TOKEN = "/v1/potentials/coachees/:token";
+AuthService.GET_POTENTIAL_COACH_FOR_TOKEN = "/v1/potentials/coachs/:token";
+AuthService.GET_POTENTIAL_RH_FOR_TOKEN = "/v1/potentials/rhs/:token";
+/* coachee */
+AuthService.UPDATE_COACHEE = "/coachees/:id";
+AuthService.POST_SIGN_UP_COACHEE = "/v1/coachees";
+AuthService.GET_COACHEES = "v1/coachees";
+AuthService.GET_COACHEE_FOR_ID = "v1/coachees/:id";
+AuthService.GET_COACHEE_NOTIFICATIONS = "v1/coachees/:id/notifications";
+AuthService.PUT_COACHEE_NOTIFICATIONS_READ = "v1/coachees/:id/notifications/read";
+/* coach */
+AuthService.UPDATE_COACH = "/coachs/:id";
+AuthService.POST_SIGN_UP_COACH = "/v1/coachs";
+AuthService.GET_COACHS = "/coachs";
+AuthService.GET_COACH_FOR_ID = "/coachs/:id";
+AuthService.GET_COACH_NOTIFICATIONS = "v1/coachs/:id/notifications";
+AuthService.PUT_COACH_NOTIFICATIONS_READ = "v1/coachs/:id/notifications/read";
+/* rh */
+AuthService.POST_SIGN_UP_RH = "/v1/rhs";
+AuthService.GET_COACHEES_FOR_RH = "/v1/rhs/:uid/coachees";
+AuthService.GET_POTENTIAL_COACHEES_FOR_RH = "/v1/rhs/:uid/potentials";
+AuthService.GET_RH_FOR_ID = "/rh/:id";
+AuthService.GET_USAGE_RATE_FOR_RH = "/v1/rhs/:id/usage";
+AuthService.GET_RH_NOTIFICATIONS = "v1/rhs/:id/notifications";
+AuthService.PUT_RH_NOTIFICATIONS_READ = "v1/rhs/:id/notifications/read";
+/* admin */
+AuthService.GET_ADMIN = "/v1/admins/user";
+AuthService.ADMIN_GET_COACHS = "v1/admins/coachs";
+AuthService.ADMIN_GET_COACHEES = "v1/admins/coachees";
+AuthService.ADMIN_GET_RHS = "v1/admins/rhs";
+/*Meeting*/
+AuthService.POST_MEETING = "/meeting";
+AuthService.DELETE_MEETING = "/meeting/:meetingId";
+AuthService.GET_MEETING_REVIEWS = "/meeting/:meetingId/reviews";
+AuthService.POST_MEETING_REVIEW = "/meeting/:meetingId/review";
+AuthService.PUT_MEETING_REVIEW = "/meeting/reviews/:reviewId"; //update review
+AuthService.DELETE_MEETING_REVIEW = "/meeting/reviews/:reviewId"; //delete review
+AuthService.CLOSE_MEETING = "/meeting/:meetingId/close";
+AuthService.GET_MEETINGS_FOR_COACHEE_ID = "/meetings/coachee/:coacheeId";
+AuthService.GET_MEETINGS_FOR_COACH_ID = "/meetings/coach/:coachId";
+AuthService.POST_MEETING_POTENTIAL_DATE = "/meeting/:meetingId/potential";
+AuthService.GET_MEETING_POTENTIAL_DATES = "/meeting/:meetingId/potentials";
+AuthService.PUT_POTENTIAL_DATE_TO_MEETING = "/meeting/potential/:potentialId"; //update potential date
+AuthService.DELETE_POTENTIAL_DATE = "/meeting/potentials/:potentialId"; //delete potential date
+AuthService.PUT_FINAL_DATE_TO_MEETING = "/meeting/:meetingId/date/:potentialId"; //set the potential date as the meeting selected date
+AuthService.GET_AVAILABLE_MEETINGS = "v1/meetings"; //get available meetings ( meetings with NO coach associated )
+AuthService.PUT_COACH_TO_MEETING = "v1/meeting/:meetingId/coach/:coachId"; //associate coach with meeting
+/* HR */
+AuthService.POST_COACHEE_OBJECTIVE = "/v1/rhs/:uidRH/coachees/:uidCoachee/objective"; //create new objective for this coachee
+AuthService = AuthService_1 = __decorate([
+    __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_1__angular_core__["Injectable"])(),
+    __metadata("design:paramtypes", [typeof (_a = typeof __WEBPACK_IMPORTED_MODULE_6__firebase_service__["a" /* FirebaseService */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_6__firebase_service__["a" /* FirebaseService */]) === "function" && _a || Object, typeof (_b = typeof __WEBPACK_IMPORTED_MODULE_0__angular_router__["a" /* Router */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_0__angular_router__["a" /* Router */]) === "function" && _b || Object, typeof (_c = typeof __WEBPACK_IMPORTED_MODULE_4__angular_http__["b" /* Http */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_4__angular_http__["b" /* Http */]) === "function" && _c || Object])
+], AuthService);
+
+var AuthService_1, _a, _b, _c;
+//# sourceMappingURL=/Users/guillaume/angular/eritis_fe/src/auth.service.js.map
 
 /***/ }),
 
@@ -302,7 +868,7 @@ var _a, _b;
 "use strict";
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__(1);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__environments_environment__ = __webpack_require__(61);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__service_firebase_service__ = __webpack_require__(84);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__service_firebase_service__ = __webpack_require__(85);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return AppComponent; });
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -342,9 +908,9 @@ var _a;
 
 "use strict";
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__(1);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__service_auth_service__ = __webpack_require__(9);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__service_auth_service__ = __webpack_require__(10);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__message__ = __webpack_require__(223);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__service_firebase_service__ = __webpack_require__(84);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__service_firebase_service__ = __webpack_require__(85);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return ChatComponent; });
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -492,7 +1058,7 @@ var Message = (function () {
 "use strict";
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__(1);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__angular_forms__ = __webpack_require__(13);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__service_auth_service__ = __webpack_require__(9);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__service_auth_service__ = __webpack_require__(10);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__angular_router__ = __webpack_require__(21);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return SigninComponent; });
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
@@ -570,8 +1136,8 @@ var _a, _b, _c;
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_rxjs_Observable__ = __webpack_require__(0);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_rxjs_Observable___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1_rxjs_Observable__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__angular_forms__ = __webpack_require__(13);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__service_auth_service__ = __webpack_require__(9);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__service_CoachCoacheeService__ = __webpack_require__(36);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__service_auth_service__ = __webpack_require__(10);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__service_CoachCoacheeService__ = __webpack_require__(32);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__angular_router__ = __webpack_require__(21);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return SignupCoachComponent; });
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
@@ -679,9 +1245,9 @@ var _a, _b, _c, _d, _e;
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__angular_forms__ = __webpack_require__(13);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_rxjs_Observable__ = __webpack_require__(0);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_rxjs_Observable___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_2_rxjs_Observable__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__service_auth_service__ = __webpack_require__(9);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__service_auth_service__ = __webpack_require__(10);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__angular_router__ = __webpack_require__(21);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__service_CoachCoacheeService__ = __webpack_require__(36);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__service_CoachCoacheeService__ = __webpack_require__(32);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return SignupCoacheeComponent; });
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -791,8 +1357,8 @@ var _a, _b, _c, _d, _e;
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_rxjs_Observable__ = __webpack_require__(0);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_rxjs_Observable___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1_rxjs_Observable__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__angular_forms__ = __webpack_require__(13);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__service_auth_service__ = __webpack_require__(9);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__service_CoachCoacheeService__ = __webpack_require__(36);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__service_auth_service__ = __webpack_require__(10);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__service_CoachCoacheeService__ = __webpack_require__(32);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__angular_router__ = __webpack_require__(21);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return SignupRhComponent; });
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
@@ -898,9 +1464,9 @@ var _a, _b, _c, _d, _e;
 "use strict";
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__(1);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__angular_forms__ = __webpack_require__(13);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__service_auth_service__ = __webpack_require__(9);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__service_auth_service__ = __webpack_require__(10);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__angular_router__ = __webpack_require__(21);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_rxjs__ = __webpack_require__(35);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_rxjs__ = __webpack_require__(36);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_rxjs___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_4_rxjs__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__service_adminAPI_service__ = __webpack_require__(60);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return SignupAdminComponent; });
@@ -1054,8 +1620,8 @@ var _a, _b, _c, _d;
 
 "use strict";
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__(1);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__service_auth_service__ = __webpack_require__(9);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_rxjs__ = __webpack_require__(35);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__service_auth_service__ = __webpack_require__(10);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_rxjs__ = __webpack_require__(36);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_rxjs___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_2_rxjs__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__angular_router__ = __webpack_require__(21);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__service_meetings_service__ = __webpack_require__(37);
@@ -1325,7 +1891,7 @@ var _a, _b, _c, _d, _e;
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_rxjs_Observable__ = __webpack_require__(0);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_rxjs_Observable___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1_rxjs_Observable__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__service_meetings_service__ = __webpack_require__(37);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__service_auth_service__ = __webpack_require__(9);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__service_auth_service__ = __webpack_require__(10);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__model_Coach__ = __webpack_require__(31);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__angular_router__ = __webpack_require__(21);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return AvailableMeetingsComponent; });
@@ -1422,9 +1988,9 @@ var _a, _b, _c, _d;
 
 "use strict";
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__(1);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_rxjs__ = __webpack_require__(35);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_rxjs__ = __webpack_require__(36);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_rxjs___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1_rxjs__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__service_auth_service__ = __webpack_require__(9);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__service_auth_service__ = __webpack_require__(10);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__model_Coach__ = __webpack_require__(31);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__model_Coachee__ = __webpack_require__(48);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__model_Rh__ = __webpack_require__(52);
@@ -1552,12 +2118,11 @@ var LogService = (function () {
 
 "use strict";
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__(1);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_rxjs__ = __webpack_require__(35);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_rxjs__ = __webpack_require__(36);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_rxjs___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1_rxjs__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__angular_router__ = __webpack_require__(21);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__model_Coach__ = __webpack_require__(31);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__service_auth_service__ = __webpack_require__(9);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__service_meetings_service__ = __webpack_require__(37);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__service_CoachCoacheeService__ = __webpack_require__(32);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return CoachDetailsComponent; });
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -1573,84 +2138,49 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 
 
 
-
 var CoachDetailsComponent = (function () {
-    function CoachDetailsComponent(router, authService, cd, meetingService) {
+    // private subscriptionGetCoach: Subscription;
+    function CoachDetailsComponent(router, cd, coachService, route) {
         this.router = router;
-        this.authService = authService;
         this.cd = cd;
-        this.meetingService = meetingService;
+        this.coachService = coachService;
+        this.route = route;
     }
     CoachDetailsComponent.prototype.ngOnInit = function () {
         var _this = this;
-        var user = this.authService.getConnectedUser();
-        if (user) {
-            this.onConnectedUserReceived(user);
-        }
-        else {
-            this.subscriptionConnectUser = this.authService.getConnectedUserObservable().subscribe(function (user) {
-                console.log("ngOnInit, sub received user", user);
-                _this.onConnectedUserReceived(user);
-            });
-        }
-    };
-    CoachDetailsComponent.prototype.onConnectedUserReceived = function (user) {
-        this.connectedUser = __WEBPACK_IMPORTED_MODULE_1_rxjs__["Observable"].of(user);
-        this.cd.detectChanges();
-    };
-    CoachDetailsComponent.prototype.createAMeeting = function () {
-        var _this = this;
-        this.connectedUser.take(1).subscribe(function (user) {
-            if (user == null) {
-                console.log('no connected user');
-                return;
-            }
-            _this.meetingService.createMeeting(user.id).subscribe(function (success) {
-                console.log('addPotentialDateToMeeting success', success);
-                //redirect to meetings page
-                _this.router.navigate(['/meetings']);
-            }, function (error) {
-                console.log('addPotentialDateToMeeting error', error);
-                // this.displayErrorBookingDate = true;
+        this.route.params.subscribe(function (params) {
+            var coachId = params['id'];
+            _this.coachService.getCoachForId(coachId).subscribe(function (coach) {
+                console.log("ngAfterViewInit, post sub coach", coach);
+                _this.coach = __WEBPACK_IMPORTED_MODULE_1_rxjs__["Observable"].of(coach);
+                _this.cd.detectChanges();
             });
         });
     };
     CoachDetailsComponent.prototype.ngAfterViewInit = function () {
-        // this.route.params.subscribe(
-        //   (params: any) => {
-        //     this.coachId = params['id']
-        //     this.subscriptionGetCoach = this.coachService.getCoachForId(this.coachId).subscribe(
-        //       (coach: Coach) => {
-        //         console.log("ngAfterViewInit, post sub coach", coach);
-        //
-        //         this.coach = Observable.of(coach);
-        //         this.cd.detectChanges();
-        //       }
-        //     );
-        //   }
-        // )
+        console.log("afterViewInit");
     };
     CoachDetailsComponent.prototype.ngOnDestroy = function () {
         // if (this.subscriptionGetCoach) {
         //   this.subscriptionGetCoach.unsubscribe();
         // }
-        if (this.subscriptionConnectUser) {
-            this.subscriptionConnectUser.unsubscribe();
-        }
+        // if (this.subscriptionConnectUser) {
+        //   this.subscriptionConnectUser.unsubscribe();
+        // }
     };
     return CoachDetailsComponent;
 }());
 __decorate([
     __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__angular_core__["Input"])(),
     __metadata("design:type", typeof (_a = typeof __WEBPACK_IMPORTED_MODULE_3__model_Coach__["a" /* Coach */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_3__model_Coach__["a" /* Coach */]) === "function" && _a || Object)
-], CoachDetailsComponent.prototype, "coach", void 0);
+], CoachDetailsComponent.prototype, "iCoach", void 0);
 CoachDetailsComponent = __decorate([
     __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__angular_core__["Component"])({
         selector: 'rb-coach-details',
         template: __webpack_require__(650),
         styles: [__webpack_require__(608)]
     }),
-    __metadata("design:paramtypes", [typeof (_b = typeof __WEBPACK_IMPORTED_MODULE_2__angular_router__["a" /* Router */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_2__angular_router__["a" /* Router */]) === "function" && _b || Object, typeof (_c = typeof __WEBPACK_IMPORTED_MODULE_4__service_auth_service__["a" /* AuthService */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_4__service_auth_service__["a" /* AuthService */]) === "function" && _c || Object, typeof (_d = typeof __WEBPACK_IMPORTED_MODULE_0__angular_core__["ChangeDetectorRef"] !== "undefined" && __WEBPACK_IMPORTED_MODULE_0__angular_core__["ChangeDetectorRef"]) === "function" && _d || Object, typeof (_e = typeof __WEBPACK_IMPORTED_MODULE_5__service_meetings_service__["a" /* MeetingsService */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_5__service_meetings_service__["a" /* MeetingsService */]) === "function" && _e || Object])
+    __metadata("design:paramtypes", [typeof (_b = typeof __WEBPACK_IMPORTED_MODULE_2__angular_router__["a" /* Router */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_2__angular_router__["a" /* Router */]) === "function" && _b || Object, typeof (_c = typeof __WEBPACK_IMPORTED_MODULE_0__angular_core__["ChangeDetectorRef"] !== "undefined" && __WEBPACK_IMPORTED_MODULE_0__angular_core__["ChangeDetectorRef"]) === "function" && _c || Object, typeof (_d = typeof __WEBPACK_IMPORTED_MODULE_4__service_CoachCoacheeService__["a" /* CoachCoacheeService */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_4__service_CoachCoacheeService__["a" /* CoachCoacheeService */]) === "function" && _d || Object, typeof (_e = typeof __WEBPACK_IMPORTED_MODULE_2__angular_router__["f" /* ActivatedRoute */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_2__angular_router__["f" /* ActivatedRoute */]) === "function" && _e || Object])
 ], CoachDetailsComponent);
 
 var _a, _b, _c, _d, _e;
@@ -1663,10 +2193,10 @@ var _a, _b, _c, _d, _e;
 
 "use strict";
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__(1);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__service_CoachCoacheeService__ = __webpack_require__(36);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_rxjs__ = __webpack_require__(35);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__service_CoachCoacheeService__ = __webpack_require__(32);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_rxjs__ = __webpack_require__(36);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_rxjs___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_2_rxjs__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__service_auth_service__ = __webpack_require__(9);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__service_auth_service__ = __webpack_require__(10);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__model_Coachee__ = __webpack_require__(48);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return CoachListComponent; });
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
@@ -1780,10 +2310,10 @@ var _a, _b, _c;
 
 "use strict";
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__(1);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_rxjs__ = __webpack_require__(35);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_rxjs__ = __webpack_require__(36);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_rxjs___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1_rxjs__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__model_Coach__ = __webpack_require__(31);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__service_auth_service__ = __webpack_require__(9);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__service_auth_service__ = __webpack_require__(10);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__angular_forms__ = __webpack_require__(13);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return ProfileCoachComponent; });
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
@@ -1879,10 +2409,10 @@ var _a, _b, _c;
 
 "use strict";
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__(1);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_rxjs__ = __webpack_require__(35);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_rxjs__ = __webpack_require__(36);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1_rxjs___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_1_rxjs__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__model_Coachee__ = __webpack_require__(48);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__service_auth_service__ = __webpack_require__(9);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__service_auth_service__ = __webpack_require__(10);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__angular_forms__ = __webpack_require__(13);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return ProfileCoacheeComponent; });
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
@@ -1974,7 +2504,7 @@ var _a, _b, _c;
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_rxjs_Observable__ = __webpack_require__(0);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_rxjs_Observable___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_2_rxjs_Observable__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__model_Rh__ = __webpack_require__(52);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__service_auth_service__ = __webpack_require__(9);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__service_auth_service__ = __webpack_require__(10);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return ProfileRhComponent; });
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -2061,7 +2591,7 @@ var _a, _b, _c;
 
 "use strict";
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__(1);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__service_auth_service__ = __webpack_require__(9);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__service_auth_service__ = __webpack_require__(10);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__angular_forms__ = __webpack_require__(13);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__angular_router__ = __webpack_require__(21);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return WelcomeComponent; });
@@ -2164,6 +2694,163 @@ var Coach = (function () {
 
 /***/ }),
 
+/***/ 32:
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__(1);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__model_Coach__ = __webpack_require__(31);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__auth_service__ = __webpack_require__(10);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__model_Rh__ = __webpack_require__(52);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return CoachCoacheeService; });
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+///<reference path="auth.service.ts"/>
+
+
+
+
+var CoachCoacheeService = (function () {
+    function CoachCoacheeService(apiService) {
+        this.apiService = apiService;
+    }
+    CoachCoacheeService.prototype.getAllCoachs = function () {
+        console.log("getAllCoachs, start request");
+        return this.apiService.get(__WEBPACK_IMPORTED_MODULE_2__auth_service__["a" /* AuthService */].GET_COACHS, null).map(function (response) {
+            var json = response.json();
+            console.log("getAllCoachs, response json : ", json);
+            return json;
+        });
+    };
+    CoachCoacheeService.prototype.getCoachForId = function (coachId) {
+        console.log("getCoachForId, start request");
+        var params = [coachId];
+        return this.apiService.get(__WEBPACK_IMPORTED_MODULE_2__auth_service__["a" /* AuthService */].GET_COACH_FOR_ID, params).map(function (response) {
+            console.log("getCoachForId, got coach", response);
+            var coach = response.json();
+            return coach;
+        }, function (error) {
+            console.log("getCoachForId, error", error);
+        });
+    };
+    CoachCoacheeService.prototype.getAllCoacheesForRh = function (rhId) {
+        console.log("getAllCoacheesForRh, start request");
+        var param = [rhId];
+        return this.apiService.get(__WEBPACK_IMPORTED_MODULE_2__auth_service__["a" /* AuthService */].GET_COACHEES_FOR_RH, param).map(function (response) {
+            var json = response.json();
+            console.log("getAllCoacheesForRh, response json : ", json);
+            return json;
+        });
+    };
+    CoachCoacheeService.prototype.getAllPotentialCoacheesForRh = function (rhId) {
+        console.log("getAllPotentialCoacheesForRh, start request");
+        var param = [rhId];
+        return this.apiService.get(__WEBPACK_IMPORTED_MODULE_2__auth_service__["a" /* AuthService */].GET_POTENTIAL_COACHEES_FOR_RH, param).map(function (response) {
+            var json = response.json();
+            console.log("getAllPotentialCoacheesForRh, response json : ", json);
+            return json;
+        });
+    };
+    CoachCoacheeService.prototype.getPotentialCoachee = function (token) {
+        console.log("getPotentialCoachee, start request");
+        var param = [token];
+        return this.apiService.getPotentialCoachee(__WEBPACK_IMPORTED_MODULE_2__auth_service__["a" /* AuthService */].GET_POTENTIAL_COACHEE_FOR_TOKEN, param);
+    };
+    CoachCoacheeService.prototype.getPotentialCoach = function (token) {
+        console.log("getPotentialCoach, start request");
+        var param = [token];
+        return this.apiService.getPotentialCoachee(__WEBPACK_IMPORTED_MODULE_2__auth_service__["a" /* AuthService */].GET_POTENTIAL_COACH_FOR_TOKEN, param);
+    };
+    CoachCoacheeService.prototype.getPotentialRh = function (token) {
+        console.log("getPotentialRh, start request");
+        var param = [token];
+        return this.apiService.getPotentialCoachee(__WEBPACK_IMPORTED_MODULE_2__auth_service__["a" /* AuthService */].GET_POTENTIAL_RH_FOR_TOKEN, param);
+    };
+    CoachCoacheeService.prototype.getUsageRate = function (rhId) {
+        console.log("getUsageRate, start request");
+        var param = [rhId];
+        return this.apiService.get(__WEBPACK_IMPORTED_MODULE_2__auth_service__["a" /* AuthService */].GET_USAGE_RATE_FOR_RH, param).map(function (response) {
+            var json = response.json();
+            console.log("getUsageRate, response json : ", json);
+            return json;
+        });
+    };
+    CoachCoacheeService.prototype.postPotentialCoachee = function (body) {
+        console.log("postPotentialCoachee, start request");
+        return this.apiService.post(__WEBPACK_IMPORTED_MODULE_2__auth_service__["a" /* AuthService */].POST_POTENTIAL_COACHEE, null, body).map(function (response) {
+            var json = response.json();
+            console.log("postPotentialCoachee, response json : ", json);
+            return json;
+        });
+    };
+    CoachCoacheeService.prototype.getAllNotificationsForUser = function (user) {
+        console.log("getAllNotifications, start request");
+        var param = [user.id];
+        var path = __WEBPACK_IMPORTED_MODULE_2__auth_service__["a" /* AuthService */].GET_COACHEE_NOTIFICATIONS;
+        if (user instanceof __WEBPACK_IMPORTED_MODULE_1__model_Coach__["a" /* Coach */]) {
+            path = __WEBPACK_IMPORTED_MODULE_2__auth_service__["a" /* AuthService */].GET_COACH_NOTIFICATIONS;
+        }
+        else if (user instanceof __WEBPACK_IMPORTED_MODULE_3__model_Rh__["a" /* Rh */]) {
+            path = __WEBPACK_IMPORTED_MODULE_2__auth_service__["a" /* AuthService */].GET_RH_NOTIFICATIONS;
+        }
+        return this.apiService.get(path, param).map(function (response) {
+            var json = response.json();
+            console.log("getAllNotifications, response json : ", json);
+            return json;
+        });
+    };
+    CoachCoacheeService.prototype.readAllNotificationsForUser = function (user) {
+        console.log("readAllNotifications, start request");
+        var param = [user.id];
+        var path = __WEBPACK_IMPORTED_MODULE_2__auth_service__["a" /* AuthService */].PUT_COACHEE_NOTIFICATIONS_READ;
+        if (user instanceof __WEBPACK_IMPORTED_MODULE_1__model_Coach__["a" /* Coach */]) {
+            path = __WEBPACK_IMPORTED_MODULE_2__auth_service__["a" /* AuthService */].PUT_COACH_NOTIFICATIONS_READ;
+        }
+        else if (user instanceof __WEBPACK_IMPORTED_MODULE_3__model_Rh__["a" /* Rh */]) {
+            path = __WEBPACK_IMPORTED_MODULE_2__auth_service__["a" /* AuthService */].PUT_RH_NOTIFICATIONS_READ;
+        }
+        return this.apiService.put(path, param, null).map(function (response) {
+            console.log("readAllNotifications done");
+        }, function (error) {
+            console.log('readAllNotifications error', error);
+        });
+    };
+    /**
+     * Add a new objective to this coachee.
+     * @param coacheeId
+     * @param rhId
+     * @param objective
+     */
+    CoachCoacheeService.prototype.addObjectiveToCoachee = function (rhId, coacheeId, objective) {
+        var param = [rhId, coacheeId];
+        var body = {
+            "objective": objective
+        };
+        return this.apiService.post(__WEBPACK_IMPORTED_MODULE_2__auth_service__["a" /* AuthService */].POST_COACHEE_OBJECTIVE, param, body).map(function (response) {
+            var json = response.json();
+            console.log("POST coachee new objective, response json : ", json);
+            return json;
+        });
+    };
+    return CoachCoacheeService;
+}());
+CoachCoacheeService = __decorate([
+    __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__angular_core__["Injectable"])(),
+    __metadata("design:paramtypes", [typeof (_a = typeof __WEBPACK_IMPORTED_MODULE_2__auth_service__["a" /* AuthService */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_2__auth_service__["a" /* AuthService */]) === "function" && _a || Object])
+], CoachCoacheeService);
+
+var _a;
+//# sourceMappingURL=/Users/guillaume/angular/eritis_fe/src/CoachCoacheeService.js.map
+
+/***/ }),
+
 /***/ 341:
 /***/ (function(module, exports) {
 
@@ -2208,7 +2895,7 @@ __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_1__angular_platform_browser_dyna
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_platform_browser__ = __webpack_require__(47);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__angular_core__ = __webpack_require__(1);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__angular_forms__ = __webpack_require__(13);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__angular_http__ = __webpack_require__(82);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__angular_http__ = __webpack_require__(83);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__app_component__ = __webpack_require__(221);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__header_header_component__ = __webpack_require__(357);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__service_data_service__ = __webpack_require__(370);
@@ -2216,14 +2903,14 @@ __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_1__angular_platform_browser_dyna
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_8__app_routing__ = __webpack_require__(355);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_9__login_signup_signup_admin_component__ = __webpack_require__(228);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_10__login_signin_signin_component__ = __webpack_require__(224);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_11__service_auth_service__ = __webpack_require__(9);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_11__service_auth_service__ = __webpack_require__(10);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_12__login_auth_guard__ = __webpack_require__(359);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_13__welcome_welcome_component__ = __webpack_require__(239);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_14__chat_chat_component__ = __webpack_require__(222);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_15__chat_chat_item_component__ = __webpack_require__(356);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_16__user_coach_list_coach_list_component__ = __webpack_require__(235);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_17__user_coach_list_coach_item_component__ = __webpack_require__(371);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_18__service_CoachCoacheeService__ = __webpack_require__(36);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_18__service_CoachCoacheeService__ = __webpack_require__(32);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_19__user_coach_details_coach_details_component__ = __webpack_require__(234);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_20_angular_calendar__ = __webpack_require__(389);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_21__angular_platform_browser_animations__ = __webpack_require__(350);
@@ -2236,7 +2923,7 @@ __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_1__angular_platform_browser_dyna
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_28__user_profile_coachee_profile_coachee_component__ = __webpack_require__(237);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_29__user_profile_coach_profile_coach_summary_component__ = __webpack_require__(372);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_30__meeting_meeting_list_coach_meeting_item_coach_component__ = __webpack_require__(360);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_31__service_firebase_service__ = __webpack_require__(84);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_31__service_firebase_service__ = __webpack_require__(85);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_32__meeting_meeting_date_meeting_date_component__ = __webpack_require__(229);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_33_primeng_components_slider_slider__ = __webpack_require__(624);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_33_primeng_components_slider_slider___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_33_primeng_components_slider_slider__);
@@ -2509,13 +3196,13 @@ var _a;
 "use strict";
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__(1);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__angular_router__ = __webpack_require__(21);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__service_auth_service__ = __webpack_require__(9);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_rxjs__ = __webpack_require__(35);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__service_auth_service__ = __webpack_require__(10);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_rxjs__ = __webpack_require__(36);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_rxjs___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_3_rxjs__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__model_Coach__ = __webpack_require__(31);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__model_Coachee__ = __webpack_require__(48);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__model_Rh__ = __webpack_require__(52);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7__service_CoachCoacheeService__ = __webpack_require__(36);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7__service_CoachCoacheeService__ = __webpack_require__(32);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return HeaderComponent; });
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -2750,7 +3437,7 @@ var _a, _b, _c, _d;
 
 "use strict";
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__(1);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__service_auth_service__ = __webpack_require__(9);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__service_auth_service__ = __webpack_require__(10);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return AuthGuard; });
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -2784,163 +3471,17 @@ var _a;
 
 /***/ }),
 
-/***/ 36:
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__(1);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__model_Coach__ = __webpack_require__(31);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__auth_service__ = __webpack_require__(9);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__model_Rh__ = __webpack_require__(52);
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return CoachCoacheeService; });
-var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
-    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-    return c > 3 && r && Object.defineProperty(target, key, r), r;
-};
-var __metadata = (this && this.__metadata) || function (k, v) {
-    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
-};
-///<reference path="auth.service.ts"/>
-
-
-
-
-var CoachCoacheeService = (function () {
-    function CoachCoacheeService(apiService) {
-        this.apiService = apiService;
-    }
-    CoachCoacheeService.prototype.getAllCoachs = function () {
-        console.log("getAllCoachs, start request");
-        return this.apiService.get(__WEBPACK_IMPORTED_MODULE_2__auth_service__["a" /* AuthService */].GET_COACHS, null).map(function (response) {
-            var json = response.json();
-            console.log("getAllCoachs, response json : ", json);
-            return json;
-        });
-    };
-    CoachCoacheeService.prototype.getAllCoacheesForRh = function (rhId) {
-        console.log("getAllCoacheesForRh, start request");
-        var param = [rhId];
-        return this.apiService.get(__WEBPACK_IMPORTED_MODULE_2__auth_service__["a" /* AuthService */].GET_COACHEES_FOR_RH, param).map(function (response) {
-            var json = response.json();
-            console.log("getAllCoacheesForRh, response json : ", json);
-            return json;
-        });
-    };
-    CoachCoacheeService.prototype.getAllPotentialCoacheesForRh = function (rhId) {
-        console.log("getAllPotentialCoacheesForRh, start request");
-        var param = [rhId];
-        return this.apiService.get(__WEBPACK_IMPORTED_MODULE_2__auth_service__["a" /* AuthService */].GET_POTENTIAL_COACHEES_FOR_RH, param).map(function (response) {
-            var json = response.json();
-            console.log("getAllPotentialCoacheesForRh, response json : ", json);
-            return json;
-        });
-    };
-    CoachCoacheeService.prototype.getPotentialCoachee = function (token) {
-        console.log("getPotentialCoachee, start request");
-        var param = [token];
-        return this.apiService.getPotentialCoachee(__WEBPACK_IMPORTED_MODULE_2__auth_service__["a" /* AuthService */].GET_POTENTIAL_COACHEE_FOR_TOKEN, param);
-    };
-    CoachCoacheeService.prototype.getPotentialCoach = function (token) {
-        console.log("getPotentialCoach, start request");
-        var param = [token];
-        return this.apiService.getPotentialCoachee(__WEBPACK_IMPORTED_MODULE_2__auth_service__["a" /* AuthService */].GET_POTENTIAL_COACH_FOR_TOKEN, param);
-    };
-    CoachCoacheeService.prototype.getPotentialRh = function (token) {
-        console.log("getPotentialRh, start request");
-        var param = [token];
-        return this.apiService.getPotentialCoachee(__WEBPACK_IMPORTED_MODULE_2__auth_service__["a" /* AuthService */].GET_POTENTIAL_RH_FOR_TOKEN, param);
-    };
-    CoachCoacheeService.prototype.getUsageRate = function (rhId) {
-        console.log("getUsageRate, start request");
-        var param = [rhId];
-        return this.apiService.get(__WEBPACK_IMPORTED_MODULE_2__auth_service__["a" /* AuthService */].GET_USAGE_RATE_FOR_RH, param).map(function (response) {
-            var json = response.json();
-            console.log("getUsageRate, response json : ", json);
-            return json;
-        });
-    };
-    CoachCoacheeService.prototype.postPotentialCoachee = function (body) {
-        console.log("postPotentialCoachee, start request");
-        return this.apiService.post(__WEBPACK_IMPORTED_MODULE_2__auth_service__["a" /* AuthService */].POST_POTENTIAL_COACHEE, null, body).map(function (response) {
-            var json = response.json();
-            console.log("postPotentialCoachee, response json : ", json);
-            return json;
-        });
-    };
-    CoachCoacheeService.prototype.getAllNotificationsForUser = function (user) {
-        console.log("getAllNotifications, start request");
-        var param = [user.id];
-        var path = __WEBPACK_IMPORTED_MODULE_2__auth_service__["a" /* AuthService */].GET_COACHEE_NOTIFICATIONS;
-        if (user instanceof __WEBPACK_IMPORTED_MODULE_1__model_Coach__["a" /* Coach */]) {
-            path = __WEBPACK_IMPORTED_MODULE_2__auth_service__["a" /* AuthService */].GET_COACH_NOTIFICATIONS;
-        }
-        else if (user instanceof __WEBPACK_IMPORTED_MODULE_3__model_Rh__["a" /* Rh */]) {
-            path = __WEBPACK_IMPORTED_MODULE_2__auth_service__["a" /* AuthService */].GET_RH_NOTIFICATIONS;
-        }
-        return this.apiService.get(path, param).map(function (response) {
-            var json = response.json();
-            console.log("getAllNotifications, response json : ", json);
-            return json;
-        });
-    };
-    CoachCoacheeService.prototype.readAllNotificationsForUser = function (user) {
-        console.log("readAllNotifications, start request");
-        var param = [user.id];
-        var path = __WEBPACK_IMPORTED_MODULE_2__auth_service__["a" /* AuthService */].PUT_COACHEE_NOTIFICATIONS_READ;
-        if (user instanceof __WEBPACK_IMPORTED_MODULE_1__model_Coach__["a" /* Coach */]) {
-            path = __WEBPACK_IMPORTED_MODULE_2__auth_service__["a" /* AuthService */].PUT_COACH_NOTIFICATIONS_READ;
-        }
-        else if (user instanceof __WEBPACK_IMPORTED_MODULE_3__model_Rh__["a" /* Rh */]) {
-            path = __WEBPACK_IMPORTED_MODULE_2__auth_service__["a" /* AuthService */].PUT_RH_NOTIFICATIONS_READ;
-        }
-        return this.apiService.put(path, param, null).map(function (response) {
-            console.log("readAllNotifications done");
-        }, function (error) {
-            console.log('readAllNotifications error', error);
-        });
-    };
-    /**
-     * Add a new objective to this coachee.
-     * @param coacheeId
-     * @param rhId
-     * @param objective
-     */
-    CoachCoacheeService.prototype.addObjectiveToCoachee = function (rhId, coacheeId, objective) {
-        var param = [rhId, coacheeId];
-        var body = {
-            "objective": objective
-        };
-        return this.apiService.post(__WEBPACK_IMPORTED_MODULE_2__auth_service__["a" /* AuthService */].POST_COACHEE_OBJECTIVE, param, body).map(function (response) {
-            var json = response.json();
-            console.log("POST coachee new objective, response json : ", json);
-            return json;
-        });
-    };
-    return CoachCoacheeService;
-}());
-CoachCoacheeService = __decorate([
-    __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__angular_core__["Injectable"])(),
-    __metadata("design:paramtypes", [typeof (_a = typeof __WEBPACK_IMPORTED_MODULE_2__auth_service__["a" /* AuthService */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_2__auth_service__["a" /* AuthService */]) === "function" && _a || Object])
-], CoachCoacheeService);
-
-var _a;
-//# sourceMappingURL=/Users/guillaume/angular/eritis_fe/src/CoachCoacheeService.js.map
-
-/***/ }),
-
 /***/ 360:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__(1);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__model_Meeting__ = __webpack_require__(128);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_rxjs__ = __webpack_require__(35);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_rxjs__ = __webpack_require__(36);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_rxjs___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_2_rxjs__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__angular_forms__ = __webpack_require__(13);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__service_meetings_service__ = __webpack_require__(37);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__service_auth_service__ = __webpack_require__(9);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__service_auth_service__ = __webpack_require__(10);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return MeetingItemCoachComponent; });
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -3263,8 +3804,8 @@ var _a, _b, _c, _d, _e;
 "use strict";
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__(1);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__service_meetings_service__ = __webpack_require__(37);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__service_CoachCoacheeService__ = __webpack_require__(36);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__service_auth_service__ = __webpack_require__(9);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__service_CoachCoacheeService__ = __webpack_require__(32);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__service_auth_service__ = __webpack_require__(10);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_rxjs_Observable__ = __webpack_require__(0);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_rxjs_Observable___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_4_rxjs_Observable__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__model_Coach__ = __webpack_require__(31);
@@ -3483,7 +4024,7 @@ var _a, _b, _c, _d;
 "use strict";
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__(1);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__model_Meeting__ = __webpack_require__(128);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_rxjs__ = __webpack_require__(35);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_rxjs__ = __webpack_require__(36);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_rxjs___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_2_rxjs__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__angular_router__ = __webpack_require__(21);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__service_meetings_service__ = __webpack_require__(37);
@@ -3622,6 +4163,10 @@ var MeetingItemCoacheeComponent = (function () {
         console.log('goToChatRoom');
         var win = window.open(this.meeting.coach.chat_room_url, "_blank");
     };
+    MeetingItemCoacheeComponent.prototype.goToCoachProfile = function (coachId) {
+        window.scrollTo(0, 0);
+        this.router.navigate(['/coachs', coachId]);
+    };
     return MeetingItemCoacheeComponent;
 }());
 __decorate([
@@ -3652,8 +4197,8 @@ var _a, _b, _c, _d;
 "use strict";
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__(1);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__service_meetings_service__ = __webpack_require__(37);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__service_CoachCoacheeService__ = __webpack_require__(36);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__service_auth_service__ = __webpack_require__(9);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__service_CoachCoacheeService__ = __webpack_require__(32);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__service_auth_service__ = __webpack_require__(10);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__angular_router__ = __webpack_require__(21);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_5_rxjs_Observable__ = __webpack_require__(0);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_5_rxjs_Observable___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_5_rxjs_Observable__);
@@ -3888,9 +4433,12 @@ var _a, _b, _c, _d, _e;
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__(1);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__model_Coachee__ = __webpack_require__(48);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__model_PotentialCoachee__ = __webpack_require__(232);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__service_CoachCoacheeService__ = __webpack_require__(36);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__service_auth_service__ = __webpack_require__(9);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__service_CoachCoacheeService__ = __webpack_require__(32);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__service_auth_service__ = __webpack_require__(10);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__model_Rh__ = __webpack_require__(52);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6_rxjs_Observable__ = __webpack_require__(0);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6_rxjs_Observable___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_6_rxjs_Observable__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7__service_meetings_service__ = __webpack_require__(37);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return MeetingItemRhComponent; });
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -3907,18 +4455,25 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 
 
 
+
+
 var MeetingItemRhComponent = (function () {
     // private coacheeUsageRate: Observable<RhUsageRate>;
-    function MeetingItemRhComponent(authService, coachCoacheeService) {
+    function MeetingItemRhComponent(authService, meetingsService, coachCoacheeService, cd) {
         this.authService = authService;
+        this.meetingsService = meetingsService;
         this.coachCoacheeService = coachCoacheeService;
+        this.cd = cd;
+        this.objectiveChanged = new __WEBPACK_IMPORTED_MODULE_0__angular_core__["EventEmitter"]();
         this.months = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
+        this.showDetails = false;
+        this.hasBookedMeeting = false;
+        this.goals = {};
     }
     MeetingItemRhComponent.prototype.ngOnInit = function () {
         console.log('ngOnInit');
-        // if (this.coachee) {
-        //   this.getUsageRate(this.coachee.id);
-        // }
+        this.getUsageRate(this.coachee.id);
+        this.getAllMeetingsForCoachee(this.coachee.id);
     };
     MeetingItemRhComponent.prototype.ngAfterViewInit = function () {
         console.log('ngAfterViewInit');
@@ -3938,6 +4493,48 @@ var MeetingItemRhComponent = (function () {
     };
     MeetingItemRhComponent.prototype.getDate = function (date) {
         return (new Date(date)).getDate() + ' ' + this.months[(new Date(date)).getMonth()] + ' ' + (new Date(date)).getFullYear();
+    };
+    MeetingItemRhComponent.prototype.toggleShowDetails = function () {
+        this.showDetails = this.showDetails ? false : true;
+    };
+    MeetingItemRhComponent.prototype.getAllMeetingsForCoachee = function (coacheeId) {
+        var _this = this;
+        this.loading = true;
+        this.meetingsService.getAllMeetingsForCoacheeId(coacheeId).subscribe(function (meetings) {
+            console.log('got meetings for coachee', meetings);
+            var bookedMeetings = [];
+            for (var _i = 0, meetings_1 = meetings; _i < meetings_1.length; _i++) {
+                var meeting = meetings_1[_i];
+                if (meeting.agreed_date != null) {
+                    bookedMeetings.push(meeting);
+                    _this.hasBookedMeeting = true;
+                    _this.getGoal(meeting.id);
+                }
+            }
+            _this.meetings = __WEBPACK_IMPORTED_MODULE_6_rxjs_Observable__["Observable"].of(bookedMeetings);
+            _this.cd.detectChanges();
+            _this.loading = false;
+        });
+    };
+    MeetingItemRhComponent.prototype.getGoal = function (meetingId) {
+        var _this = this;
+        return this.meetingsService.getMeetingGoal(meetingId).subscribe(function (reviews) {
+            console.log("getMeetingGoal, got goal : ", reviews);
+            if (reviews != null)
+                _this.goals[meetingId] = reviews[0].comment;
+            else
+                _this.goals[meetingId] = 'n/a';
+        }, function (error) {
+            console.log('getMeetingGoal error', error);
+            //this.displayErrorPostingReview = true;
+        });
+    };
+    MeetingItemRhComponent.prototype.getUsageRate = function (rhId) {
+        var _this = this;
+        this.coachCoacheeService.getUsageRate(rhId).subscribe(function (rate) {
+            console.log("getUsageRate, rate : ", rate);
+            _this.coacheeUsageRate = __WEBPACK_IMPORTED_MODULE_6_rxjs_Observable__["Observable"].of(rate);
+        });
     };
     MeetingItemRhComponent.prototype.updateCoacheeObjectivePanelVisibility = function (visible) {
         if (visible) {
@@ -3977,9 +4574,14 @@ var MeetingItemRhComponent = (function () {
             console.log('addObjectiveToCoachee, SUCCESS', obj);
             // close modal
             _this.updateCoacheeObjectivePanelVisibility(false);
+            _this.objectiveChanged.emit(_this.coacheeNewObjective);
+            Materialize.toast("L'objectif a été modifié !", 3000, 'rounded');
             // TODO stop loader
             // clean
             _this.coacheeNewObjective = null;
+        }, function (error) {
+            console.log('addObjectiveToCoachee, error', error);
+            Materialize.toast("Imposible de modifier l'objectif", 3000, 'rounded');
         });
     };
     return MeetingItemRhComponent;
@@ -3992,16 +4594,20 @@ __decorate([
     __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__angular_core__["Input"])(),
     __metadata("design:type", typeof (_b = typeof __WEBPACK_IMPORTED_MODULE_2__model_PotentialCoachee__["a" /* PotentialCoachee */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_2__model_PotentialCoachee__["a" /* PotentialCoachee */]) === "function" && _b || Object)
 ], MeetingItemRhComponent.prototype, "potentialCoachee", void 0);
+__decorate([
+    __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__angular_core__["Output"])(),
+    __metadata("design:type", Object)
+], MeetingItemRhComponent.prototype, "objectiveChanged", void 0);
 MeetingItemRhComponent = __decorate([
     __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__angular_core__["Component"])({
         selector: 'rb-meeting-item-rh',
         template: __webpack_require__(646),
         styles: [__webpack_require__(604)]
     }),
-    __metadata("design:paramtypes", [typeof (_c = typeof __WEBPACK_IMPORTED_MODULE_4__service_auth_service__["a" /* AuthService */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_4__service_auth_service__["a" /* AuthService */]) === "function" && _c || Object, typeof (_d = typeof __WEBPACK_IMPORTED_MODULE_3__service_CoachCoacheeService__["a" /* CoachCoacheeService */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_3__service_CoachCoacheeService__["a" /* CoachCoacheeService */]) === "function" && _d || Object])
+    __metadata("design:paramtypes", [typeof (_c = typeof __WEBPACK_IMPORTED_MODULE_4__service_auth_service__["a" /* AuthService */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_4__service_auth_service__["a" /* AuthService */]) === "function" && _c || Object, typeof (_d = typeof __WEBPACK_IMPORTED_MODULE_7__service_meetings_service__["a" /* MeetingsService */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_7__service_meetings_service__["a" /* MeetingsService */]) === "function" && _d || Object, typeof (_e = typeof __WEBPACK_IMPORTED_MODULE_3__service_CoachCoacheeService__["a" /* CoachCoacheeService */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_3__service_CoachCoacheeService__["a" /* CoachCoacheeService */]) === "function" && _e || Object, typeof (_f = typeof __WEBPACK_IMPORTED_MODULE_0__angular_core__["ChangeDetectorRef"] !== "undefined" && __WEBPACK_IMPORTED_MODULE_0__angular_core__["ChangeDetectorRef"]) === "function" && _f || Object])
 ], MeetingItemRhComponent);
 
-var _a, _b, _c, _d;
+var _a, _b, _c, _d, _e, _f;
 //# sourceMappingURL=/Users/guillaume/angular/eritis_fe/src/meeting-item-rh.component.js.map
 
 /***/ }),
@@ -4011,8 +4617,8 @@ var _a, _b, _c, _d;
 
 "use strict";
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__(1);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__service_CoachCoacheeService__ = __webpack_require__(36);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__service_auth_service__ = __webpack_require__(9);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__service_CoachCoacheeService__ = __webpack_require__(32);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__service_auth_service__ = __webpack_require__(10);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_rxjs_Observable__ = __webpack_require__(0);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_rxjs_Observable___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_3_rxjs_Observable__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__model_ContractPlan__ = __webpack_require__(368);
@@ -4404,8 +5010,8 @@ var MEETING_REVIEW_TYPE_SESSION_NEXT_STEP = "SESSION_NEXT_STEP";
 
 "use strict";
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__(1);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__auth_service__ = __webpack_require__(9);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__angular_http__ = __webpack_require__(82);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__auth_service__ = __webpack_require__(10);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__angular_http__ = __webpack_require__(83);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__model_MeetingReview__ = __webpack_require__(369);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return MeetingsService; });
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
@@ -5096,7 +5702,7 @@ exports = module.exports = __webpack_require__(6)();
 
 
 // module
-exports.push([module.i, "nav{\n  background-color: transparent;\n  background-attachment: scroll;\n  background-position: top;\n  background-size: cover;\n  min-height: 96px;\n  box-shadow: none;\n}\n\n.user-connected nav {\n  background-image: url(" + __webpack_require__(109) + ");\n}\n\nnav li{\n  background-color: transparent;\n}\n\nnav li a{\n  cursor: pointer;\n  color: var(--main-light-grey);\n}\n\nnav li.active a{\n  font-weight: bold;\n  font-size: 110%;\n  padding: 0;\n  margin: 0 16px;\n}\n\nnav li a:hover,\nnav li a:focus,\nnav li.active a{\n  color: #FFF !important;\n}\n\n.side-nav li a:hover,\n.side-nav li a:focus,\n.side-nav li.active a{\n  color: var(--main-electric-blue) !important;\n}\n\n.navbar-fixed,\n.navbar{\n  min-height: 96px;\n  padding: 0;\n}\n\n.navbar-color {\n  background-color: var(--main-blue-filter);\n  /*background-color: var(--main-dark-blue);*/\n  height: 100%;\n  padding: 16px;\n}\n\n.brand-logo {\n  padding: 0;\n}\n\n.logo-text img{\n  height: 50px;\n}\n\n.side-nav {\n  padding: 0;\n  background-color: rgba(255, 255, 255, 1);\n  color: var(--main-dark-grey);\n }\n\n.side-nav-header {\n  background-image: url(" + __webpack_require__(109) + ");\n  background-attachment: scroll;\n  background-position: center;\n  background-size: cover;\n  min-height: 96px;\n  box-shadow: none;\n}\n\n.side-nav-header-container {\n  padding: 64px 32px;\n  color: #FFF;\n  background-color: var(--main-blue-filter);\n  display: -webkit-box;\n  display: -ms-flexbox;\n  display: flex;\n  -webkit-box-orient: horizontal;\n  -webkit-box-direction: normal;\n      -ms-flex-direction: row;\n          flex-direction: row;\n  -webkit-box-flex: 1;\n      -ms-flex-positive: 1;\n          flex-grow: 1;\n  -webkit-box-align: center;\n      -ms-flex-align: center;\n          align-items: center;\n  line-height: 1.5;\n}\n\n.side-nav-user-img {\n  width: 90px;\n  margin-right: 16px;\n}\n\n.side-nav-user-info h5 {\n  margin: 0;\n  margin-bottom: 4px;\n}\n\n.side-nav-user-info span {\n  font-weight: 200;\n  color: var(--main-ultra-light-grey);\n}\n\n.side-nav-items {\n  padding: 16px;\n}\n\nheader{\n  background-image: url(" + __webpack_require__(109) + ");\n  background-attachment: fixed;\n  background-position: center;\n  background-size: cover;\n}\n\nheader.user-connected {\n  background-attachment: scroll;\n}\n\n.header-user{\n  background-color: var(--main-blue-filter);\n  color: var(--main-white-color);\n  box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.5);\n}\n\n.header-user-filter{\n\n}\n\n.header-user .container{\n  display: -webkit-box;\n  display: -ms-flexbox;\n  display: flex;\n  -webkit-box-align: center;\n      -ms-flex-align: center;\n          align-items: center;\n  -ms-flex-line-pack: center;\n      align-content: center;\n  padding: 64px 0;\n}\n\n.header-user-info{\n  margin-left: 16px;\n}\n\n.header-user-img{\n  height: 100px;\n}\n\n.welcome-header{\n  display: -webkit-box;\n  display: -ms-flexbox;\n  display: flex;\n  -webkit-box-orient: vertical;\n  -webkit-box-direction: normal;\n      -ms-flex-direction: column;\n          flex-direction: column;\n  -webkit-box-align: center;\n      -ms-flex-align: center;\n          align-items: center;\n  text-align: center;\n  color: var(--main-white-color);\n  padding: 64px 0;\n  background-color: var(--main-blue-filter);\n}\n\n.header-title{\n  /*font-size: 66px*/\n  font-size: 8vmin; /*Test taille adaptative relative à la taille minimale de l'écran*/\n  font-weight: 500;\n  letter-spacing: 1.1px;\n  margin: 0;\n}\n\n.header-subtitle{\n  /*font-size: 36px;*/\n  font-size: 4vmin;\n  font-weight: 300;\n  letter-spacing: 2.3px;\n  margin: 64px 0;\n  opacity: 0.6;\n}\n\n.header-btn .btn-basic{\n  min-width: 200px;\n}\n\n.header-arrow-bottom{\n  font-size: 66px;\n  color: var(--main-white-color);\n  opacity: 0.6;\n}\n\n.header-arrow-bottom:hover{\n  opacity: 1;\n}\n\nrb-signin{\n  width: 30%;\n}\n\n@media(max-width: 960px){\n  rb-signin{\n    width: 80%;\n  }\n}\n\n.dropdown-notifs {\n  width: 350px !important;\n  padding: 0;\n}\n\n.notif-item,\n.profil-item {\n  padding: 16px;\n}\n\n.profil-item:hover {\n  background-color: var(--main-ultra-light-grey);\n}\n\n.notif-count {\n  background-color: var(--main-electric-blue);\n  height: 24px;\n  width: 24px;\n  padding: 0;\n  margin: 0;\n  font-size: 16px;\n  line-height: 24px;\n  text-align: center;\n  border-radius: 100%;\n  position: relative;\n  top: -55px;\n  right: -28px;\n}\n\n.notif-date {\n  margin: 0;\n  color: var(--main-light-grey);\n}\n\n.notif-messsage {\n  margin: 0;\n  font-weight: bold;\n}\n\n.notif-delete{\n  padding: 0;\n  text-align: center;\n  color: var(--main-light-grey);\n}\n\n.notif-delete>a:hover{\n  color: var(--main-electric-blue) !important;\n}\n\n.item-user-img{\n  height: 35px;\n  margin-right: 4px;\n}\n", ""]);
+exports.push([module.i, "nav{\n  background-color: transparent;\n  background-attachment: scroll;\n  background-position: top;\n  background-size: cover;\n  min-height: 96px;\n  box-shadow: none;\n}\n\n.user-connected nav {\n  background-image: url(" + __webpack_require__(82) + ");\n}\n\nnav li{\n  background-color: transparent;\n}\n\nnav li a{\n  cursor: pointer;\n  color: var(--main-light-grey);\n}\n\nnav li.active a{\n  font-weight: bold;\n  font-size: 110%;\n  padding: 0;\n  margin: 0 16px;\n}\n\nnav li a:hover,\nnav li a:focus,\nnav li.active a{\n  color: #FFF !important;\n}\n\n.side-nav li a:hover,\n.side-nav li a:focus,\n.side-nav li.active a{\n  color: var(--main-electric-blue) !important;\n}\n\n.navbar-fixed,\n.navbar{\n  min-height: 96px;\n  padding: 0;\n}\n\n.navbar-color {\n  background-color: var(--main-blue-filter);\n  /*background-color: var(--main-dark-blue);*/\n  height: 100%;\n  padding: 16px;\n}\n\n.brand-logo {\n  padding: 0;\n}\n\n.logo-text img{\n  height: 50px;\n}\n\n.side-nav {\n  padding: 0;\n  background-color: rgba(255, 255, 255, 1);\n  color: var(--main-dark-grey);\n }\n\n.side-nav-header {\n  background-image: url(" + __webpack_require__(82) + ");\n  background-attachment: scroll;\n  background-position: center;\n  background-size: cover;\n  min-height: 96px;\n  box-shadow: none;\n}\n\n.side-nav-header-container {\n  padding: 64px 32px;\n  color: #FFF;\n  background-color: var(--main-blue-filter);\n  display: -webkit-box;\n  display: -ms-flexbox;\n  display: flex;\n  -webkit-box-orient: horizontal;\n  -webkit-box-direction: normal;\n      -ms-flex-direction: row;\n          flex-direction: row;\n  -webkit-box-flex: 1;\n      -ms-flex-positive: 1;\n          flex-grow: 1;\n  -webkit-box-align: center;\n      -ms-flex-align: center;\n          align-items: center;\n  line-height: 1.5;\n}\n\n.side-nav-user-img {\n  width: 90px;\n  height: 90px;\n  margin-right: 16px;\n}\n\n.side-nav-user-info h5 {\n  margin: 0;\n  margin-bottom: 4px;\n}\n\n.side-nav-user-info span {\n  font-weight: 200;\n  color: var(--main-ultra-light-grey);\n}\n\n.side-nav-items {\n  padding: 16px;\n}\n\nheader{\n  background-image: url(" + __webpack_require__(82) + ");\n  background-attachment: fixed;\n  background-position: center;\n  background-size: cover;\n}\n\nheader.user-connected {\n  background-attachment: scroll;\n}\n\n.header-user{\n  background-color: var(--main-blue-filter);\n  color: var(--main-white-color);\n  box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.5);\n}\n\n.header-user-filter{\n  display: -webkit-box;\n  display: -ms-flexbox;\n  display: flex;\n  -webkit-box-align: center;\n      -ms-flex-align: center;\n          align-items: center;\n  -ms-flex-line-pack: center;\n      align-content: center;\n  padding: 64px 0;\n}\n\n.header-user-info{\n  margin-left: 16px;\n}\n\n.header-user-img{\n  height: 100px;\n  width: 100px;\n}\n\n.welcome-header{\n  display: -webkit-box;\n  display: -ms-flexbox;\n  display: flex;\n  -webkit-box-orient: vertical;\n  -webkit-box-direction: normal;\n      -ms-flex-direction: column;\n          flex-direction: column;\n  -webkit-box-align: center;\n      -ms-flex-align: center;\n          align-items: center;\n  text-align: center;\n  color: var(--main-white-color);\n  padding: 64px 0;\n  background-color: var(--main-blue-filter);\n}\n\n.header-title{\n  /*font-size: 66px*/\n  font-size: 8vmin; /*Test taille adaptative relative à la taille minimale de l'écran*/\n  font-weight: 500;\n  letter-spacing: 1.1px;\n  margin: 0;\n}\n\n.header-subtitle{\n  /*font-size: 36px;*/\n  font-size: 4vmin;\n  font-weight: 300;\n  letter-spacing: 2.3px;\n  margin: 64px 0;\n}\n\n.header-btn {\n  text-align: center;\n}\n\n.header-btn .btn-basic{\n  min-width: 200px;\n  margin: 8px;\n}\n\n.header-arrow-bottom{\n  font-size: 66px;\n  color: var(--main-white-color);\n  opacity: 0.6;\n}\n\n.header-arrow-bottom:hover{\n  opacity: 1;\n}\n\nrb-signin{\n  width: 30%;\n}\n\n@media(max-width: 960px){\n  rb-signin{\n    width: 80%;\n  }\n}\n\n.dropdown-notifs {\n  width: 350px !important;\n  padding: 0;\n}\n\n.notif-item,\n.profil-item {\n  padding: 16px;\n}\n\n.profil-item:hover {\n  background-color: var(--main-ultra-light-grey);\n}\n\n.notif-count {\n  background-color: var(--main-electric-blue);\n  height: 24px;\n  width: 24px;\n  padding: 0;\n  margin: 0;\n  font-size: 16px;\n  line-height: 24px;\n  text-align: center;\n  border-radius: 100%;\n  position: relative;\n  top: -55px;\n  right: -28px;\n}\n\n.notif-date {\n  margin: 0;\n  color: var(--main-light-grey);\n}\n\n.notif-messsage {\n  margin: 0;\n  font-weight: bold;\n}\n\n.notif-delete{\n  padding: 0;\n  text-align: center;\n  color: var(--main-light-grey);\n}\n\nnav .notif-delete:hover > a{\n  color: var(--main-electric-blue) !important;\n}\n\n.item-user-img{\n  height: 35px;\n  margin-right: 4px;\n}\n", ""]);
 
 // exports
 
@@ -5240,7 +5846,7 @@ exports = module.exports = __webpack_require__(6)();
 
 
 // module
-exports.push([module.i, "button{\n  margin: 0;\n}\n\na:hover,\na:focus{\n  color: var(--main-electric-blue) !important;\n}\n\np {\n  margin: 0;\n}\n\n.btn-basic {\n  margin: 0;\n}\n\n.card-content, .card-reveal {\n  padding: 0;\n}\n\n.meeting-item{\n  margin: 0;\n  padding: 16px 0 !important;\n}\n\n.meeting-item > .row {\n  margin: 0;\n}\n\n.meeting-item-coach{\n  margin-top: 2px;\n  margin-bottom: 0;\n}\n\n.meeting-item-coach-avatar{\n  height: 52px;\n  margin-right: 16px;\n}\n\n.meeting-item-header,\n.meeting-item-body {\n  display: -webkit-box;\n  display: -ms-flexbox;\n  display: flex;\n  -webkit-box-orient: horizontal;\n  -webkit-box-direction: normal;\n      -ms-flex-direction: row;\n          flex-direction: row;\n  -webkit-box-flex: 1;\n      -ms-flex-positive: 1;\n          flex-grow: 1;\n  -webkit-box-align: start;\n      -ms-flex-align: start;\n          align-items: flex-start;\n  padding: 0px;\n}\n\n.meeting-item-header {\n  -webkit-box-pack: justify;\n      -ms-flex-pack: justify;\n          justify-content: space-between;\n  padding: 8px 0;\n}\n\n.meeting-item-header > div {\n  display: -webkit-box;\n  display: -ms-flexbox;\n  display: flex;\n  -webkit-box-orient: horizontal;\n  -webkit-box-direction: normal;\n      -ms-flex-direction: row;\n          flex-direction: row;\n  -webkit-box-flex: 1;\n      -ms-flex-positive: 1;\n          flex-grow: 1;\n  -webkit-box-align: center;\n      -ms-flex-align: center;\n          align-items: center;\n  padding: 0px;\n}\n\n.meeting-item-coach {\n  display: -webkit-box;\n  display: -ms-flexbox;\n  display: flex;\n  -webkit-box-orient: horizontal;\n  -webkit-box-direction: normal;\n      -ms-flex-direction: row;\n          flex-direction: row;\n  -webkit-box-flex: 1;\n      -ms-flex-positive: 1;\n          flex-grow: 1;\n  -webkit-box-align: center;\n      -ms-flex-align: center;\n          align-items: center;\n}\n\n.meeting-item-date{\n  font-size: 22px;\n  margin-left: 32px;\n  text-align: right;\n}\n\n.meeting-item-body{\n  -webkit-box-pack: justify;\n      -ms-flex-pack: justify;\n          justify-content: space-between;\n  padding-left: 112px;\n}\n\n.meeting-item-body-buttons {\n  padding: 16px 0;\n}\n\n.meeting-item-body-content {\n  -webkit-box-orient: vertical;\n  -webkit-box-direction: normal;\n      -ms-flex-direction: column;\n          flex-direction: column;\n  -webkit-box-pack: justify;\n      -ms-flex-pack: justify;\n          justify-content: space-between;\n  -ms-flex-line-pack: justify;\n      align-content: space-between;\n  padding: 24px 0;\n}\n\n.meeting-review {\n  width: 100%;\n}\n\n.meeting-potential {\n  margin: 4px 0;\n}\n\n.meeting-potential-date {\n  display: inline-block;\n  width: 60px;\n}\n\n.confirm-meeting-form {\n  display: -webkit-box;\n  display: -ms-flexbox;\n  display: flex;\n  -webkit-box-orient: horizontal;\n  -webkit-box-direction: normal;\n      -ms-flex-direction: row;\n          flex-direction: row;\n  -webkit-box-flex: 1;\n      -ms-flex-positive: 1;\n          flex-grow: 1;\n  -ms-flex-line-pack: center;\n      align-content: center;\n  -webkit-box-align: center;\n      -ms-flex-align: center;\n          align-items: center;\n}\n\n.confirm-meeting-form .input-field {\n  margin-right: 16px;\n  margin-top: 0;\n}\n\n.confirm-meeting-form select {\n  min-width: 120px;\n}\n\n.meeting-item-buttons {\n  display: -webkit-box;\n  display: -ms-flexbox;\n  display: flex;\n  -webkit-box-orient: horizontal;\n  -webkit-box-direction: normal;\n      -ms-flex-direction: row;\n          flex-direction: row;\n  -ms-flex-line-pack: end;\n      align-content: flex-end;\n  -webkit-box-pack: end;\n      -ms-flex-pack: end;\n          justify-content: flex-end;\n}\n\n@media screen and (max-device-width: 1240px), (max-width: 992px) {\n  .meeting-item-body {\n    padding-left: 0;\n  }\n\n  .confirm-meeting-form {\n    /*flex-direction: column;*/\n    /*align-items: flex-start;*/\n    /*align-content: flex-start;*/\n  }\n\n  .confirm-meeting-form .input-field {\n    margin-left: 0;\n  }\n}\n\n.preloader-wrapper{\n  left: 50%;\n  margin-left: -30px;\n  margin: 32px 0;\n}\n\n.btn-cancel {\n  margin-left: 8px;\n}\n", ""]);
+exports.push([module.i, "button{\n  margin: 0;\n}\n\na:hover,\na:focus{\n  color: var(--main-electric-blue) !important;\n}\n\np {\n  margin: 0;\n}\n\n.btn-basic {\n  margin: 0;\n}\n\n.card-content, .card-reveal {\n  padding: 0;\n}\n\n.meeting-item{\n  margin: 0;\n  padding: 16px 0 !important;\n}\n\n.meeting-item > .row {\n  margin: 0;\n}\n\n.meeting-item-coach{\n  margin-top: 2px;\n  margin-bottom: 0;\n}\n\n.meeting-item-coach-avatar{\n  height: 52px;\n  width: 52px;\n  margin-right: 16px;\n}\n\n.meeting-item-header,\n.meeting-item-body {\n  display: -webkit-box;\n  display: -ms-flexbox;\n  display: flex;\n  -webkit-box-orient: horizontal;\n  -webkit-box-direction: normal;\n      -ms-flex-direction: row;\n          flex-direction: row;\n  -webkit-box-flex: 1;\n      -ms-flex-positive: 1;\n          flex-grow: 1;\n  -webkit-box-align: start;\n      -ms-flex-align: start;\n          align-items: flex-start;\n  padding: 0px;\n}\n\n.meeting-item-header {\n  -webkit-box-pack: justify;\n      -ms-flex-pack: justify;\n          justify-content: space-between;\n  padding: 8px 0;\n}\n\n.meeting-item-header > div {\n  display: -webkit-box;\n  display: -ms-flexbox;\n  display: flex;\n  -webkit-box-orient: horizontal;\n  -webkit-box-direction: normal;\n      -ms-flex-direction: row;\n          flex-direction: row;\n  -webkit-box-flex: 1;\n      -ms-flex-positive: 1;\n          flex-grow: 1;\n  -webkit-box-align: center;\n      -ms-flex-align: center;\n          align-items: center;\n  padding: 0px;\n}\n\n.meeting-item-coach {\n  display: -webkit-box;\n  display: -ms-flexbox;\n  display: flex;\n  -webkit-box-orient: horizontal;\n  -webkit-box-direction: normal;\n      -ms-flex-direction: row;\n          flex-direction: row;\n  -webkit-box-flex: 1;\n      -ms-flex-positive: 1;\n          flex-grow: 1;\n  -webkit-box-align: center;\n      -ms-flex-align: center;\n          align-items: center;\n}\n\n.meeting-item-date{\n  font-size: 22px;\n  margin-left: 32px;\n  text-align: right;\n}\n\n.meeting-item-body{\n  -webkit-box-pack: justify;\n      -ms-flex-pack: justify;\n          justify-content: space-between;\n  padding-left: 112px;\n}\n\n.meeting-item-body-buttons {\n  padding: 16px 0;\n}\n\n.meeting-item-body-content {\n  -webkit-box-orient: vertical;\n  -webkit-box-direction: normal;\n      -ms-flex-direction: column;\n          flex-direction: column;\n  -webkit-box-pack: justify;\n      -ms-flex-pack: justify;\n          justify-content: space-between;\n  -ms-flex-line-pack: justify;\n      align-content: space-between;\n  padding: 24px 0;\n}\n\n.meeting-review {\n  width: 100%;\n}\n\n.meeting-potential {\n  margin: 4px 0;\n}\n\n.meeting-potential-date {\n  display: inline-block;\n  width: 60px;\n}\n\n.confirm-meeting-form {\n  display: -webkit-box;\n  display: -ms-flexbox;\n  display: flex;\n  -webkit-box-orient: horizontal;\n  -webkit-box-direction: normal;\n      -ms-flex-direction: row;\n          flex-direction: row;\n  -webkit-box-flex: 1;\n      -ms-flex-positive: 1;\n          flex-grow: 1;\n  -ms-flex-line-pack: center;\n      align-content: center;\n  -webkit-box-align: center;\n      -ms-flex-align: center;\n          align-items: center;\n}\n\n.confirm-meeting-form .input-field {\n  margin-right: 16px;\n  margin-top: 0;\n}\n\n.confirm-meeting-form select {\n  min-width: 120px;\n}\n\n.meeting-item-buttons {\n  display: -webkit-box;\n  display: -ms-flexbox;\n  display: flex;\n  -webkit-box-orient: horizontal;\n  -webkit-box-direction: normal;\n      -ms-flex-direction: row;\n          flex-direction: row;\n  -ms-flex-line-pack: end;\n      align-content: flex-end;\n  -webkit-box-pack: end;\n      -ms-flex-pack: end;\n          justify-content: flex-end;\n}\n\n@media screen and (max-device-width: 1240px), (max-width: 992px) {\n  .meeting-item-body {\n    padding-left: 0;\n  }\n\n  .confirm-meeting-form {\n    /*flex-direction: column;*/\n    /*align-items: flex-start;*/\n    /*align-content: flex-start;*/\n  }\n\n  .confirm-meeting-form .input-field {\n    margin-left: 0;\n  }\n}\n\n.preloader-wrapper{\n  left: 50%;\n  margin-left: -30px;\n  margin: 32px 0;\n}\n\n.btn-cancel {\n  margin-left: 8px;\n}\n", ""]);
 
 // exports
 
@@ -5255,11 +5861,11 @@ module.exports = module.exports.toString();
 
 "use strict";
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__(1);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__angular_http__ = __webpack_require__(82);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__angular_http__ = __webpack_require__(83);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__environments_environment__ = __webpack_require__(61);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__model_Coach__ = __webpack_require__(31);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__model_Coachee__ = __webpack_require__(48);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__auth_service__ = __webpack_require__(9);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__auth_service__ = __webpack_require__(10);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return AdminAPIService; });
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -5420,7 +6026,7 @@ exports = module.exports = __webpack_require__(6)();
 
 
 // module
-exports.push([module.i, "button{\n  margin: 0;\n}\n\np {\n  margin: 0;\n}\n\n.card-content, .card-reveal {\n  padding: 0;\n}\n\n.meeting-item{\n  margin: 0;\n  padding: 16px 0 !important;\n}\n\n.meeting-item > .row {\n  margin: 0;\n}\n\n.meeting-item-coach{\n  margin-top: 2px;\n  margin-bottom: 0;\n}\n\n.meeting-item-coach-avatar{\n  height: 52px;\n  margin-right: 16px;\n}\n\n.meeting-item-header,\n.meeting-item-body{\n  display: -webkit-box;\n  display: -ms-flexbox;\n  display: flex;\n  -webkit-box-orient: horizontal;\n  -webkit-box-direction: normal;\n      -ms-flex-direction: row;\n          flex-direction: row;\n  -webkit-box-flex: 1;\n      -ms-flex-positive: 1;\n          flex-grow: 1;\n  -webkit-box-align: center;\n      -ms-flex-align: center;\n          align-items: center;\n  padding: 0;\n}\n\n.meeting-item-header {\n  -webkit-box-pack: justify;\n      -ms-flex-pack: justify;\n          justify-content: space-between;\n}\n\n.meeting-item-coach{\n  display: -webkit-box;\n  display: -ms-flexbox;\n  display: flex;\n  -webkit-box-orient: horizontal;\n  -webkit-box-direction: normal;\n      -ms-flex-direction: row;\n          flex-direction: row;\n  -webkit-box-flex: 1;\n      -ms-flex-positive: 1;\n          flex-grow: 1;\n  -webkit-box-align: center;\n      -ms-flex-align: center;\n          align-items: center;\n}\n\n.meeting-item-date{\n  font-size: 22px;\n  margin-left: 32px;\n  text-align: right;\n}\n\n.meeting-item-body{\n  -webkit-box-pack: justify;\n      -ms-flex-pack: justify;\n          justify-content: space-between;\n  padding-left: 112px;\n}\n\n.meeting-item.closed .meeting-item-header,\n.meeting-item.closed .meeting-item-body{\n  -webkit-box-align: start;\n      -ms-flex-align: start;\n          align-items: flex-start;\n}\n\n.meeting-item-body-content {\n  -webkit-box-orient: vertical;\n  -webkit-box-direction: normal;\n      -ms-flex-direction: column;\n          flex-direction: column;\n  -webkit-box-pack: start;\n      -ms-flex-pack: start;\n          justify-content: flex-start;\n  -ms-flex-line-pack: start;\n      align-content: flex-start;\n  padding: 24px 0;\n}\n\n.meeting-review {\n  width: 100%;\n}\n\n.meeting-item-buttons {\n  display: -webkit-box;\n  display: -ms-flexbox;\n  display: flex;\n  -webkit-box-orient: horizontal;\n  -webkit-box-direction: normal;\n      -ms-flex-direction: row;\n          flex-direction: row;\n  -ms-flex-line-pack: end;\n      align-content: flex-end;\n  -webkit-box-pack: end;\n      -ms-flex-pack: end;\n          justify-content: flex-end;\n}\n\n@media screen and (max-device-width: 1240px), (max-width: 992px) {\n  .meeting-item-body {\n    -webkit-box-orient: vertical;\n    -webkit-box-direction: normal;\n        -ms-flex-direction: column;\n            flex-direction: column;\n    -webkit-box-pack: start;\n        -ms-flex-pack: start;\n            justify-content: flex-start;\n    -ms-flex-line-pack: start;\n        align-content: flex-start;\n    -webkit-box-align: left;\n        -ms-flex-align: left;\n            align-items: left;\n    padding-left: 0;\n  }\n\n  .meeting-item-buttons {\n    width: 100%;\n    text-align: right;\n    -ms-flex-line-pack: justify;\n        align-content: space-between;\n    -webkit-box-pack: justify;\n        -ms-flex-pack: justify;\n            justify-content: space-between;\n  }\n}\n\n.preloader-wrapper{\n  left: 50%;\n  margin-left: -30px;\n  margin: 32px 0;\n}\n\n.btn-cancel {\n  margin-left: 8px;\n}\n", ""]);
+exports.push([module.i, "button{\n  margin: 0;\n}\n\np {\n  margin: 0;\n}\n\n.card-content, .card-reveal {\n  padding: 0;\n}\n\n.meeting-item{\n  margin: 0;\n  padding: 16px 0 !important;\n}\n\n.meeting-item > .row {\n  margin: 0;\n}\n\n.meeting-item-coach{\n  margin-top: 2px;\n  margin-bottom: 0;\n}\n\n.meeting-item-coach-avatar{\n  height: 52px;\n  width: 52px;\n  margin-right: 16px;\n}\n\n.meeting-item-header,\n.meeting-item-body{\n  display: -webkit-box;\n  display: -ms-flexbox;\n  display: flex;\n  -webkit-box-orient: horizontal;\n  -webkit-box-direction: normal;\n      -ms-flex-direction: row;\n          flex-direction: row;\n  -webkit-box-flex: 1;\n      -ms-flex-positive: 1;\n          flex-grow: 1;\n  -webkit-box-align: center;\n      -ms-flex-align: center;\n          align-items: center;\n  padding: 0;\n}\n\n.meeting-item-header {\n  -webkit-box-pack: justify;\n      -ms-flex-pack: justify;\n          justify-content: space-between;\n}\n\n.meeting-item-coach{\n  display: -webkit-box;\n  display: -ms-flexbox;\n  display: flex;\n  -webkit-box-orient: horizontal;\n  -webkit-box-direction: normal;\n      -ms-flex-direction: row;\n          flex-direction: row;\n  -webkit-box-flex: 1;\n      -ms-flex-positive: 1;\n          flex-grow: 1;\n  -webkit-box-align: center;\n      -ms-flex-align: center;\n          align-items: center;\n}\n\n.meeting-item-coach.has-coach {\n  cursor: pointer;\n}\n\n.meeting-item-coach.has-coach:hover .meeting-item-coach-name {\n  color: var(--main-electric-blue);\n}\n\n.meeting-item-date{\n  font-size: 22px;\n  margin-left: 32px;\n  text-align: right;\n}\n\n.meeting-item-body{\n  -webkit-box-pack: justify;\n      -ms-flex-pack: justify;\n          justify-content: space-between;\n  padding-left: 64px;\n}\n\n.meeting-item.closed .meeting-item-header,\n.meeting-item.closed .meeting-item-body{\n  -webkit-box-align: start;\n      -ms-flex-align: start;\n          align-items: flex-start;\n}\n\n.meeting-item-body-content {\n  -webkit-box-orient: vertical;\n  -webkit-box-direction: normal;\n      -ms-flex-direction: column;\n          flex-direction: column;\n  -webkit-box-pack: start;\n      -ms-flex-pack: start;\n          justify-content: flex-start;\n  -ms-flex-line-pack: start;\n      align-content: flex-start;\n  padding: 24px 0;\n}\n\n.meeting-review {\n  width: 100%;\n}\n\n.meeting-item-buttons {\n  display: -webkit-box;\n  display: -ms-flexbox;\n  display: flex;\n  -webkit-box-orient: horizontal;\n  -webkit-box-direction: normal;\n      -ms-flex-direction: row;\n          flex-direction: row;\n  -ms-flex-line-pack: end;\n      align-content: flex-end;\n  -webkit-box-pack: end;\n      -ms-flex-pack: end;\n          justify-content: flex-end;\n}\n\n@media screen and (max-device-width: 1240px), (max-width: 992px) {\n  .meeting-item-body {\n    -webkit-box-orient: vertical;\n    -webkit-box-direction: normal;\n        -ms-flex-direction: column;\n            flex-direction: column;\n    -webkit-box-pack: start;\n        -ms-flex-pack: start;\n            justify-content: flex-start;\n    -ms-flex-line-pack: start;\n        align-content: flex-start;\n    -webkit-box-align: left;\n        -ms-flex-align: left;\n            align-items: left;\n    padding-left: 0;\n  }\n\n  .meeting-item-buttons {\n    width: 100%;\n    text-align: right;\n    -ms-flex-line-pack: justify;\n        align-content: space-between;\n    -webkit-box-pack: justify;\n        -ms-flex-pack: justify;\n            justify-content: space-between;\n  }\n}\n\n.preloader-wrapper{\n  left: 50%;\n  margin-left: -30px;\n  margin: 32px 0;\n}\n\n.btn-cancel {\n  margin-left: 8px;\n}\n", ""]);
 
 // exports
 
@@ -5474,7 +6080,7 @@ exports = module.exports = __webpack_require__(6)();
 
 
 // module
-exports.push([module.i, "button{\n  margin: 0;\n}\n\np {\n  margin: 0;\n}\n\n.row {\n  margin: 0;\n}\n\n.btn-basic {\n  margin: 0;\n}\n\n.card-content, .card-reveal {\n  padding: 0;\n}\n\n.meeting-item{\n  margin: 0;\n  padding: 16px 0 !important;\n}\n\n.meeting-item > .row {\n  margin: 0;\n}\n\n.meeting-item-coach{\n  margin-top: 2px;\n  margin-bottom: 0;\n}\n\n.meeting-item-coach-avatar{\n  height: 52px;\n  margin-right: 16px;\n}\n\n.meeting-item-date-hour{\n  margin-left: 16px;\n}\n\n.meeting-item-header,\n.meeting-item-body{\n  display: -webkit-box;\n  display: -ms-flexbox;\n  display: flex;\n  -webkit-box-orient: horizontal;\n  -webkit-box-direction: normal;\n      -ms-flex-direction: row;\n          flex-direction: row;\n  -webkit-box-flex: 1;\n      -ms-flex-positive: 1;\n          flex-grow: 1;\n  -webkit-box-align: center;\n      -ms-flex-align: center;\n          align-items: center;\n  padding: 0px;\n}\n\n.meeting-item-header {\n  -webkit-box-pack: justify;\n      -ms-flex-pack: justify;\n          justify-content: space-between;\n}\n\n.meeting-item-coach{\n  display: -webkit-box;\n  display: -ms-flexbox;\n  display: flex;\n  -webkit-box-orient: horizontal;\n  -webkit-box-direction: normal;\n      -ms-flex-direction: row;\n          flex-direction: row;\n  -webkit-box-flex: 1;\n      -ms-flex-positive: 1;\n          flex-grow: 1;\n  -webkit-box-align: center;\n      -ms-flex-align: center;\n          align-items: center;\n}\n\n.meeting-item-date{\n  font-size: 22px;\n  margin-left: 32px;\n  text-align: right;\n}\n\n.meeting-item-body{\n  -webkit-box-pack: justify;\n      -ms-flex-pack: justify;\n          justify-content: space-between;\n  padding-left: 112px;\n}\n\n.meeting-item-body-content {\n  -webkit-box-orient: vertical;\n  -webkit-box-direction: normal;\n      -ms-flex-direction: column;\n          flex-direction: column;\n  -webkit-box-pack: start;\n      -ms-flex-pack: start;\n          justify-content: flex-start;\n  -ms-flex-line-pack: start;\n      align-content: flex-start;\n  padding: 24px 0;\n}\n\n.meeting-review {\n  width: 100%;\n}\n\n@media screen and (max-device-width: 1240px), (max-width: 992px) {\n  .meeting-item-body {\n    -webkit-box-orient: vertical;\n    -webkit-box-direction: normal;\n        -ms-flex-direction: column;\n            flex-direction: column;\n    -webkit-box-pack: start;\n        -ms-flex-pack: start;\n            justify-content: flex-start;\n    -ms-flex-line-pack: start;\n        align-content: flex-start;\n    -webkit-box-align: left;\n        -ms-flex-align: left;\n            align-items: left;\n    padding-left: 0;\n  }\n\n  .meeting-item-buttons {\n    width: 100%;\n    text-align: right;\n    -ms-flex-line-pack: justify;\n        align-content: space-between;\n    -webkit-box-pack: justify;\n        -ms-flex-pack: justify;\n            justify-content: space-between;\n  }\n}\n\n.preloader-wrapper{\n  left: 50%;\n  margin-left: -30px;\n  margin: 32px 0;\n}\n", ""]);
+exports.push([module.i, "button{\n  margin: 0;\n}\n\np {\n  margin: 0;\n}\n\n.row {\n  margin: 0;\n}\n\n.btn-basic {\n  margin: 0;\n}\n\n.card-content, .card-reveal {\n  padding: 0;\n}\n\n.meeting-item{\n  margin: 0;\n  padding: 16px 0 !important;\n  cursor: pointer;\n}\n\n.meeting-item > .row {\n  margin: 0;\n}\n\n.meeting-item-coach{\n  margin-top: 2px;\n  margin-bottom: 0;\n}\n\n.meeting-item-coach-avatar{\n  height: 52px;\n  width: 52px;\n  margin-right: 16px;\n}\n\n.meeting-item-date-hour{\n  margin-left: 16px;\n}\n\n.meeting-item-header,\n.meeting-item-body{\n  display: -webkit-box;\n  display: -ms-flexbox;\n  display: flex;\n  -webkit-box-orient: horizontal;\n  -webkit-box-direction: normal;\n      -ms-flex-direction: row;\n          flex-direction: row;\n  -webkit-box-flex: 1;\n      -ms-flex-positive: 1;\n          flex-grow: 1;\n  -webkit-box-align: start;\n      -ms-flex-align: start;\n          align-items: flex-start;\n  padding: 0px;\n}\n\n.meeting-item-header {\n  -webkit-box-pack: justify;\n      -ms-flex-pack: justify;\n          justify-content: space-between;\n  padding: 8px 0;\n}\n\n.meeting-item-header > div {\n  display: -webkit-box;\n  display: -ms-flexbox;\n  display: flex;\n  -webkit-box-orient: horizontal;\n  -webkit-box-direction: normal;\n      -ms-flex-direction: row;\n          flex-direction: row;\n  -webkit-box-flex: 1;\n      -ms-flex-positive: 1;\n          flex-grow: 1;\n  -webkit-box-align: center;\n      -ms-flex-align: center;\n          align-items: center;\n  padding: 0px;\n}\n\n\n.meeting-item-coach{\n  display: -webkit-box;\n  display: -ms-flexbox;\n  display: flex;\n  -webkit-box-orient: horizontal;\n  -webkit-box-direction: normal;\n      -ms-flex-direction: row;\n          flex-direction: row;\n  -webkit-box-flex: 1;\n      -ms-flex-positive: 1;\n          flex-grow: 1;\n  -webkit-box-align: center;\n      -ms-flex-align: center;\n          align-items: center;\n}\n\n.meeting-item-date{\n  font-size: 22px;\n  margin-left: 32px;\n  text-align: right;\n}\n\n.meeting-item-body{\n  -webkit-box-pack: justify;\n      -ms-flex-pack: justify;\n          justify-content: space-between;\n  padding-left: 112px;\n}\n\n.meeting-item-body-buttons {\n  padding: 16px 0;\n}\n\n.meeting-item-body-content {\n  -webkit-box-orient: vertical;\n  -webkit-box-direction: normal;\n      -ms-flex-direction: column;\n          flex-direction: column;\n  -webkit-box-pack: justify;\n      -ms-flex-pack: justify;\n          justify-content: space-between;\n  -ms-flex-line-pack: justify;\n      align-content: space-between;\n  padding: 24px 0;\n}\n\n.meeting-review {\n  width: 100%;\n}\n\n@media screen and (max-device-width: 1240px), (max-width: 992px) {\n  .meeting-item-body {\n    padding-left: 0;\n  }\n\n  .meeting-item-buttons {\n    width: 100%;\n    text-align: right;\n    -ms-flex-line-pack: justify;\n        align-content: space-between;\n    -webkit-box-pack: justify;\n        -ms-flex-pack: justify;\n            justify-content: space-between;\n  }\n}\n\n@media only screen and (max-width: 1400px) and (min-width: 1000px) {\n  .usage-title {\n    display: none;\n  }\n}\n\n.preloader-wrapper{\n  left: 50%;\n  margin-left: -30px;\n  margin: 32px 0;\n}\n\n.meeting-list-date {\n  font-size: 20px;\n  font-weight: 500;\n  margin-right: 8px;\n}\n", ""]);
 
 // exports
 
@@ -5546,7 +6152,7 @@ exports = module.exports = __webpack_require__(6)();
 
 
 // module
-exports.push([module.i, ".has-potential-date{\n  color: var(--main-electric-blue);\n  font-weight: 600;\n}\n", ""]);
+exports.push([module.i, ".header-user{\n  background-image: url(" + __webpack_require__(82) + ");\n  background-attachment: scroll;\n  background-position: center;\n  background-size: cover;\n  box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.5);\n}\n\n.header-user-filter{\n  background-color: var(--main-blue-filter);\n  color: var(--main-white-color);\n}\n\n.header-user .container {\n  padding: 64px 0;\n  display: -webkit-box;\n  display: -ms-flexbox;\n  display: flex;\n  -webkit-box-orient: horizontal;\n  -webkit-box-direction: normal;\n      -ms-flex-direction: row;\n          flex-direction: row;\n  -webkit-box-align: center;\n      -ms-flex-align: center;\n          align-items: center;\n  -webkit-box-pack: justify;\n      -ms-flex-pack: justify;\n          justify-content: space-between;\n}\n\n.header-stats {\n  display: -webkit-box;\n  display: -ms-flexbox;\n  display: flex;\n  -webkit-box-orient: horizontal;\n  -webkit-box-direction: normal;\n      -ms-flex-direction: row;\n          flex-direction: row;\n  -webkit-box-align: center;\n      -ms-flex-align: center;\n          align-items: center;\n  -webkit-box-pack: justify;\n      -ms-flex-pack: justify;\n          justify-content: space-between;\n\n}\n\n.user {\n  display: -webkit-box;\n  display: -ms-flexbox;\n  display: flex;\n  -webkit-box-align: center;\n      -ms-flex-align: center;\n          align-items: center;\n  -ms-flex-line-pack: center;\n      align-content: center;\n}\n\n.user-info{\n  margin-left: 16px;\n}\n\n.user-img{\n  height: 100px;\n  width: 100px;\n}\n\n.header-item {\n  text-align: center;\n}\n\n.header-item-number {\n  margin: 0;\n  margin-bottom: 8px;\n  font-size: 40px;\n  font-weight: 500;\n}\n\n.header-item-number span {\n  font-size: 18px;\n  font-weight: 400;\n}\n\n.header-item-title {\n  margin: 0;\n  color: var(--main-ultra-light-grey);\n}\n\n.gap {\n  height: 64px;\n}\n\n.message-field {\n  min-height: 200px;\n}\n", ""]);
 
 // exports
 
@@ -5586,10 +6192,10 @@ module.exports = module.exports.toString();
  * Created by guillaume on 31/03/2017.
  */ var environment = {
     production: true,
-    BACKEND_BASE_URL: "https://eritis-be-dev.appspot.com/api",
-    firebase_apiKey: "AIzaSyDGJt42caQMGiRJDg8z_0C_sWhy1NFlHJ0",
-    firebase_authDomain: "eritis-be-dev.firebaseapp.com",
-    firebase_databaseURL: "https://eritis-be-dev.firebaseio.com",
+    BACKEND_BASE_URL: "https://eritis-be-glr.appspot.com/api",
+    firebase_apiKey: "AIzaSyAAszel5d8YQuuGyZ65lX89zYb3V6oqoyA",
+    firebase_authDomain: "eritis-be-glr.firebaseapp.com",
+    firebase_databaseURL: "https://eritis-be-glr.firebaseio.com",
 };
 //# sourceMappingURL=/Users/guillaume/angular/eritis_fe/src/environment.js.map
 
@@ -5693,7 +6299,7 @@ exports = module.exports = __webpack_require__(6)();
 
 
 // module
-exports.push([module.i, "nav{\n  background-color: transparent;\n  box-shadow: none;\n  padding: 16px;\n}\n\nnav li{\n  background-color: transparent !important;\n}\n\nnav li:hover a,\nnav li:focus a{\n  color: var(--main-dark-grey) !important;\n  -webkit-transition: .3s;\n  transition: .3s;\n}\n\n\n.bg-top-image {\n  position: fixed;\n  top: 0;\n  left: 0;\n  background-size: cover;\n  background: url(" + __webpack_require__(109) + ") no-repeat center;\n  height: 1000px;\n  width: 100%;\n  max-width: 100%;\n  z-index: -10;\n}\n\n.bg-top-filter{\n  position: fixed;\n  top: 0;\n  left: 0;\n  background-color: var(--main-blue-filter);\n  height: 1000px;\n  width: 100%;\n  max-width: 100%;\n  z-index: -1;\n}\n\n.section{\n  padding: 0;\n}\n\nheader.section{\n  padding: 0;\n}\n\nheader.section .container{\n  display: -webkit-box;\n  display: -ms-flexbox;\n  display: flex;\n  -webkit-box-orient: vertical;\n  -webkit-box-direction: normal;\n      -ms-flex-direction: column;\n          flex-direction: column;\n  -webkit-box-align: center;\n      -ms-flex-align: center;\n          align-items: center;\n  text-align: center;\n  color: var(--main-white-color);\n  padding: 160px 0;\n}\n\n.header-title{\n  /*font-size: 66px*/\n  font-size: 8vmin; /*Test taille adaptative relative à la taille minimale de l'écran*/\n  font-weight: 500;\n  letter-spacing: 1.1px;\n  margin: 0;\n}\n\n.header-subtitle{\n  /*font-size: 36px;*/\n  font-size: 4vmin;\n  font-weight: 300;\n  letter-spacing: 2.3px;\n  margin: 64px 0;\n  opacity: 0.6;\n}\n\n.header-btn .btn-basic{\n  min-width: 200px;\n}\n\n.header-arrow-bottom{\n  font-size: 66px;\n  color: var(--main-white-color);\n  opacity: 0.6;\n}\n\n.header-arrow-bottom:hover{\n  opacity: 1;\n}\n\nrb-signin{\n  width: 30%;\n}\n\n@media(max-width: 960px){\n  rb-signin{\n    width: 80%;\n  }\n}\n\n.desc_icon {\n  width: 96px;\n  height: 96px;\n}\n\n.content {\n  -webkit-box-flex: 1;\n      -ms-flex-positive: 1;\n          flex-grow: 1;\n}\n\n.section_title{\n  /*font-size: 42px;*/\n  color: #000;\n  font-size: 5vmin;\n  font-weight: 600;\n  margin-bottom: 32px;\n  margin-top: 0;\n}\n\n#presentation {\n  background: var(--main-white-color);\n}\n\n.presentation_item {\n  display: -webkit-box;\n  display: -ms-flexbox;\n  display: flex;\n  -webkit-box-orient: vertical;\n  -webkit-box-direction: normal;\n      -ms-flex-direction: column;\n          flex-direction: column;\n  -webkit-box-align: center;\n      -ms-flex-align: center;\n          align-items: center;\n  padding: 0 2%;\n  margin-top: 64px;\n}\n\n.presentation_item_title{\n  font-size: 32px;\n  /*font-size: 4vmin;*/\n  height: 64px;\n  color: #1D1D1D;\n}\n\n.presentation_item_text{\n  font-size: 22px;\n  /*font-size: 3vmin;*/\n  color: var(--main-light-grey);\n}\n\n#coach_section {\n  display: inline-block;\n  background-image: -webkit-linear-gradient(bottom, #46b0ff, #0073cf);\n  background-image: linear-gradient(to top, #46b0ff, #0073cf);\n  box-shadow: 0 8px 12px 0 rgba(0, 0, 0, 0.5);\n  text-align: center;\n  color: var(--main-white-color);\n}\n\n.coach_section_title {\n  color: var(--main-white-color);\n  margin-bottom: 32px;\n}\n\n.coach_section_subtitle {\n  margin: 0;\n}\n\n.coach_description {\n  display: -webkit-box;\n  display: -ms-flexbox;\n  display: flex;\n  -webkit-box-orient: vertical;\n  -webkit-box-direction: normal;\n      -ms-flex-direction: column;\n          flex-direction: column;\n  -webkit-box-align: center;\n      -ms-flex-align: center;\n          align-items: center;\n  text-align: center;\n  padding: 0 2%;\n  margin-top: 64px;\n}\n\n.coach_description h4{\n  font-size: 32px;\n  /*font-size: 4vmin;*/\n  height: 72px;\n}\n\n.coach_description p{\n  font-size: 22px;\n  /*font-size: 2.5vmin;*/\n  font-weight: 300;\n  color: var(--main-ultra-light-grey);\n}\n\n.coach_img {\n  height: 173px;\n  width: 173px;\n  background-size: cover;\n}\n\n.small-line-container{\n  display: -webkit-box;\n  display: -ms-flexbox;\n  display: flex;\n  -webkit-box-align: center;\n      -ms-flex-align: center;\n          align-items: center;\n  -webkit-box-pack: center;\n      -ms-flex-pack: center;\n          justify-content: center;\n  margin-top: 64px;\n}\n\n.small-line{\n  height: 1px;\n  width: 180px;\n  border: solid 1px rgba(255, 255, 255, 0.67);\n}\n\nfooter {\n  background-color: var(--main-white-color);\n}\n\ntextarea{\n  width: 100%;\n  min-height: 192px;\n}\n\n.address{\n  color: #000;\n}\n\n.address p{\n  font-size: 22px;\n  font-weight: 400;\n}\n\n.btn-submit{\n  border-color: #44AFFE;\n  background-color: #44AFFE;\n}\n\n.btn-submit:disabled{\n  border-color: #E8E8E8;\n  background-color: #E8E8E8;\n}\n\n.side-nav{\n  background-color: rgba(255, 255, 255, .9)\n}\n", ""]);
+exports.push([module.i, "nav{\n  background-color: transparent;\n  box-shadow: none;\n  padding: 16px;\n}\n\nnav li{\n  background-color: transparent !important;\n}\n\nnav li:hover a,\nnav li:focus a{\n  color: var(--main-dark-grey) !important;\n  -webkit-transition: .3s;\n  transition: .3s;\n}\n\n\n.bg-top-image {\n  position: fixed;\n  top: 0;\n  left: 0;\n  background-size: cover;\n  background: url(" + __webpack_require__(82) + ") no-repeat center;\n  height: 1000px;\n  width: 100%;\n  max-width: 100%;\n  z-index: -10;\n}\n\n.bg-top-filter{\n  position: fixed;\n  top: 0;\n  left: 0;\n  background-color: var(--main-blue-filter);\n  height: 1000px;\n  width: 100%;\n  max-width: 100%;\n  z-index: -1;\n}\n\n.section{\n  padding: 0;\n}\n\nheader.section{\n  padding: 0;\n}\n\nheader.section .container{\n  display: -webkit-box;\n  display: -ms-flexbox;\n  display: flex;\n  -webkit-box-orient: vertical;\n  -webkit-box-direction: normal;\n      -ms-flex-direction: column;\n          flex-direction: column;\n  -webkit-box-align: center;\n      -ms-flex-align: center;\n          align-items: center;\n  text-align: center;\n  color: var(--main-white-color);\n  padding: 160px 0;\n}\n\n.header-title{\n  /*font-size: 66px*/\n  font-size: 8vmin; /*Test taille adaptative relative à la taille minimale de l'écran*/\n  font-weight: 500;\n  letter-spacing: 1.1px;\n  margin: 0;\n}\n\n.header-subtitle{\n  /*font-size: 36px;*/\n  font-size: 4vmin;\n  font-weight: 300;\n  letter-spacing: 2.3px;\n  margin: 64px 0;\n  opacity: 0.6;\n}\n\n.header-btn .btn-basic{\n  min-width: 200px;\n}\n\n.header-arrow-bottom{\n  font-size: 66px;\n  color: var(--main-white-color);\n  opacity: 0.6;\n}\n\n.header-arrow-bottom:hover{\n  opacity: 1;\n}\n\nrb-signin{\n  width: 30%;\n}\n\n@media(max-width: 960px){\n  rb-signin{\n    width: 80%;\n  }\n}\n\n.desc_icon {\n  width: 96px;\n  height: 96px;\n}\n\n.content {\n  -webkit-box-flex: 1;\n      -ms-flex-positive: 1;\n          flex-grow: 1;\n}\n\n.section_title{\n  /*font-size: 42px;*/\n  color: #000;\n  font-size: 5vmin;\n  font-weight: 600;\n  margin-bottom: 32px;\n  margin-top: 0;\n}\n\n#presentation {\n  background: var(--main-white-color);\n}\n\n.presentation_item {\n  display: -webkit-box;\n  display: -ms-flexbox;\n  display: flex;\n  -webkit-box-orient: vertical;\n  -webkit-box-direction: normal;\n      -ms-flex-direction: column;\n          flex-direction: column;\n  -webkit-box-align: center;\n      -ms-flex-align: center;\n          align-items: center;\n  padding: 0 2%;\n  margin-top: 64px;\n}\n\n.presentation_item_title{\n  font-size: 32px;\n  /*font-size: 4vmin;*/\n  height: 64px;\n  color: #1D1D1D;\n}\n\n.presentation_item_text{\n  font-size: 22px;\n  /*font-size: 3vmin;*/\n  color: var(--main-light-grey);\n}\n\n#coach_section {\n  display: inline-block;\n  background-image: -webkit-linear-gradient(bottom, #46b0ff, #0073cf);\n  background-image: linear-gradient(to top, #46b0ff, #0073cf);\n  box-shadow: 0 8px 12px 0 rgba(0, 0, 0, 0.5);\n  text-align: center;\n  color: var(--main-white-color);\n}\n\n.coach_section_title {\n  color: var(--main-white-color);\n  margin-bottom: 32px;\n}\n\n.coach_section_subtitle {\n  margin: 0;\n}\n\n.coach_description {\n  display: -webkit-box;\n  display: -ms-flexbox;\n  display: flex;\n  -webkit-box-orient: vertical;\n  -webkit-box-direction: normal;\n      -ms-flex-direction: column;\n          flex-direction: column;\n  -webkit-box-align: center;\n      -ms-flex-align: center;\n          align-items: center;\n  text-align: center;\n  padding: 0 2%;\n  margin-top: 64px;\n}\n\n.coach_description h4{\n  font-size: 32px;\n  /*font-size: 4vmin;*/\n  height: 72px;\n}\n\n.coach_description p{\n  font-size: 22px;\n  /*font-size: 2.5vmin;*/\n  font-weight: 300;\n  color: var(--main-ultra-light-grey);\n}\n\n.coach_img {\n  height: 173px;\n  width: 173px;\n  background-size: cover;\n}\n\n.small-line-container{\n  display: -webkit-box;\n  display: -ms-flexbox;\n  display: flex;\n  -webkit-box-align: center;\n      -ms-flex-align: center;\n          align-items: center;\n  -webkit-box-pack: center;\n      -ms-flex-pack: center;\n          justify-content: center;\n  margin-top: 64px;\n}\n\n.small-line{\n  height: 1px;\n  width: 180px;\n  border: solid 1px rgba(255, 255, 255, 0.67);\n}\n\nfooter {\n  background-color: var(--main-white-color);\n}\n\ntextarea{\n  width: 100%;\n  min-height: 192px;\n}\n\n.address{\n  color: #000;\n}\n\n.address p{\n  font-size: 22px;\n  font-weight: 400;\n}\n\n.btn-submit{\n  border-color: #44AFFE;\n  background-color: #44AFFE;\n}\n\n.btn-submit:disabled{\n  border-color: #E8E8E8;\n  background-color: #E8E8E8;\n}\n\n.side-nav{\n  background-color: rgba(255, 255, 255, .9)\n}\n", ""]);
 
 // exports
 
@@ -5755,7 +6361,7 @@ module.exports = "<!doctype html>\n<!--\n  Copyright 2015 Google Inc. All rights
 /***/ 633:
 /***/ (function(module, exports) {
 
-module.exports = "<header id=\"header\" class=\"page-topbar\"\n        [class.user-connected]=\"(isAuthenticated | async)\"\n        [hidden]=\"router.url === '/admin' || router.url === '/admin/signup' || router.url === '/admin/coachees-list' || router.url === '/admin/coachs-list' || router.url === '/admin/rhs-list' || router.url === '/signup_coachee' || router.url === '/signup_coach' || router.url === '/signup_rh'\">\n  <div class=\"navbar\" [class.navbar-fixed]=\"(isAuthenticated | async)\" [class.z-depth-2]=\"!(isAuthenticated | async)\">\n    <nav>\n      <div class=\"navbar-color\" [class.z-depth-2]=\"(isAuthenticated | async)\">\n        <div class=\"col s12\">\n          <a (click)=\"goToMeetings()\" class=\"brand-logo left hide-on-med-and-down\"><img src=\"assets/img/logo-eritis-new.png\" alt=\"Eritis\"></a>\n          <a (click)=\"goToMeetings()\" class=\"brand-logo center hide-on-large-only\"><img src=\"assets/img/logo-eritis-new.png\" alt=\"Eritis\"></a>\n          <a data-activates=\"side-nav\" class=\"button-collapse left\" [hidden]=\"!(isAuthenticated | async)\">\n            <i class=\"mdi-navigation-menu\"></i>\n          </a>\n\n          <ul class=\"right hide-on-med-and-down\">\n            <!--<li *ngIf=\"canDisplayListOfCoach()\"><a (click)=\"goToCoachs()\">Liste Des Coachs</a></li>-->\n\n            <li *ngIf=\"(isAuthenticated | async) && isUserACoach()\" [class.active]=\"router.url === '/available_meetings'\"><a (click)=\"goToAvailableSessions()\">\n              Demandes en attente</a></li>\n\n            <li *ngIf=\"(isAuthenticated | async)\" [class.active]=\"router.url === '/meetings'\"><a (click)=\"goToMeetings()\">Tableau de bord</a></li>\n\n            <!--<li *ngIf=\"(isAuthenticated | async) && isUserACoach()\"><a (click)=\"goToProfile()\">Profil</a></li>-->\n\n            <li [hidden]=\"!(isAuthenticated | async)\">\n              <a class=\"dropdown-button-notifs\" data-activates=\"notifs\"><i class=\"material-icons\">notifications</i></a>\n              <div class=\"notif-count\" *ngIf=\"(notifications | async) != null || (notifications | async)?.length > 0\">\n                {{(notifications | async).length}}\n              </div>\n            </li>\n\n            <!--<li *ngIf=\"(isAuthenticated | async)\"><a (click)=\"onLogout()\">Déconnexion</a></li>-->\n\n            <li [hidden]=\"!(isAuthenticated | async)\"\n                [class.active]=\"router.url === '/profile_coach' || router.url === '/profile_coachee' || router.url === '/profile_rh'\">\n              <a class=\"dropdown-button-profile\" data-activates=\"profil\">\n                <img src=\"{{(user | async)?.avatar_url}}\" alt=\"profile image\" class=\"item-user-img circle responsive-img\">\n                {{(user | async)?.display_name}}\n              </a>\n            </li>\n\n          </ul>\n\n\n          <!-- Side Nav -->\n          <ul class=\"side-nav\" id=\"side-nav\">\n\n            <div class=\"side-nav-header\" *ngIf=\"(isAuthenticated | async)\">\n              <div class=\"side-nav-header-container  z-depth-1\">\n                <img src=\"{{(user | async)?.avatar_url}}\" alt=\"profile image\" class=\"side-nav-user-img circle responsive-img z-depth-2\">\n                <div class=\"side-nav-user-info\">\n                  <h5>{{(user | async)?.display_name}}</h5>\n                  <span>{{(user | async)?.email}}</span>\n                </div>\n              </div>\n            </div>\n\n            <!--<li *ngIf=\"canDisplayListOfCoach()\"><a (click)=\"goToCoachs()\">Liste Des Coachs</a></li>-->\n\n            <!--<li *ngIf=\"(isAuthenticated | async)\"><a (click)=\"goToMeetings()\">Vos meetings</a></li>-->\n            <div class=\"side-nav-items\">\n              <li *ngIf=\"(isAuthenticated | async) && isUserACoach()\" [class.active]=\"router.url === '/available_meetings'\"><a (click)=\"goToAvailableSessions()\">Séances\n                disponibles</a></li>\n\n              <li *ngIf=\"(isAuthenticated | async)\" [class.active]=\"router.url === '/meetings'\"><a (click)=\"goToMeetings()\">Tableau de bord</a></li>\n\n              <!--<li [hidden]=\"!(isAuthenticated | async)\">-->\n              <!--<a class=\"dropdown-button\" data-activates=\"notifs\"><i class=\"material-icons\">notifications</i></a>-->\n              <!--<div class=\"notif-count\">0</div>-->\n              <!--</li>-->\n\n              <li *ngIf=\"(isAuthenticated | async) && isUserACoach()\"\n                  [class.active]=\"router.url === '/profile_coach' || router.url === '/profile_coachee' || router.url === '/profile_rh'\">\n                <a (click)=\"goToProfile()\">Modifier mon profil</a></li>\n\n              <li *ngIf=\"(isAuthenticated | async)\"><a (click)=\"onLogout()\">Déconnexion</a></li>\n            </div>\n\n          </ul>\n\n        </div>\n      </div>\n    </nav>\n\n\n    <div class=\"welcome-header\" *ngIf=\"!(isAuthenticated | async)\">\n      <div class=\"container\">\n        <h1 class=\"header-title\">Atteignez vos objectifs</h1>\n        <h3 class=\"header-subtitle\">Séances de coaching individuel avec un coach certifié</h3>\n\n        <div class=\"row\">\n          <div class=\"header-btn col-xs-12 col-sm-6\">\n            <a pageScroll href=\"#coach_section\" class=\"btn-basic right\">En savoir plus</a>\n          </div>\n          <div class=\"header-btn col-xs-12 col-sm-6\">\n            <button class=\"btn-basic btn-plain btn-connexion left\" (click)=\"activateLogin()\"><i class=\"material-icons\">perm_identity</i>\n              Connexion\n            </button>\n          </div>\n        </div>\n\n         <rb-signin [hidden]=\"!loginActivated\"></rb-signin>\n\n        <a pageScroll href=\"#presentation\" class=\"header-arrow-bottom\"><i class=\"fa fa-angle-down\"\n                                                                          aria-hidden=\"true\"></i></a>\n      </div>\n    </div>\n\n\n  </div><!--end navbar-fixed-->\n\n  <!--<div class=\"header-user\" *ngIf=\"(isAuthenticated | async)\">-->\n    <!--<div class=\"container\">-->\n      <!--<img src=\"{{(user | async)?.avatar_url}}\" alt=\"profile image\" class=\"header-user-img circle responsive-img\">-->\n      <!--<div class=\"header-user-info\">-->\n        <!--<h5>{{(user | async)?.display_name}}</h5>-->\n        <!--<h6>{{(user | async)?.email}}</h6>-->\n      <!--</div>-->\n    <!--</div>-->\n  <!--</div>-->\n\n</header>\n\n<ul id=\"notifs\" class=\"dropdown-content dropdown-notifs collection\">\n  <li class=\"notif-item collection-item\" *ngIf=\"(notifications | async) == null\">Vous n'avez pas de notification</li>\n  <div *ngIf=\"(notifications | async) != null\">\n    <li class=\"notif-item collection-item notif-delete\"><a (click)=\"readAllNotifications()\">Marquer comme lues</a></li>\n    <li class=\"notif-item collection-item\" *ngFor=\"let notif of (notifications | async)\">\n      <p class=\"notif-date\">{{printDateString(notif.date)}}</p>\n      <p class=\"notif-messsage\">{{notif.message}}</p>\n    </li>\n  </div>\n</ul>\n\n<ul id=\"profil\" class=\"dropdown-content dropdown-profil collection\">\n  <li class=\"profil-item collection-item text-right\" (click)=\"goToProfile()\" *ngIf=\"isUserACoach()\">Modifier mon profil</li>\n  <li class=\"profil-item collection-item text-right\" (click)=\"onLogout()\">Déconnexion</li>\n</ul>\n"
+module.exports = "<header id=\"header\" class=\"page-topbar\"\n        [class.user-connected]=\"(isAuthenticated | async)\"\n        [hidden]=\"router.url === '/admin' || router.url === '/admin/signup' || router.url === '/admin/coachees-list' || router.url === '/admin/coachs-list' || router.url === '/admin/rhs-list' || router.url === '/signup_coachee' || router.url === '/signup_coach' || router.url === '/signup_rh'\">\n  <div class=\"navbar\" [class.navbar-fixed]=\"(isAuthenticated | async)\" [class.z-depth-2]=\"!(isAuthenticated | async)\">\n    <nav>\n      <div class=\"navbar-color\" [class.z-depth-2]=\"(isAuthenticated | async)\">\n        <div class=\"col s12\">\n          <a (click)=\"goToMeetings()\" class=\"brand-logo left hide-on-med-and-down\" *ngIf=\"(isAuthenticated | async)\"><img src=\"assets/img/logo-eritis-new.png\" alt=\"Eritis\"></a>\n          <a (click)=\"goToMeetings()\" class=\"brand-logo center hide-on-med-and-down\" *ngIf=\"!(isAuthenticated | async)\"><img src=\"assets/img/logo-eritis-new.png\" alt=\"Eritis\"></a>\n          <a (click)=\"goToMeetings()\" class=\"brand-logo center hide-on-large-only\"><img src=\"assets/img/logo-eritis-new.png\" alt=\"Eritis\"></a>\n          <a data-activates=\"side-nav\" class=\"button-collapse left\" [hidden]=\"!(isAuthenticated | async)\">\n            <i class=\"mdi-navigation-menu\"></i>\n          </a>\n\n          <ul class=\"right hide-on-med-and-down\">\n            <!--<li *ngIf=\"canDisplayListOfCoach()\"><a (click)=\"goToCoachs()\">Liste Des Coachs</a></li>-->\n\n            <li *ngIf=\"(isAuthenticated | async) && isUserACoach()\" [class.active]=\"router.url === '/available_meetings'\"><a (click)=\"goToAvailableSessions()\">\n              Demandes en attente</a></li>\n\n            <li *ngIf=\"(isAuthenticated | async)\" [class.active]=\"router.url === '/meetings'\"><a (click)=\"goToMeetings()\">Tableau de bord</a></li>\n\n            <!--<li *ngIf=\"(isAuthenticated | async) && isUserACoach()\"><a (click)=\"goToProfile()\">Profil</a></li>-->\n\n            <li [hidden]=\"!(isAuthenticated | async)\">\n              <a class=\"dropdown-button-notifs\" data-activates=\"notifs\"><i class=\"material-icons\">notifications</i></a>\n              <div class=\"notif-count\" *ngIf=\"(notifications | async) != null || (notifications | async)?.length > 0\">\n                {{(notifications | async).length}}\n              </div>\n            </li>\n\n            <!--<li *ngIf=\"(isAuthenticated | async)\"><a (click)=\"onLogout()\">Déconnexion</a></li>-->\n\n            <li [hidden]=\"!(isAuthenticated | async)\"\n                [class.active]=\"router.url === '/profile_coach' || router.url === '/profile_coachee' || router.url === '/profile_rh'\">\n              <a class=\"dropdown-button-profile\" data-activates=\"profil\">\n                <img src=\"{{(user | async)?.avatar_url}}\" alt=\"profile image\" class=\"item-user-img circle responsive-img\">\n                {{(user | async)?.display_name}}\n              </a>\n            </li>\n\n          </ul>\n\n\n          <!-- Side Nav -->\n          <ul class=\"side-nav\" id=\"side-nav\">\n\n            <div class=\"side-nav-header\" *ngIf=\"(isAuthenticated | async)\">\n              <div class=\"side-nav-header-container  z-depth-1\">\n                <img src=\"{{(user | async)?.avatar_url}}\" alt=\"profile image\" class=\"side-nav-user-img circle responsive-img z-depth-2\">\n                <div class=\"side-nav-user-info\">\n                  <h5>{{(user | async)?.display_name}}</h5>\n                  <span>{{(user | async)?.email}}</span>\n                </div>\n              </div>\n            </div>\n\n            <!--<li *ngIf=\"canDisplayListOfCoach()\"><a (click)=\"goToCoachs()\">Liste Des Coachs</a></li>-->\n\n            <!--<li *ngIf=\"(isAuthenticated | async)\"><a (click)=\"goToMeetings()\">Vos meetings</a></li>-->\n            <div class=\"side-nav-items\">\n              <li *ngIf=\"(isAuthenticated | async) && isUserACoach()\" [class.active]=\"router.url === '/available_meetings'\"><a (click)=\"goToAvailableSessions()\">Séances\n                disponibles</a></li>\n\n              <li *ngIf=\"(isAuthenticated | async)\" [class.active]=\"router.url === '/meetings'\"><a (click)=\"goToMeetings()\">Tableau de bord</a></li>\n\n              <!--<li [hidden]=\"!(isAuthenticated | async)\">-->\n              <!--<a class=\"dropdown-button\" data-activates=\"notifs\"><i class=\"material-icons\">notifications</i></a>-->\n              <!--<div class=\"notif-count\">0</div>-->\n              <!--</li>-->\n\n              <li *ngIf=\"(isAuthenticated | async) && isUserACoach()\"\n                  [class.active]=\"router.url === '/profile_coach' || router.url === '/profile_coachee' || router.url === '/profile_rh'\">\n                <a (click)=\"goToProfile()\">Modifier mon profil</a></li>\n\n              <li *ngIf=\"(isAuthenticated | async)\"><a (click)=\"onLogout()\">Déconnexion</a></li>\n            </div>\n\n          </ul>\n\n        </div>\n      </div>\n    </nav>\n\n\n    <div class=\"welcome-header\" *ngIf=\"!(isAuthenticated | async)\">\n      <div class=\"container\">\n        <h1 class=\"header-title\">Atteignez vos objectifs</h1>\n        <h3 class=\"header-subtitle ultra-light-grey-text\">Séances de coaching individuel avec un coach certifié</h3>\n\n        <div class=\"row hide-on-small-and-down\">\n          <div class=\"header-btn col-xs-12 col-sm-6\">\n            <a pageScroll href=\"#coach_section\" class=\"btn-basic right\">En savoir plus</a>\n          </div>\n          <div class=\"header-btn col-xs-12 col-sm-6\">\n            <button class=\"btn-basic btn-plain btn-connexion left\" (click)=\"activateLogin()\"><i class=\"material-icons\">perm_identity</i>\n              Connexion\n            </button>\n          </div>\n        </div>\n\n        <div class=\"row hide-on-med-and-up\">\n          <div class=\"header-btn col-xs-12 col-sm-6\">\n            <a pageScroll href=\"#coach_section\" class=\"btn-basic\">En savoir plus</a>\n          </div>\n          <div class=\"header-btn col-xs-12 col-sm-6\">\n            <button class=\"btn-basic btn-plain btn-connexion\" (click)=\"activateLogin()\"><i class=\"material-icons\">perm_identity</i>\n              Connexion\n            </button>\n          </div>\n        </div>\n\n         <rb-signin [hidden]=\"!loginActivated\"></rb-signin>\n\n        <a pageScroll href=\"#presentation\" class=\"header-arrow-bottom\"><i class=\"fa fa-angle-down\"\n                                                                          aria-hidden=\"true\"></i></a>\n      </div>\n    </div>\n\n\n  </div><!--end navbar-fixed-->\n\n  <!--<div class=\"header-user\" *ngIf=\"(isAuthenticated | async)\">-->\n    <!--<div class=\"container header-user-filter\">-->\n      <!--<img src=\"{{(user | async)?.avatar_url}}\" alt=\"profile image\" class=\"header-user-img circle responsive-img\">-->\n      <!--<div class=\"header-user-info\">-->\n        <!--<h5>{{(user | async)?.display_name}}</h5>-->\n        <!--<h6>{{(user | async)?.email}}</h6>-->\n      <!--</div>-->\n    <!--</div>-->\n  <!--</div>-->\n\n</header>\n\n<ul id=\"notifs\" class=\"dropdown-content dropdown-notifs collection\">\n  <li class=\"notif-item collection-item\" *ngIf=\"(notifications | async) == null\">Vous n'avez pas de notification</li>\n  <div *ngIf=\"(notifications | async) != null\">\n    <li class=\"notif-item collection-item notif-delete\"><a (click)=\"readAllNotifications()\">Marquer comme lues</a></li>\n    <li class=\"notif-item collection-item\" *ngFor=\"let notif of (notifications | async)\">\n      <p class=\"notif-date\">{{printDateString(notif.date)}}</p>\n      <p class=\"notif-messsage\">{{notif.message}}</p>\n    </li>\n  </div>\n</ul>\n\n<ul id=\"profil\" class=\"dropdown-content dropdown-profil collection\">\n  <li class=\"profil-item collection-item text-right\" (click)=\"goToProfile()\" *ngIf=\"isUserACoach()\">Modifier mon profil</li>\n  <li class=\"profil-item collection-item text-right\" (click)=\"onLogout()\">Déconnexion</li>\n</ul>\n"
 
 /***/ }),
 
@@ -5790,7 +6396,7 @@ module.exports = "<div class=\"section\">\n  <div class=\"row\">\n    <div class
 /***/ 638:
 /***/ (function(module, exports) {
 
-module.exports = "<div class=\"section\">\n  <div class=\"row\">\n    <div class=\"col s12 m12 l6\">\n      <div class=\"card-panel\">\n        <h4 class=\"header2\">Envoyer une invitation</h4>\n        <div class=\"row\">\n          <form class=\"col s12\" [formGroup]=\"signUpForm\" (ngSubmit)=\"onSignUpSubmitted()\">\n            <div class=\"row\">\n              <div class=\"input-field col s12\">\n                <input id=\"email\" type=\"email\" formControlName=\"email\">\n                <label for=\"email\">Email</label>\n                <small\n                  *ngIf=\"!signUpForm.controls['email'].pristine &&!signUpForm.controls['email'].valid\"\n                  class=\"text-danger\">\n                  Email is required and format should be <i>john@doe.com</i>.\n                </small>\n              </div>\n            </div>\n\n            <div class=\"input-field\">\n              <select [(ngModel)]=\"signUpSelectedType\"\n                      [ngModelOptions]=\"{standalone: true}\"\n                      name=\"signup_type_selector\"\n                      class=\"browser-default\">\n                <option value=\"{{signUpSelectedType}}\" disabled selected>Sélectionnez un Type</option>\n                <option *ngFor=\"let type of signUpTypes\" [ngValue]=\"type\">\n                  {{ getSignUpTypeName(type) }}\n                </option>\n              </select>\n            </div>\n\n            <div *ngIf=\"signUpSelectedType == 1\">\n              <h4>Choisir un plan pour ce coaché</h4>\n              <div *ngFor=\"let plan of plans | async\" (click)=\"onSelectPlan(plan)\"\n                   [class.contract_selected]=\"plan == mSelectedPlan\">\n                Plan id : {{plan.plan_id}}\n                Plan Name : {{plan.plan_name}}\n                Plan Sessions count : {{plan.sessions_count}}\n              </div>\n            </div>\n\n            <br>\n            <br>\n\n            <h4>Conseils</h4>\n            <p>Un email sera envoyé à l'adresse mail entrée, assurez-vous de posséder cet email</p>\n            <p>Email possibles : </p>\n            <br>\n            <p>coach.1.eritis@gmail.com</p>\n            <p>pwd : passwordEritis</p>\n\n            <br>\n\n            <p>coachee.1.eritis@gmail.com</p>\n            <p>pwd : passwordEritis</p>\n\n            <br>\n\n            <p>rh.1.eritis@gmail.com</p>\n            <p>pwd : passwordEritis</p>\n\n            <div class=\"row\">\n              <div class=\"input-field col s12\">\n                <button class=\"btn-basic btn-blue right\" type=\"submit\" name=\"action\"\n                        [disabled]=\"!signUpForm.valid  || signUpSelectedType==null || (signUpSelectedType == 1 && !mSelectedPlan)\">\n                  Valider\n                </button>\n\n              </div>\n            </div>\n\n            <!-- sign up error div-->\n\n            <div *ngIf=\"error && errorMessage != ''\">\n\n              <!-- add extra separator-->\n              <hr>\n\n              <small class=\"text-danger\">\n                {{errorMessage}}\n              </small>\n            </div>\n\n          </form>\n        </div>\n      </div><!--end card panel-->\n    </div>\n  </div><!--end row-->\n</div><!--end section-->\n"
+module.exports = "<div class=\"section\">\n  <div class=\"row\">\n    <div class=\"col s12 m12 l6\">\n      <div class=\"card-panel\">\n        <h4>Envoyer une invitation</h4>\n        <div class=\"row\">\n          <form class=\"col s12\" [formGroup]=\"signUpForm\" (ngSubmit)=\"onSignUpSubmitted()\">\n            <div class=\"row\">\n              <div class=\"col s12\">\n                <label for=\"email\">Email</label>\n                <input id=\"email\" type=\"email\" formControlName=\"email\" placeholder=\"exemple@mail.com\">\n                <small\n                  *ngIf=\"!signUpForm.controls['email'].pristine &&!signUpForm.controls['email'].valid\"\n                  class=\"text-danger\">\n                  Email is required and format should be <i>john@doe.com</i>.\n                </small>\n              </div>\n            </div>\n\n            <div class=\"input-field\">\n              <select [(ngModel)]=\"signUpSelectedType\"\n                      [ngModelOptions]=\"{standalone: true}\"\n                      name=\"signup_type_selector\"\n                      class=\"browser-default\">\n                <option value=\"{{signUpSelectedType}}\" disabled selected>Sélectionnez un Type</option>\n                <option *ngFor=\"let type of signUpTypes\" [ngValue]=\"type\">\n                  {{ getSignUpTypeName(type) }}\n                </option>\n              </select>\n            </div>\n\n            <div *ngIf=\"signUpSelectedType == 1\">\n              <h4>Choisir un plan pour ce coaché</h4>\n              <div *ngFor=\"let plan of plans | async\" (click)=\"onSelectPlan(plan)\"\n                   [class.contract_selected]=\"plan == mSelectedPlan\">\n                Plan id : {{plan.plan_id}}\n                Plan Name : {{plan.plan_name}}\n                Plan Sessions count : {{plan.sessions_count}}\n              </div>\n            </div>\n\n            <br>\n            <br>\n\n            <h4>Conseils</h4>\n            <p>Un email sera envoyé à l'adresse mail entrée, assurez-vous de posséder cet email</p>\n            <br>\n\n            <h5 class=\"black-text\">Email possibles</h5>\n            <div class=\"row\">\n              <div class=\"col-lg-4\">\n                <p>coach.1.eritis@gmail.com</p>\n                <p>pwd : passwordEritis</p>\n              </div>\n\n              <div class=\"col-lg-4\">\n                <p>coachee.1.eritis@gmail.com</p>\n                <p>pwd : passwordEritis</p>\n              </div>\n\n              <div class=\"col-lg-4\">\n                <p>rh.1.eritis@gmail.com</p>\n                <p>pwd : passwordEritis</p>\n              </div>\n\n            </div>\n\n            <div class=\"row\">\n              <div class=\"input-field col s12\">\n                <button class=\"btn-basic btn-blue right\" type=\"submit\" name=\"action\"\n                        [disabled]=\"!signUpForm.valid  || signUpSelectedType==null || (signUpSelectedType == 1 && !mSelectedPlan)\">\n                  Valider\n                </button>\n\n              </div>\n            </div>\n\n            <!-- sign up error div-->\n\n            <div *ngIf=\"error && errorMessage != ''\">\n\n              <!-- add extra separator-->\n              <hr>\n\n              <small class=\"text-danger\">\n                {{errorMessage}}\n              </small>\n            </div>\n\n          </form>\n        </div>\n      </div><!--end card panel-->\n    </div>\n  </div><!--end row-->\n</div><!--end section-->\n"
 
 /***/ }),
 
@@ -5811,7 +6417,7 @@ module.exports = "\n<div class=\"container\">\n  <div class=\"row\">\n    <div c
 /***/ 641:
 /***/ (function(module, exports) {
 
-module.exports = "<div class=\"meeting-item col-lg-12\" [class.closed]=\"!meeting.isOpen\" [class.unbooked]=\"!meeting.agreed_date\">\n  <!--<span class=\"card-title\">Vous avez choisi {{ coach.display_name }} pour être votre coach.</span>-->\n\n  <div class=\"preloader-wrapper active\" *ngIf=\"loading\">\n    <div class=\"spinner-layer spinner-blue-only\">\n      <div class=\"circle-clipper left\">\n        <div class=\"circle\"></div>\n      </div>\n      <div class=\"gap-patch\">\n        <div class=\"circle\"></div>\n      </div>\n      <div class=\"circle-clipper right\">\n        <div class=\"circle\"></div>\n      </div>\n    </div>\n  </div>\n\n  <div class=\"row\" *ngIf=\"!loading\">\n\n    <!-- COACHEE -->\n    <div class=\"meeting-item-header col-md-12\" [class.col-lg-3]=\"!meeting.agreed_date\" [class.col-lg-5]=\"meeting.agreed_date\">\n      <div>\n        <div class=\"meeting-item-coach\">\n          <div>\n            <!-- image coach-->\n            <img *ngIf=\"meeting.coachee\" class=\"meeting-item-coach-avatar circle img-responsive\" alt=\"coachee\"\n                 [src]=\"meeting.coachee.avatar_url\">\n            <img *ngIf=\"!meeting.coachee\" class=\"meeting-item-coach-avatar circle img-responsive\" alt=\"coachee\"\n                 src=\"https://s-media-cache-ak0.pinimg.com/originals/af/25/49/af25490494d3338afef00869c59fdd37.png\">\n          </div>\n\n          <div>\n            <p class=\"meeting-item-coach black-text\" *ngIf=\"meeting.coachee\">{{ meeting.coachee.display_name }}</p>\n            <p class=\"italic\">Company name</p>\n          </div>\n        </div><!--end meeting-item-coach-->\n\n        <!-- DATE -->\n        <div class=\"meeting-item-date\" *ngIf=\"meeting.agreed_date\">\n          <div *ngIf=\"meeting.agreed_date\">\n            <span class=\"meeting-item-date-date\">{{ getDate(meeting.agreed_date.start_date) }}</span>\n            <span class=\"meeting-item-date-hour\">{{ printTimeString(meeting.agreed_date.start_date) }}</span>\n          </div>\n        </div>\n      </div>\n    </div>\n\n    <!-- GOAL & REVIEW -->\n    <div class=\"meeting-item-body col-md-12\" [class.col-lg-9]=\"!meeting.agreed_date\" [class.col-lg-7]=\"meeting.agreed_date\">\n      <div class=\"meeting-item-body-content\">\n        <p class=\"meeting-item-goal\">\n          <span class=\"black-text bold\">Objectif de la séance: </span>\n          <span *ngIf=\"hasGoal\">{{(goal | async) }}</span>\n          <span *ngIf=\"!hasGoal\" class=\"red-text\">Pas encore défini...</span>\n        </p>\n\n        <!--Complétées-->\n        <div *ngIf=\"!meeting.isOpen\" class=\"meeting-review\">\n          <div *ngIf=\"hasValue && hasNextStep\">\n            <br>\n            <p><span class=\"black-text bold\">En quoi la séance a-t-elle été utile ? </span>{{ reviewValue }}</p>\n            <br>\n            <p><span class=\"black-text bold\">Avec quoi êtes vous reparti ? </span>{{ reviewNextStep }}</p>\n          </div>\n        </div><!--end meeting-review-->\n\n\n        <div *ngIf=\"meeting.agreed_date && showDetails\" class=\"meeting-review\">\n          <div>\n            <br>\n            <p><span class=\"black-text bold\">Context :</span> {{ (context | async) }}</p>\n            <br>\n            <p><span class=\"black-text bold\">Objectif personnel :</span>\n              <span *ngIf=\"coachee.last_objective != null\">{{ coachee.last_objective.objective }}</span>\n              <span *ngIf=\"coachee.last_objective == null\">n/a</span>\n            </p>\n          </div>\n        </div><!--end meeting-review-->\n\n        <!--Demandes disponibles-->\n        <div *ngIf=\"!meeting.agreed_date && showDetails\" class=\"meeting-review\">\n          <div>\n            <br>\n            <p><span class=\"black-text bold\">Disponibilités :</span></p>\n            <div class=\"meeting-potential\" *ngFor=\"let potential of potentialDates | async\">\n              <span class=\"meeting-potential-date\">{{ getDate(potential.start_date) }}</span>\n              <span class=\"meeting-potential-hours\">{{ printTimeString(potential.start_date) }} - {{ printTimeString(potential.end_date) }}</span>\n            </div>\n            <br>\n            <form class=\"confirm-meeting-form\">\n              <!--<span class=\"black-text bold\">Réponse :</span>-->\n              <div class=\"input-field\">\n                <select [(ngModel)]=\"selectedDate\" name=\"meeting-date\" class=\"browser-default\"\n                        (change)=\"loadPotentialHours(selectedDate)\">\n                  <option value=\"0\" disabled selected>Date</option>\n                  <option *ngFor=\"let d of potentialDays | async\" [ngValue]=\" d \">\n                    {{ getDate(d) }}\n                  </option>\n                </select>\n              </div>\n              <div class=\"input-field\">\n                <select [(ngModel)]=\"selectedHour\" name=\"meeting-hour\" class=\"browser-default\"\n                        materialize=\"material_select\">\n                  <option value=\"0\" disabled selected>Heure</option>\n                  <option *ngFor=\"let h of potentialHours | async\" [ngValue]=\"h\">\n                    {{ printTimeNumber(h) }} - {{ printTimeNumber(h+1) }}\n                  </option>\n                </select>\n              </div>\n              <div>\n                <button type=\"submit\" class=\"btn-basic btn-blue btn-small\"\n                        [disabled]=\"!selectedDate || !selectedHour\"\n                        (click)=\"openCoachValidateMeetingModal()\">Valider\n                </button>\n              </div>\n            </form>\n          </div>\n        </div><!--end meeting-review-->\n      </div>\n\n      <div class=\"meeting-item-body-buttons\" *ngIf=\"meeting.isOpen\">\n        <button class=\"btn-basic btn-plain btn-blue btn-small\"\n                (click)=\"toggleShowDetails()\">DETAIL\n        </button>\n        <!--<button class=\"btn-basic btn-cancel\"-->\n                <!--*ngIf=\"meeting.agreed_date\"-->\n                <!--(click)=\"openModal()\">-->\n          <!--<i class=\"material-icons\">clear</i>-->\n        <!--</button>-->\n      </div>\n    </div><!--end meeting-item-body-->\n\n  </div><!--end row-->\n\n</div><!--end meeting-item-->\n\n\n<!-- Modal Coach Validate Meeting -->\n<div id=\"coach_cancel_meeting\" class=\"modal\">\n  <div class=\"delete-modal-content\">\n    <div class=\"delete-modal-message\">\n      <h5>Vous ne pourrez pas annuler ce meeting, êtes-vous sûr de vouloir valider ce créneau ?</h5>\n    </div>\n    <div class=\"delete-modal-footer\">\n      <button class=\"btn-basic btn-plain btn-small\" (click)=\"cancelCoachValidateMeeting()\">Annuler</button>\n      <button class=\"btn-basic btn-blue btn-small\" (click)=\"onSubmitValidateMeeting()\">Valider</button>\n    </div>\n  </div>\n</div>\n\n\n<!--\n<div class=\"card\">\n  <div class=\"card-content\">\n    <span class=\"card-title\">Vous avez été choisi par {{ coachee.display_name }} pour une séance.</span>\n\n\n    &lt;!&ndash; Meeting is closed&ndash;&gt;\n    <div *ngIf=\"!meeting.isOpen\">\n      <h4>Meeting is now closed</h4>\n    </div>\n\n    &lt;!&ndash; Meeting is open &ndash;&gt;\n    <div *ngIf=\"meeting.isOpen\">\n      <div class=\"col s12\" *ngIf=\"meeting.agreed_date == null\">\n\n        &lt;!&ndash; no potential dates selected&ndash;&gt;\n        <div class=\"section\" *ngIf=\"(potentialDates | async)== null\">\n          <h5>Votre coachee doit d'abord indiquer ses préférences horaires</h5>\n        </div>\n\n        &lt;!&ndash; some potential dates selected&ndash;&gt;\n        <div class=\"section\" *ngIf=\"(potentialDates | async)!= null\">\n          <h5>Votre coachee a indiqué ses préférences horaires</h5>\n\n          &lt;!&ndash; list of potential dates &ndash;&gt;\n          <div *ngFor=\"let date of potentialDates | async\">\n            <h6>Possible date</h6>\n            <p>Le : {{date.start_date | date}}</p>\n            <p>De : {{date.start_date | date:'shortTime'}}</p>\n            <p>A : {{date.end_date | date:'shortTime'}}</p>\n\n            <button class=\"btn cyan waves-effect waves-light right\" (click)=\"confirmPotentialDate(date)\">\n              Confirmer cette date\n              <i class=\"mdi-content-send right\"></i>\n            </button>\n\n          </div>\n        </div>\n\n      </div>\n\n      <div class=\"col s12\" *ngIf=\"meeting.agreed_date \">\n        <h5>Votre meeting est le : {{meeting.agreed_date.start_date | date}} à {{meeting.agreed_date.start_date | date:'shortTime'}} </h5>\n      </div>\n\n    </div>\n\n\n    &lt;!&ndash; check if you have some reviews&ndash;&gt;\n    <div class=\"container\" *ngIf=\"(hasSomeReviews | async)\">\n\n      <h4>Comments</h4>\n\n      &lt;!&ndash; list of reviews &ndash;&gt;\n      <div *ngFor=\"let review of reviews | async\">\n\n        <div class=\"card\">\n          <div class=\"card-content\">\n            <span class=\"card-title\">Meeting Review</span>\n            <div class=\"list-group-item-text\">at : {{review.date}}</div>\n            <div class=\"list-group-item-text\">comment : {{review.comment}}</div>\n            <div class=\"list-group-item-text\">score : {{review.score}}</div>\n          </div>\n        </div>\n      </div>\n\n    </div>\n    &lt;!&ndash; /reviews&ndash;&gt;\n\n    &lt;!&ndash; Display Close Form is the Meeting is still open &ndash;&gt;\n    <div *ngIf=\"meeting.isOpen\" class=\"card\">\n\n      <div class=\"card-content\">\n\n        <h5>Close this meeting</h5>\n\n        <form [formGroup]=\"closeMeetingForm\" (ngSubmit)=\"submitCloseMeetingForm()\">\n\n          <div class=\"form-group\">\n            <label for=\"recap\">Résumé du meeting</label>\n            <input\n              type=\"text\"\n              id=\"recap\"\n              class=\"form-control\"\n              formControlName=\"recap\">\n          </div>\n\n          &lt;!&ndash;<button type=\"submit\" class=\"btn btn-success\">Envoyer</button>&ndash;&gt;\n          &lt;!&ndash;<button type=\"submit\" class=\"btn btn-success\" [disabled]=\"!closeMeetingForm.valid\">Envoyer</button>&ndash;&gt;\n          <button class=\"btn cyan waves-effect waves-light right\" type=\"submit\" name=\"action\">\n            Fermer le meeting\n            <i class=\"mdi-content-send right\"></i>\n          </button>\n        </form>\n      </div>\n    </div>\n\n\n  </div>\n\n\n</div>\n-->\n"
+module.exports = "<div class=\"meeting-item col-lg-12\" [class.closed]=\"!meeting.isOpen\" [class.unbooked]=\"!meeting.agreed_date\">\n  <!--<span class=\"card-title\">Vous avez choisi {{ coach.display_name }} pour être votre coach.</span>-->\n\n  <div class=\"preloader-wrapper active\" *ngIf=\"loading\">\n    <div class=\"spinner-layer spinner-blue-only\">\n      <div class=\"circle-clipper left\">\n        <div class=\"circle\"></div>\n      </div>\n      <div class=\"gap-patch\">\n        <div class=\"circle\"></div>\n      </div>\n      <div class=\"circle-clipper right\">\n        <div class=\"circle\"></div>\n      </div>\n    </div>\n  </div>\n\n  <div class=\"row\" *ngIf=\"!loading\">\n\n    <!-- COACHEE -->\n    <div class=\"meeting-item-header col-md-12\" [class.col-lg-3]=\"!meeting.agreed_date\" [class.col-lg-5]=\"meeting.agreed_date\">\n      <div>\n        <div class=\"meeting-item-coach\">\n          <div>\n            <!-- image coach-->\n            <img *ngIf=\"meeting.coachee\" class=\"meeting-item-coach-avatar circle img-responsive\" alt=\"coachee\"\n                 [src]=\"meeting.coachee.avatar_url\">\n            <img *ngIf=\"!meeting.coachee\" class=\"meeting-item-coach-avatar circle img-responsive\" alt=\"coachee\"\n                 src=\"https://s-media-cache-ak0.pinimg.com/originals/af/25/49/af25490494d3338afef00869c59fdd37.png\">\n          </div>\n\n          <div>\n            <p class=\"meeting-item-coach black-text\" *ngIf=\"meeting.coachee\">{{ meeting.coachee.display_name }}</p>\n            <p class=\"italic\">Company name</p>\n          </div>\n        </div><!--end meeting-item-coach-->\n\n        <!-- DATE -->\n        <div class=\"meeting-item-date\" *ngIf=\"meeting.agreed_date\">\n          <div *ngIf=\"meeting.agreed_date\">\n            <span class=\"meeting-item-date-date\">{{ getDate(meeting.agreed_date.start_date) }}</span>\n            <span class=\"meeting-item-date-hour\">{{ printTimeString(meeting.agreed_date.start_date) }}</span>\n          </div>\n        </div>\n      </div>\n    </div>\n\n    <!-- GOAL & REVIEW -->\n    <div class=\"meeting-item-body col-md-12\" [class.col-lg-9]=\"!meeting.agreed_date\" [class.col-lg-7]=\"meeting.agreed_date\">\n      <div class=\"meeting-item-body-content\">\n        <p class=\"meeting-item-goal\">\n          <span class=\"black-text bold\">Objectif de la séance: </span>\n          <span *ngIf=\"hasGoal\">{{(goal | async) }}</span>\n          <span *ngIf=\"!hasGoal\" class=\"red-text\">Pas encore défini...</span>\n        </p>\n\n        <!--Complétées-->\n        <div *ngIf=\"!meeting.isOpen\" class=\"meeting-review\">\n          <div *ngIf=\"hasValue && hasNextStep\">\n            <br>\n            <p><span class=\"black-text bold\">En quoi la séance a-t-elle été utile ? </span>{{ reviewValue }}</p>\n            <br>\n            <p><span class=\"black-text bold\">Avec quoi êtes vous reparti ? </span>{{ reviewNextStep }}</p>\n          </div>\n        </div><!--end meeting-review-->\n\n\n        <div *ngIf=\"meeting.agreed_date && showDetails\" class=\"meeting-review\">\n          <div>\n            <br>\n            <p><span class=\"black-text bold\">Context :</span> {{ (context | async) }}</p>\n            <br>\n            <p><span class=\"black-text bold\">Objectif personnel :</span>\n              <span *ngIf=\"coachee.last_objective != null\">{{ coachee.last_objective.objective }}</span>\n              <span *ngIf=\"coachee.last_objective == null\">n/a</span>\n            </p>\n          </div>\n        </div><!--end meeting-review-->\n\n        <!--Demandes disponibles-->\n        <div *ngIf=\"!meeting.agreed_date && showDetails\" class=\"meeting-review\">\n          <div>\n            <br>\n            <p><span class=\"black-text bold\">Context :</span> {{ (context | async) }}</p>\n            <br>\n            <p><span class=\"black-text bold\">Disponibilités :</span></p>\n            <div class=\"meeting-potential\" *ngFor=\"let potential of potentialDates | async\">\n              <span class=\"meeting-potential-date\">{{ getDate(potential.start_date) }}</span>\n              <span class=\"meeting-potential-hours\">{{ printTimeString(potential.start_date) }} - {{ printTimeString(potential.end_date) }}</span>\n            </div>\n            <br>\n            <form class=\"confirm-meeting-form\">\n              <!--<span class=\"black-text bold\">Réponse :</span>-->\n              <div class=\"input-field\">\n                <select [(ngModel)]=\"selectedDate\" name=\"meeting-date\" class=\"browser-default\"\n                        (change)=\"loadPotentialHours(selectedDate)\">\n                  <option value=\"0\" disabled selected>Date</option>\n                  <option *ngFor=\"let d of potentialDays | async\" [ngValue]=\" d \">\n                    {{ getDate(d) }}\n                  </option>\n                </select>\n              </div>\n              <div class=\"input-field\">\n                <select [(ngModel)]=\"selectedHour\" name=\"meeting-hour\" class=\"browser-default\"\n                        materialize=\"material_select\">\n                  <option value=\"0\" disabled selected>Heure</option>\n                  <option *ngFor=\"let h of potentialHours | async\" [ngValue]=\"h\">\n                    {{ printTimeNumber(h) }} - {{ printTimeNumber(h+1) }}\n                  </option>\n                </select>\n              </div>\n              <div>\n                <button type=\"submit\" class=\"btn-basic btn-blue btn-small\"\n                        [disabled]=\"!selectedDate || !selectedHour\"\n                        (click)=\"openCoachValidateMeetingModal()\">Valider\n                </button>\n              </div>\n            </form>\n          </div>\n        </div><!--end meeting-review-->\n      </div>\n\n      <div class=\"meeting-item-body-buttons\" *ngIf=\"meeting.isOpen\">\n        <button class=\"btn-basic btn-plain btn-blue btn-small\"\n                (click)=\"toggleShowDetails()\">DETAIL\n        </button>\n        <!--<button class=\"btn-basic btn-cancel\"-->\n                <!--*ngIf=\"meeting.agreed_date\"-->\n                <!--(click)=\"openModal()\">-->\n          <!--<i class=\"material-icons\">clear</i>-->\n        <!--</button>-->\n      </div>\n    </div><!--end meeting-item-body-->\n\n  </div><!--end row-->\n\n</div><!--end meeting-item-->\n\n\n<!-- Modal Coach Validate Meeting -->\n<div id=\"coach_cancel_meeting\" class=\"modal\">\n  <div class=\"action-modal-content\">\n    <div class=\"daction-modal-message\">\n      <h5 class=\"black-text center\">Vous ne pourrez pas annuler ce meeting, êtes-vous sûr de vouloir valider ce créneau ?</h5>\n    </div>\n    <div class=\"action-modal-footer\">\n      <button class=\"btn-basic btn-plain btn-small\" (click)=\"cancelCoachValidateMeeting()\">Annuler</button>\n      <button class=\"btn-basic btn-blue btn-small\" (click)=\"onSubmitValidateMeeting()\">Valider</button>\n    </div>\n  </div>\n</div>\n\n\n<!--\n<div class=\"card\">\n  <div class=\"card-content\">\n    <span class=\"card-title\">Vous avez été choisi par {{ coachee.display_name }} pour une séance.</span>\n\n\n    &lt;!&ndash; Meeting is closed&ndash;&gt;\n    <div *ngIf=\"!meeting.isOpen\">\n      <h4>Meeting is now closed</h4>\n    </div>\n\n    &lt;!&ndash; Meeting is open &ndash;&gt;\n    <div *ngIf=\"meeting.isOpen\">\n      <div class=\"col s12\" *ngIf=\"meeting.agreed_date == null\">\n\n        &lt;!&ndash; no potential dates selected&ndash;&gt;\n        <div class=\"section\" *ngIf=\"(potentialDates | async)== null\">\n          <h5>Votre coachee doit d'abord indiquer ses préférences horaires</h5>\n        </div>\n\n        &lt;!&ndash; some potential dates selected&ndash;&gt;\n        <div class=\"section\" *ngIf=\"(potentialDates | async)!= null\">\n          <h5>Votre coachee a indiqué ses préférences horaires</h5>\n\n          &lt;!&ndash; list of potential dates &ndash;&gt;\n          <div *ngFor=\"let date of potentialDates | async\">\n            <h6>Possible date</h6>\n            <p>Le : {{date.start_date | date}}</p>\n            <p>De : {{date.start_date | date:'shortTime'}}</p>\n            <p>A : {{date.end_date | date:'shortTime'}}</p>\n\n            <button class=\"btn cyan waves-effect waves-light right\" (click)=\"confirmPotentialDate(date)\">\n              Confirmer cette date\n              <i class=\"mdi-content-send right\"></i>\n            </button>\n\n          </div>\n        </div>\n\n      </div>\n\n      <div class=\"col s12\" *ngIf=\"meeting.agreed_date \">\n        <h5>Votre meeting est le : {{meeting.agreed_date.start_date | date}} à {{meeting.agreed_date.start_date | date:'shortTime'}} </h5>\n      </div>\n\n    </div>\n\n\n    &lt;!&ndash; check if you have some reviews&ndash;&gt;\n    <div class=\"container\" *ngIf=\"(hasSomeReviews | async)\">\n\n      <h4>Comments</h4>\n\n      &lt;!&ndash; list of reviews &ndash;&gt;\n      <div *ngFor=\"let review of reviews | async\">\n\n        <div class=\"card\">\n          <div class=\"card-content\">\n            <span class=\"card-title\">Meeting Review</span>\n            <div class=\"list-group-item-text\">at : {{review.date}}</div>\n            <div class=\"list-group-item-text\">comment : {{review.comment}}</div>\n            <div class=\"list-group-item-text\">score : {{review.score}}</div>\n          </div>\n        </div>\n      </div>\n\n    </div>\n    &lt;!&ndash; /reviews&ndash;&gt;\n\n    &lt;!&ndash; Display Close Form is the Meeting is still open &ndash;&gt;\n    <div *ngIf=\"meeting.isOpen\" class=\"card\">\n\n      <div class=\"card-content\">\n\n        <h5>Close this meeting</h5>\n\n        <form [formGroup]=\"closeMeetingForm\" (ngSubmit)=\"submitCloseMeetingForm()\">\n\n          <div class=\"form-group\">\n            <label for=\"recap\">Résumé du meeting</label>\n            <input\n              type=\"text\"\n              id=\"recap\"\n              class=\"form-control\"\n              formControlName=\"recap\">\n          </div>\n\n          &lt;!&ndash;<button type=\"submit\" class=\"btn btn-success\">Envoyer</button>&ndash;&gt;\n          &lt;!&ndash;<button type=\"submit\" class=\"btn btn-success\" [disabled]=\"!closeMeetingForm.valid\">Envoyer</button>&ndash;&gt;\n          <button class=\"btn cyan waves-effect waves-light right\" type=\"submit\" name=\"action\">\n            Fermer le meeting\n            <i class=\"mdi-content-send right\"></i>\n          </button>\n        </form>\n      </div>\n    </div>\n\n\n  </div>\n\n\n</div>\n-->\n"
 
 /***/ }),
 
@@ -5825,14 +6431,14 @@ module.exports = "<h4 class=\"text-right\">Vous avez <span class=\"blue-text\">{
 /***/ 643:
 /***/ (function(module, exports) {
 
-module.exports = "<div class=\"meeting-item col-lg-12\" [class.closed]=\"!meeting.isOpen\">\n  <!--<span class=\"card-title\">Vous avez choisi {{ coach.display_name }} pour être votre coach.</span>-->\n\n  <div class=\"preloader-wrapper active\" *ngIf=\"loading\">\n    <div class=\"spinner-layer spinner-blue-only\">\n      <div class=\"circle-clipper left\">\n        <div class=\"circle\"></div>\n      </div>\n      <div class=\"gap-patch\">\n        <div class=\"circle\"></div>\n      </div>\n      <div class=\"circle-clipper right\">\n        <div class=\"circle\"></div>\n      </div>\n    </div>\n  </div>\n\n  <div class=\"row\" *ngIf=\"!loading\">\n\n    <!-- COACH -->\n    <div class=\"meeting-item-header col-md-12 col-lg-4\">\n      <div class=\"meeting-item-coach\">\n        <div>\n          <!-- image coach-->\n          <img *ngIf=\"meeting.coach\" class=\"meeting-item-coach-avatar circle img-responsive\" alt=\"coach\"\n               [src]=\"meeting.coach.avatar_url\">\n          <img *ngIf=\"!meeting.coach\" class=\"meeting-item-coach-avatar circle img-responsive\" alt=\"coach\"\n               src=\"https://s-media-cache-ak0.pinimg.com/originals/af/25/49/af25490494d3338afef00869c59fdd37.png\">\n        </div>\n\n        <div>\n          <p class=\"meeting-item-coach\" *ngIf=\"meeting.coach\">{{ meeting.coach.display_name }}</p>\n          <p class=\"meeting-item-coach\" *ngIf=\"!meeting.coach\">Un coach vous sera bientôt attribué</p>\n        </div>\n      </div>\n\n      <!-- DATE -->\n      <div class=\"meeting-item-date\">\n        <div *ngIf=\"meeting.agreed_date\">\n          <span class=\"meeting-item-date-date\">{{ getDate(meeting.agreed_date.start_date) }}</span>\n          <span class=\"meeting-item-date-hour\">{{ printTimeString(meeting.agreed_date.start_date) }}</span>\n        </div>\n\n        <div *ngIf=\"!meeting.agreed_date\">\n          <span class=\"meeting-item-date-date\">N/A</span>\n        </div>\n\n        <!--<button *ngIf=\"!meeting.agreed_date\" class=\"btn-basic btn-blue btn-small\" (click)=\"goToModifyDate(meeting.id)\">-->\n          <!--Modifier-->\n        <!--</button>-->\n      </div>\n    </div>\n\n\n    <!-- GOAL & REVIEW -->\n    <div class=\"meeting-item-body col-md-12 col-lg-8\">\n      <div class=\"meeting-item-body-content\">\n        <p class=\"meeting-item-goal\">\n          <span class=\"black-text bold\">Objectif de la séance: </span>\n          <span *ngIf=\"hasGoal\">{{ goal }}</span>\n          <span *ngIf=\"!hasGoal\" class=\"red-text\">Veuillez définir votre objectif.</span>\n        </p>\n\n        <div *ngIf=\"!meeting.isOpen\" class=\"meeting-review\">\n          <er-post-meeting *ngIf=\"!hasValue || !hasNextStep\" [meeting]=\"meeting\"></er-post-meeting>\n\n          <div *ngIf=\"hasValue && hasNextStep\">\n            <br>\n            <p><span class=\"black-text bold\">En quoi la séance a-t-elle été utile ? </span>{{ reviewValue }}</p>\n            <br>\n            <p><span class=\"black-text bold\">Avec quoi êtes vous reparti ? </span>{{ reviewNextStep }}</p>\n          </div>\n        </div><!--end meeting-review-->\n      </div>\n\n      <div class=\"meeting-item-buttons\" *ngIf=\"meeting.isOpen\">\n        <button class=\"btn-basic btn-plain btn-blue btn-small\" *ngIf=\"!meeting.agreed_date\" (click)=\"goToModifyDate(meeting.id)\">\n          MODIFIER\n        </button>\n        <button class=\"btn-basic btn-plain btn-blue btn-small\" *ngIf=\"hasGoal\" (click)=\"goToChatRoom()\"\n                [disabled]=\"!meeting.agreed_date\">LANCER\n        </button>\n        <button class=\"btn-basic btn-cancel\" (click)=\"openModal()\"><i class=\"material-icons\">clear</i></button>\n      </div>\n    </div><!--end meeting-item-body-->\n\n  </div><!--end row-->\n\n</div><!--end meeting-item-->\n"
+module.exports = "<div class=\"meeting-item col-lg-12\" [class.closed]=\"!meeting.isOpen\">\n  <!--<span class=\"card-title\">Vous avez choisi {{ coach.display_name }} pour être votre coach.</span>-->\n\n  <div class=\"preloader-wrapper active\" *ngIf=\"loading\">\n    <div class=\"spinner-layer spinner-blue-only\">\n      <div class=\"circle-clipper left\">\n        <div class=\"circle\"></div>\n      </div>\n      <div class=\"gap-patch\">\n        <div class=\"circle\"></div>\n      </div>\n      <div class=\"circle-clipper right\">\n        <div class=\"circle\"></div>\n      </div>\n    </div>\n  </div>\n\n  <div class=\"row\" *ngIf=\"!loading\">\n\n    <!-- COACH -->\n    <div class=\"meeting-item-header col-md-12 col-lg-4\">\n      <div class=\"meeting-item-coach has-coach\" *ngIf=\"meeting.coach\"\n           (click)=\"goToCoachProfile(meeting.coach.id)\">\n        <div>\n          <!-- image coach-->\n          <img class=\"meeting-item-coach-avatar circle img-responsive\" alt=\"coach\"\n               [src]=\"meeting.coach.avatar_url\">\n        </div>\n\n        <div>\n          <p class=\"meeting-item-coach-name\">{{ meeting.coach.display_name }}</p>\n        </div>\n      </div>\n\n      <div class=\"meeting-item-coach\" *ngIf=\"!meeting.coach\">\n        <div>\n          <!-- image coach-->\n          <img class=\"meeting-item-coach-avatar circle img-responsive\" alt=\"coach\"\n               src=\"https://s-media-cache-ak0.pinimg.com/originals/af/25/49/af25490494d3338afef00869c59fdd37.png\">\n        </div>\n\n        <div>\n          <p class=\"meeting-item-coach-name\">Un coach vous sera bientôt attribué</p>\n        </div>\n      </div>\n\n      <!-- DATE -->\n      <div class=\"meeting-item-date\">\n        <div *ngIf=\"meeting.agreed_date\">\n          <span class=\"meeting-item-date-date\">{{ getDate(meeting.agreed_date.start_date) }}</span>\n          <span class=\"meeting-item-date-hour\">{{ printTimeString(meeting.agreed_date.start_date) }}</span>\n        </div>\n\n        <div *ngIf=\"!meeting.agreed_date\">\n          <span class=\"meeting-item-date-date\">N/A</span>\n        </div>\n\n        <!--<button *ngIf=\"!meeting.agreed_date\" class=\"btn-basic btn-blue btn-small\" (click)=\"goToModifyDate(meeting.id)\">-->\n          <!--Modifier-->\n        <!--</button>-->\n      </div>\n    </div>\n\n\n    <!-- GOAL & REVIEW -->\n    <div class=\"meeting-item-body col-md-12 col-lg-8\">\n      <div class=\"meeting-item-body-content\">\n        <p class=\"meeting-item-goal\">\n          <span class=\"black-text bold\">Objectif de la séance: </span>\n          <span *ngIf=\"hasGoal\">{{ goal }}</span>\n          <span *ngIf=\"!hasGoal\" class=\"red-text\">Veuillez définir votre objectif.</span>\n        </p>\n\n        <div *ngIf=\"!meeting.isOpen\" class=\"meeting-review\">\n          <er-post-meeting *ngIf=\"!hasValue || !hasNextStep\" [meeting]=\"meeting\"></er-post-meeting>\n\n          <div *ngIf=\"hasValue && hasNextStep\">\n            <br>\n            <p><span class=\"black-text bold\">En quoi la séance a-t-elle été utile ? </span>{{ reviewValue }}</p>\n            <br>\n            <p><span class=\"black-text bold\">Avec quoi êtes vous reparti ? </span>{{ reviewNextStep }}</p>\n          </div>\n        </div><!--end meeting-review-->\n      </div>\n\n      <div class=\"meeting-item-buttons\" *ngIf=\"meeting.isOpen\">\n        <button class=\"btn-basic btn-plain btn-blue btn-small\" *ngIf=\"!meeting.agreed_date\" (click)=\"goToModifyDate(meeting.id)\">\n          MODIFIER\n        </button>\n        <button class=\"btn-basic btn-plain btn-blue btn-small\" *ngIf=\"hasGoal && meeting.agreed_date\" (click)=\"goToChatRoom()\">\n          LANCER\n        </button>\n        <button class=\"btn-basic btn-cancel\" (click)=\"openModal()\"><i class=\"material-icons\">clear</i></button>\n      </div>\n    </div><!--end meeting-item-body-->\n\n  </div><!--end row-->\n\n</div><!--end meeting-item-->\n"
 
 /***/ }),
 
 /***/ 644:
 /***/ (function(module, exports) {
 
-module.exports = "<h4 class=\"text-right\">Il vous reste <span\n  class=\"blue-text\">{{(user | async)?.availableSessionsCount || 0}}</span>\n  séance<span *ngIf=\"(user | async)?.availableSessionsCount > 1\">s</span>\n  pour ce mois\n  <h5 class=\"italic\" *ngIf=\"(user | async)?.last_objective != null\">\"{{(user | async).last_objective.objective}}\"</h5>\n  <h5 class=\"italic\" *ngIf=\"(user | async)?.last_objective == null\">Vous n'avez pas encore d'objectif personnel</h5>\n</h4>\n<p class=\"text-right\" *ngIf=\"(user | async)?.availableSessionsCount > 0\">\n  <span class=\"blue-text\">Cliquez</span> ici pour planifier une nouvelle séance\n  <a class=\"btn-floating btn-large waves-effect waves-light add-meeting-btn\" (click)=\"goToDate()\">\n    <i class=\"material-icons\">add</i>\n  </a>\n</p>\n\n\n\n<div class=\"row\">\n  <h4 class=\"col-lg-12 black-text\">A venir</h4>\n  <div class=\"card collection col-lg-12\">\n\n    <div *ngIf=\"hasOpenedMeeting\">\n      <div class=\"collection-item\" *ngFor=\"let meeting of meetingsOpened | async\">\n        <rb-meeting-item-coachee [meeting]=\"meeting\"\n                                 (cancelMeetingTimeEvent)=\"openCoacheeDeleteMeetingModal($event)\">\n        </rb-meeting-item-coachee>\n      </div>\n    </div>\n\n    <div *ngIf=\"!hasOpenedMeeting\" class=\"collection-item text-center\">\n      <h5 class=\"no-meeting\">Vos séances à venir apparaîtront ici</h5>\n    </div>\n\n  </div><!--end card-->\n</div><!--end row-->\n\n<div class=\"row\">\n  <h4 class=\"col-lg-12 black-text\">Complétées</h4>\n  <div class=\"card collection col-lg-12\">\n\n    <div *ngIf=\"hasClosedMeeting\">\n      <div class=\"collection-item\" *ngFor=\"let meeting of meetingsClosed | async\">\n        <rb-meeting-item-coachee [meeting]=\"meeting\"\n                                 (cancelMeetingTimeEvent)=\"openCoacheeDeleteMeetingModal($event)\">\n        </rb-meeting-item-coachee>\n      </div>\n    </div>\n\n    <div *ngIf=\"!hasClosedMeeting\" class=\"collection-item text-center\">\n      <h5 class=\"no-meeting\">Vos séances complétées apparaîtront ici</h5>\n    </div>\n\n  </div><!--end card-->\n</div><!--end row-->\n\n\n\n<!-- Modal Coachee Delete Meeting -->\n<div id=\"coachee_delete_meeting_modal\" class=\"modal\">\n  <div class=\"delete-modal-content\">\n    <div class=\"delete-modal-message\">\n      <h5>Ce meeting sera supprimé définitivement.</h5>\n    </div>\n    <div class=\"delete-modal-footer\">\n      <button class=\"btn-basic btn-plain btn-small\" (click)=\"cancelCoacheeDeleteMeeting()\">Annuler</button>\n      <button class=\"btn-basic btn-red btn-small\" (click)=\"validateCoacheeDeleteMeeting()\">Supprimer</button>\n    </div>\n  </div>\n</div>\n"
+module.exports = "<h4 class=\"text-right\">Il vous reste <span\n  class=\"blue-text\">{{(user | async)?.availableSessionsCount || 0}}</span>\n  séance<span *ngIf=\"(user | async)?.availableSessionsCount > 1\">s</span>\n  pour ce mois\n  <h5 class=\"italic\" *ngIf=\"(user | async)?.last_objective != null\">\n    Objectif de votre RH: \"{{(user | async).last_objective.objective}}\"</h5>\n  <h5 class=\"italic\" *ngIf=\"(user | async)?.last_objective == null\">\n    Vous n'avez pas encore d'objectif personnel</h5>\n</h4>\n<p class=\"text-right\" *ngIf=\"(user | async)?.availableSessionsCount > 0\">\n  <span class=\"blue-text\">Cliquez</span> ici pour planifier une nouvelle séance\n  <a class=\"btn-floating btn-large waves-effect waves-light add-meeting-btn\" (click)=\"goToDate()\">\n    <i class=\"material-icons\">add</i>\n  </a>\n</p>\n\n\n\n<div class=\"row\">\n  <h4 class=\"col-lg-12 black-text\">A venir</h4>\n  <div class=\"card collection col-lg-12\">\n\n    <div *ngIf=\"hasOpenedMeeting\">\n      <div class=\"collection-item\" *ngFor=\"let meeting of meetingsOpened | async\">\n        <rb-meeting-item-coachee [meeting]=\"meeting\"\n                                 (cancelMeetingTimeEvent)=\"openCoacheeDeleteMeetingModal($event)\">\n        </rb-meeting-item-coachee>\n      </div>\n    </div>\n\n    <div *ngIf=\"!hasOpenedMeeting\" class=\"collection-item text-center\">\n      <h5 class=\"no-meeting\">Vos séances à venir apparaîtront ici</h5>\n    </div>\n\n  </div><!--end card-->\n</div><!--end row-->\n\n<div class=\"row\">\n  <h4 class=\"col-lg-12 black-text\">Complétées</h4>\n  <div class=\"card collection col-lg-12\">\n\n    <div *ngIf=\"hasClosedMeeting\">\n      <div class=\"collection-item\" *ngFor=\"let meeting of meetingsClosed | async\">\n        <rb-meeting-item-coachee [meeting]=\"meeting\"\n                                 (cancelMeetingTimeEvent)=\"openCoacheeDeleteMeetingModal($event)\">\n        </rb-meeting-item-coachee>\n      </div>\n    </div>\n\n    <div *ngIf=\"!hasClosedMeeting\" class=\"collection-item text-center\">\n      <h5 class=\"no-meeting\">Vos séances complétées apparaîtront ici</h5>\n    </div>\n\n  </div><!--end card-->\n</div><!--end row-->\n\n\n\n<!-- Modal Coachee Delete Meeting -->\n<div id=\"coachee_delete_meeting_modal\" class=\"modal\">\n  <div class=\"action-modal-content\">\n    <div class=\"action-modal-message\">\n      <h5 class=\"black-text center\">Ce meeting sera supprimé définitivement.</h5>\n    </div>\n    <div class=\"action-modal-footer\">\n      <button class=\"btn-basic btn-plain btn-small\" (click)=\"cancelCoacheeDeleteMeeting()\">Annuler</button>\n      <button class=\"btn-basic btn-red btn-plain btn-small\" (click)=\"validateCoacheeDeleteMeeting()\">Supprimer</button>\n    </div>\n  </div>\n</div>\n"
 
 /***/ }),
 
@@ -5846,21 +6452,21 @@ module.exports = "<!--<rb-header></rb-header>-->\n\n<div class=\"container\">\n 
 /***/ 646:
 /***/ (function(module, exports) {
 
-module.exports = "<div class=\"meeting-item col-lg-12\">\n\n  <div class=\"preloader-wrapper active\" *ngIf=\"loading\">\n    <div class=\"spinner-layer spinner-blue-only\">\n      <div class=\"circle-clipper left\">\n        <div class=\"circle\"></div>\n      </div>\n      <div class=\"gap-patch\">\n        <div class=\"circle\"></div>\n      </div>\n      <div class=\"circle-clipper right\">\n        <div class=\"circle\"></div>\n      </div>\n    </div>\n  </div>\n\n  <div *ngIf=\"!loading\">\n\n    <!-- COACHEE -->\n    <div *ngIf=\"coachee != null\" class=\"row\">\n      <div class=\"meeting-item-header col-md-12 col-lg-3\">\n        <div class=\"meeting-item-coach\">\n          <div>\n            <!-- image coachee -->\n            <img class=\"meeting-item-coach-avatar circle img-responsive\" alt=\"coachee\" [src]=\"coachee.avatar_url\">\n          </div>\n\n          <div>\n            <p class=\"meeting-item-coach black-text\">{{ coachee.display_name }}</p>\n            <p class=\"italic\">Inscrit le {{ printDateString(coachee.start_date) }}</p>\n          </div>\n        </div>\n\n        <!-- USAGE -->\n        <!--<div class=\"meeting-item-date\">-->\n        <!--<span class=\"meeting-item-date-date\">Usage: <span class=\"blue-text\">{{ (coacheeUsageRate | async)?.usage_rate }}%</span></span>-->\n        <!--</div>-->\n      </div>\n\n      <!-- GOAL -->\n      <div class=\"meeting-item-body col-md-12 col-lg-9\">\n        <div class=\"meeting-item-body-content\">\n          <p class=\"meeting-item-goal\">\n            <span class=\"black-text bold\">Objectif personnel: </span>\n            <span *ngIf=\"coachee.last_objective\">{{ coachee.last_objective.objective }}</span>\n            <span *ngIf=\"!coachee.last_objective\">n/a</span>\n          </p>\n        </div>\n\n        <div class=\"meeting-item-body-buttons\">\n          <button class=\"btn-basic btn-blue btn-plain btn-small\" (click)=\"updateCoacheeObjectivePanelVisibility(true)\" *ngIf=\"!coachee.last_objective\">\n            Ajouter un objectif\n          </button>\n          <button class=\"btn-basic btn-blue btn-plain btn-small\" (click)=\"updateCoacheeObjectivePanelVisibility(true)\" *ngIf=\"coachee.last_objective\">\n            Modifier l'objectif\n          </button>\n        </div>\n      </div><!--end meeting-item-body-->\n    </div><!--end coachee-->\n\n    <!-- POTENTIAL COACHEE -->\n    <div *ngIf=\"potentialCoachee != null\" class=\"row\">\n      <div class=\"meeting-item-header col-lg-12\">\n        <div class=\"meeting-item-coach\">\n          <div>\n            <!-- image coachee -->\n            <img class=\"meeting-item-coach-avatar circle img-responsive\" alt=\"potentialCoachee\"\n                 src=\"https://s-media-cache-ak0.pinimg.com/originals/af/25/49/af25490494d3338afef00869c59fdd37.png\">\n          </div>\n\n          <div>\n            <p class=\"meeting-item-coach\">{{ potentialCoachee.email }}</p>\n          </div>\n        </div>\n\n        <!-- PLAN -->\n        <div class=\"meeting-item-date\">\n          <span class=\"meeting-item-date-date\"><span class=\"blue-text\">{{ potentialCoachee.plan.sessions_count }}</span> séances</span>\n        </div>\n      </div>\n    </div><!--end potentialCoachee-->\n\n  </div><!--end row-->\n\n  <!-- Modal RH add new objective to Coachee -->\n  <div id=\"add_new_objective_modal\" class=\"modal\">\n    <div class=\"delete-modal-content\">\n      <div class=\"delete-modal-message\">\n        <h5>Définissez un objectif</h5>\n        <input type=\"text\" placeholder=\"Objectif\" id=\"\" [(ngModel)]=\"coacheeNewObjective\">\n      </div>\n      <div class=\"delete-modal-footer\">\n        <button class=\"btn-basic btn-plain btn-small\" (click)=\"cancelAddNewObjectiveModal()\">Annuler</button>\n        <button class=\"btn-basic btn-blue btn-plain btn-small\" (click)=\"validateAddNewObjectiveModal()\"\n                [disabled]=\"!coacheeNewObjective\">Ajouter\n        </button>\n      </div>\n    </div>\n  </div>\n\n</div><!--end meeting-item-->\n\n\n\n\n"
+module.exports = "<div class=\"meeting-item col-lg-12\" (click)=\"toggleShowDetails()\">\n\n  <div class=\"preloader-wrapper active\" *ngIf=\"loading\">\n    <div class=\"spinner-layer spinner-blue-only\">\n      <div class=\"circle-clipper left\">\n        <div class=\"circle\"></div>\n      </div>\n      <div class=\"gap-patch\">\n        <div class=\"circle\"></div>\n      </div>\n      <div class=\"circle-clipper right\">\n        <div class=\"circle\"></div>\n      </div>\n    </div>\n  </div>\n\n  <div *ngIf=\"!loading\">\n\n    <!-- COACHEE -->\n    <div *ngIf=\"coachee != null\" class=\"row\">\n      <div class=\"meeting-item-header col-md-12 col-lg-5\">\n        <div>\n          <div class=\"meeting-item-coach\">\n            <div>\n              <!-- image coachee -->\n              <img class=\"meeting-item-coach-avatar circle img-responsive\" alt=\"coachee\" [src]=\"coachee.avatar_url\">\n            </div>\n\n            <div>\n              <p class=\"meeting-item-coach black-text\">{{ coachee.display_name }}</p>\n              <p class=\"italic\">Inscrit le {{ printDateString(coachee.start_date) }}</p>\n            </div>\n          </div>\n\n          <!--USAGE-->\n          <div class=\"meeting-item-date\">\n            <div class=\"meeting-item-date-date\">\n              <span class=\"usage-title\">Utilisation: </span>\n              <span class=\"blue-text\">{{ (coacheeUsageRate | async)?.usage_rate}}%</span>\n            </div>\n          </div>\n        </div>\n      </div>\n\n      <!-- GOAL -->\n      <div class=\"meeting-item-body col-md-12 col-lg-7\">\n        <div class=\"meeting-item-body-content\">\n          <p class=\"meeting-item-goal\">\n            <span class=\"black-text bold\">Objectif personnel: </span>\n            <span *ngIf=\"coachee.last_objective\">{{ coachee.last_objective.objective }}</span>\n            <span *ngIf=\"!coachee.last_objective\">n/a</span>\n          </p>\n        </div>\n\n        <div class=\"meeting-item-body-buttons\">\n          <button class=\"btn-basic btn-blue btn-plain btn-small\" (click)=\"updateCoacheeObjectivePanelVisibility(true)\" *ngIf=\"!coachee.last_objective\">\n            Ajouter un objectif\n          </button>\n          <button class=\"btn-basic btn-blue btn-plain btn-small\" (click)=\"updateCoacheeObjectivePanelVisibility(true)\" *ngIf=\"coachee.last_objective\">\n            Modifier l'objectif\n          </button>\n        </div>\n      </div><!--end meeting-item-body-->\n\n      <div *ngIf=\"showDetails\" class=\"meeting-review\">\n        <div>\n          <h5><span class=\"blue-text\">{{ coachee.plan.sessions_count }}</span> séances/mois</h5>\n          <br>\n          <div *ngIf=\"!hasBookedMeeting\"><p>Pas encore de séance réalisée</p><br></div>\n          <div *ngIf=\"hasBookedMeeting\">\n            <div *ngFor=\"let meeting of (meetings | async)\">\n              <p>\n                <span class=\"meeting-list-date\">{{ printDateString(meeting.agreed_date.start_date) }}</span>\n                <span class=\"black-text bold\">Objectif de la séance: </span>\n                <span>{{ goals[meeting.id] }}</span>\n              </p>\n              <br>\n            </div>\n          </div>\n        </div>\n      </div><!--end meeting-review-->\n\n    </div><!--end coachee-->\n\n    <!-- POTENTIAL COACHEE -->\n    <div *ngIf=\"potentialCoachee != null\" class=\"row\">\n      <div class=\"meeting-item-header col-lg-12\">\n        <div class=\"meeting-item-coach\">\n          <div>\n            <!-- image coachee -->\n            <img class=\"meeting-item-coach-avatar circle img-responsive\" alt=\"potentialCoachee\"\n                 src=\"https://s-media-cache-ak0.pinimg.com/originals/af/25/49/af25490494d3338afef00869c59fdd37.png\">\n          </div>\n\n          <div>\n            <p class=\"meeting-item-coach\">{{ potentialCoachee.email }}</p>\n          </div>\n        </div>\n\n        <!-- PLAN -->\n        <div class=\"meeting-item-date\">\n          <span class=\"meeting-item-date-date\"><span class=\"blue-text\">{{ potentialCoachee.plan.sessions_count }}</span> séances</span>\n        </div>\n      </div>\n    </div><!--end potentialCoachee-->\n\n  </div><!--end row-->\n\n  <!-- Modal RH add new objective to Coachee -->\n  <div id=\"add_new_objective_modal\" class=\"modal\">\n    <div class=\"action-modal-content\">\n      <div class=\"action-modal-message\">\n        <label>Définissez un objectif</label>\n        <input type=\"text\" placeholder=\"Objectif\" id=\"\" [(ngModel)]=\"coacheeNewObjective\">\n      </div>\n      <div class=\"action-modal-footer\">\n        <button class=\"btn-basic btn-plain btn-small\" (click)=\"cancelAddNewObjectiveModal()\">Annuler</button>\n        <button class=\"btn-basic btn-blue btn-plain btn-small\" (click)=\"validateAddNewObjectiveModal()\"\n                [disabled]=\"!coacheeNewObjective\">Ajouter\n        </button>\n      </div>\n    </div>\n  </div>\n\n</div><!--end meeting-item-->\n"
 
 /***/ }),
 
 /***/ 647:
 /***/ (function(module, exports) {
 
-module.exports = "<h4 class=\"text-right welcome-message\">Bonjour {{(user | async)?.display_name}},<br>\n    Le taux total d'utilisation de vos collaborateurs est de <span class=\"blue-text\">{{(rhUsageRate | async)?.usage_rate}}%</span>\n</h4>\n<p class=\"text-right\">\n  <span class=\"blue-text\">Cliquez</span> ici pour ajouter un collaborateur\n  <a class=\"btn-floating btn-large waves-effect waves-light add-meeting-btn\"\n     (click)=\"addPotentialCoacheeModalVisibility(true)\">\n    <i class=\"material-icons\">add</i>\n  </a>\n</p>\n\n\n\n<div class=\"row\">\n  <h4 class=\"col-lg-12 black-text\">Collaborateurs</h4>\n  <div class=\"card collection col-lg-12\">\n\n    <div *ngIf=\"hasCollaborators\">\n      <div class=\"collection-item\" *ngFor=\"let coachee of coachees | async\">\n        <rb-meeting-item-rh [coachee]=\"coachee\"\n                            [potentialCoachee]=\"null\">\n        </rb-meeting-item-rh>\n      </div>\n    </div>\n\n    <div *ngIf=\"!hasCollaborators\" class=\"collection-item text-center\">\n      <h5 class=\"no-meeting\">Vos collaborateurs apparaîtront ici</h5>\n    </div>\n\n  </div><!--end card-->\n</div><!--end row-->\n\n<div class=\"row\">\n  <h4 class=\"col-lg-12 black-text\">Collaborateurs invités en attente</h4>\n  <div class=\"card collection col-lg-12\">\n\n    <div *ngIf=\"hasPotentialCollaborators\">\n      <div class=\"collection-item\" *ngFor=\"let potentialCoachee of potentialCoachees | async\">\n        <rb-meeting-item-rh [potentialCoachee]=\"potentialCoachee\"\n                            [coachee]=\"null\">\n        </rb-meeting-item-rh>\n      </div>\n    </div>\n\n    <div *ngIf=\"!hasPotentialCollaborators\" class=\"collection-item text-center\">\n      <h5 class=\"no-meeting\">Vos collaborateurs en attente de validation apparaîtront ici</h5>\n    </div>\n\n  </div><!--end card-->\n</div><!--end row-->\n\n<!-- Modal RH add Coachee -->\n<div id=\"add_potential_coachee_modal\" class=\"modal\">\n  <div class=\"delete-modal-content\">\n    <div class=\"delete-modal-message\">\n      <h5>Veuillez saisir l'adresse mail du collaborateur. Un mail lui sera envoyé pour finaliser son inscription.</h5>\n      <input type=\"email\" placeholder=\"Email\" id=\"potential_mail\" [(ngModel)]=\"potentialCoacheeEmail\">\n      <select [(ngModel)]=\"selectedPlan\"\n              [ngModelOptions]=\"{standalone: true}\"\n              name=\"plan_selector\"\n              class=\"browser-default\">\n        <option value=\"{{selectedPlan}}\" disabled selected>Sélectionnez un plan</option>\n        <option *ngFor=\"let plan of plans | async\" [ngValue]=\"plan\">\n          {{ plan.sessions_count }} séances\n        </option>\n      </select>\n    </div>\n    <div class=\"delete-modal-footer\">\n      <button class=\"btn-basic btn-plain\" (click)=\"cancelAddPotentialCoachee()\">Annuler</button>\n      <button class=\"btn-basic btn-blue\" (click)=\"validateAddPotentialCoachee()\"\n              [disabled]=\"!potentialCoacheeEmail\">Ajouter\n      </button>\n    </div>\n  </div>\n</div>\n"
+module.exports = "<h4 class=\"text-right welcome-message\">Bonjour {{(user | async)?.display_name}},<br>\n    Le taux total d'utilisation de vos collaborateurs est de <span class=\"blue-text\">{{(rhUsageRate | async)?.usage_rate}}%</span>\n</h4>\n<p class=\"text-right\">\n  <span class=\"blue-text\">Cliquez</span> ici pour ajouter un collaborateur\n  <a class=\"btn-floating btn-large waves-effect waves-light add-meeting-btn\"\n     (click)=\"addPotentialCoacheeModalVisibility(true)\">\n    <i class=\"material-icons\">add</i>\n  </a>\n</p>\n\n\n\n<div class=\"row\">\n  <h4 class=\"col-lg-12 black-text\">Collaborateurs</h4>\n  <div class=\"card collection col-lg-12\">\n\n    <div *ngIf=\"hasCollaborators\">\n      <div class=\"collection-item\" *ngFor=\"let coachee of coachees | async\">\n        <rb-meeting-item-rh [coachee]=\"coachee\"\n                            [potentialCoachee]=\"null\">\n        </rb-meeting-item-rh>\n      </div>\n    </div>\n\n    <div *ngIf=\"!hasCollaborators\" class=\"collection-item text-center\">\n      <h5 class=\"no-meeting\">Vos collaborateurs apparaîtront ici</h5>\n    </div>\n\n  </div><!--end card-->\n</div><!--end row-->\n\n<div class=\"row\">\n  <h4 class=\"col-lg-12 black-text\">Collaborateurs invités en attente</h4>\n  <div class=\"card collection col-lg-12\">\n\n    <div *ngIf=\"hasPotentialCollaborators\">\n      <div class=\"collection-item\" *ngFor=\"let potentialCoachee of potentialCoachees | async\">\n        <rb-meeting-item-rh [potentialCoachee]=\"potentialCoachee\"\n                            [coachee]=\"null\"\n                            (objectiveChanged)=\"onRefreshRequested()\">\n        </rb-meeting-item-rh>\n      </div>\n    </div>\n\n    <div *ngIf=\"!hasPotentialCollaborators\" class=\"collection-item text-center\">\n      <h5 class=\"no-meeting\">Vos collaborateurs en attente de validation apparaîtront ici</h5>\n    </div>\n\n  </div><!--end card-->\n</div><!--end row-->\n\n<!-- Modal RH add Coachee -->\n<div id=\"add_potential_coachee_modal\" class=\"modal\">\n  <div class=\"action-modal-content\">\n    <div class=\"action-modal-message\">\n      <label>Veuillez saisir l'adresse mail du collaborateur. Un mail lui sera envoyé pour finaliser son inscription.</label>\n      <input type=\"email\" placeholder=\"Email\" id=\"potential_mail\" [(ngModel)]=\"potentialCoacheeEmail\">\n      <select [(ngModel)]=\"selectedPlan\"\n              [ngModelOptions]=\"{standalone: true}\"\n              name=\"plan_selector\"\n              class=\"browser-default\">\n        <option value=\"{{selectedPlan}}\" disabled selected>Sélectionnez un plan</option>\n        <option *ngFor=\"let plan of plans | async\" [ngValue]=\"plan\">\n          {{ plan.sessions_count }} séances\n        </option>\n      </select>\n    </div>\n    <div class=\"action-modal-footer\">\n      <button class=\"btn-basic btn-plain btn-small\" (click)=\"cancelAddPotentialCoachee()\">Annuler</button>\n      <button class=\"btn-basic btn-blue btn-plain btn-small\" (click)=\"validateAddPotentialCoachee()\"\n              [disabled]=\"!potentialCoacheeEmail\">Ajouter\n      </button>\n    </div>\n  </div>\n</div>\n"
 
 /***/ }),
 
 /***/ 648:
 /***/ (function(module, exports) {
 
-module.exports = "<h4 class=\"card-title\">Veuillez renseigner les éléments de votre demande</h4>\n\n<div class=\"row\">\n  <div class=\"input-field col s12\">\n    <input id=\"objectif\" type=\"text\" [ngModel]=\"uiMeetingGoal\" (change)=\"onGoalValueChanged($event)\">\n    <label for=\"objectif\">Quel est votre objectif ?</label>\n  </div>\n</div>\n\n\n<div class=\"row\">\n  <div class=\"input-field col s12\">\n    <input id=\"context\" type=\"text\" [ngModel]=\"uiMeetingContext\" (change)=\"onContextValueChanged($event)\">\n    <label for=\"context\">Quel est le context ?</label>\n  </div>\n</div>\n"
+module.exports = "<h4>Veuillez renseigner les éléments de votre demande</h4>\n\n<div class=\"row\">\n  <div class=\"col s12\">\n    <label for=\"objectif\">Quel est votre objectif ?</label>\n    <input id=\"objectif\" type=\"text\" [ngModel]=\"uiMeetingGoal\" (change)=\"onGoalValueChanged($event)\" placeholder=\"Objectif...\">\n  </div>\n</div>\n\n\n<div class=\"row\">\n  <div class=\"col s12\">\n    <label for=\"context\">Quel est le context ?</label>\n    <input id=\"context\" type=\"text\" [ngModel]=\"uiMeetingContext\" (change)=\"onContextValueChanged($event)\" placeholder=\"Context...\">\n  </div>\n</div>\n"
 
 /***/ }),
 
@@ -5874,7 +6480,7 @@ module.exports = "\n\n<div id=\"card-alert_seance_book\" class=\"card red\" *ngI
 /***/ 650:
 /***/ (function(module, exports) {
 
-module.exports = "<div id=\"profile-page\" class=\"section\">\n  <!-- profile-page-header -->\n  <div id=\"profile-page-header\" class=\"card\">\n    <div class=\"card-image waves-effect waves-block waves-light\">\n      <img class=\"activator\" src=\"images/user-profile-bg.jpg\" alt=\"user background\">\n    </div>\n    <figure class=\"card-profile-image\">\n      <img src=\"{{ coach.avatar_url}}\" alt=\"profile image\"\n           class=\"circle z-depth-2 responsive-img activator\">\n    </figure>\n    <div class=\"card-content\">\n      <div class=\"row\">\n        <div class=\"col s3 offset-s2\">\n          <h4 class=\"card-title grey-text text-darken-4\">{{ coach.display_name }}</h4>\n          <p class=\"medium-small grey-text\">Coach</p>\n        </div>\n        <div class=\"col s2 center-align\">\n          <h4 class=\"card-title grey-text text-darken-4\">10+</h4>\n          <p class=\"medium-small grey-text\">Work Experience</p>\n        </div>\n        <div class=\"col s2 center-align\">\n          <h4 class=\"card-title grey-text text-darken-4\">6</h4>\n          <p class=\"medium-small grey-text\">Completed Sessions</p>\n        </div>\n        <div class=\"col s2 center-align\">\n          <h4 class=\"card-title grey-text text-darken-4\">$ 1,253,000</h4>\n          <p class=\"medium-small grey-text\">Business Profit</p>\n        </div>\n        <div class=\"col s1 right-align\">\n          <a class=\"btn-floating activator waves-effect waves-light darken-2 right\">\n            <i class=\"mdi-action-perm-identity\"></i>\n          </a>\n        </div>\n      </div>\n    </div>\n    <div class=\"card-reveal\">\n      <p>\n            <span class=\"card-title grey-text text-darken-4\">{{ coach.display_name }} <i\n              class=\"mdi-navigation-close right\"></i></span>\n        <span><i class=\"mdi-action-perm-identity cyan-text text-darken-2\"></i>Coach</span>\n      </p>\n\n      <p>Coach description</p>\n\n      <p><i class=\"mdi-action-perm-phone-msg cyan-text text-darken-2\"></i> +1 (612) 222 8989</p>\n      <p><i class=\"mdi-communication-email cyan-text text-darken-2\"></i> {{ coach.email }}</p>\n      <p><i class=\"mdi-social-cake cyan-text text-darken-2\"></i> Start Date : {{ coach.start_date }}</p>\n      <p><i class=\"mdi-device-airplanemode-on cyan-text text-darken-2\"></i> BAR - AUS</p>\n      <p><i class=\"mdi-social-cake cyan-text text-darken-2\"></i> eritis id : {{ coach.id }}</p>\n\n    </div>\n  </div>\n  <!--/ profile-page-header -->\n\n  <!-- profile-page-content -->\n  <div id=\"profile-page-content\" class=\"row\">\n    <!-- profile-page-sidebar-->\n    <div id=\"profile-page-sidebar\" class=\"col s12 m4\">\n      <!-- Profile About  -->\n      <div class=\"card light-blue\">\n        <div class=\"card-content white-text\">\n          <span class=\"card-title\">About Me!</span>\n          <p>Coach description</p>\n\n        </div>\n      </div>\n      <!-- Profile About  -->\n\n      <!-- Profile About Details  -->\n      <ul id=\"profile-page-about-details\" class=\"collection z-depth-1\">\n        <li class=\"collection-item\">\n          <div class=\"row\">\n            <div class=\"col s5 grey-text darken-1\"><i class=\"mdi-action-wallet-travel\"></i> Project</div>\n            <div class=\"col s7 grey-text text-darken-4 right-align\">ABC Name</div>\n          </div>\n        </li>\n        <li class=\"collection-item\">\n          <div class=\"row\">\n            <div class=\"col s5 grey-text darken-1\"><i class=\"mdi-social-poll\"></i> Skills</div>\n            <div class=\"col s7 grey-text text-darken-4 right-align\">HTML, CSS</div>\n          </div>\n        </li>\n        <li class=\"collection-item\">\n          <div class=\"row\">\n            <div class=\"col s5 grey-text darken-1\"><i class=\"mdi-social-domain\"></i> Lives in</div>\n            <div class=\"col s7 grey-text text-darken-4 right-align\">NY, USA</div>\n          </div>\n        </li>\n        <li class=\"collection-item\">\n          <div class=\"row\">\n            <div class=\"col s5 grey-text darken-1\"><i class=\"mdi-social-cake\"></i> Birth date</div>\n            <div class=\"col s7 grey-text text-darken-4 right-align\">18th June, 1991</div>\n          </div>\n        </li>\n      </ul>\n      <!--/ Profile About Details  -->\n\n      <!-- Profile About  -->\n\n    </div>\n  </div>\n</div>\n\n<button class=\"btn cyan waves-effect waves-light right\" (click)=\"createAMeeting()\">\n  Créer votre séance<i\n  class=\"mdi-content-send right\"></i></button>\n\n<!--&lt;!&ndash; add a date for this meeting &ndash;&gt;-->\n<!--<rb-meeting-date [coach]=\"coach\"></rb-meeting-date>-->\n\n\n\n\n"
+module.exports = "<div class=\"header-user\">\n  <div class=\"header-user-filter\">\n    <div class=\"container row\">\n\n      <div class=\"user col-lg-5\">\n        <img src=\"{{(coach | async)?.avatar_url}}\" alt=\"profile image\" class=\"user-img circle responsive-img z-depth-2\">\n        <div class=\"user-info\">\n          <h5>{{(coach | async)?.display_name}}</h5>\n          <h6>{{(coach | async)?.email}}</h6>\n        </div>\n      </div>\n\n      <div class=\"col-sm-12 hide-on-large-only gap\"></div>\n\n      <div class=\"header-stats col-lg-7\">\n        <div class=\"header-item\">\n          <h4 class=\"header-item-number\">10<span>mois</span></h4>\n          <p class=\"header-item-title\">Expérience</p>\n        </div>\n\n        <div class=\"header-item\">\n          <h4 class=\"header-item-number\">6</h4>\n          <p class=\"header-item-title\">Séances réalisées</p>\n        </div>\n\n        <div class=\"header-item\">\n          <h4 class=\"header-item-number\">3</h4>\n          <p class=\"header-item-title\">Personnes coachées</p>\n        </div>\n      </div>\n\n    </div>\n  </div>\n</div>\n\n<div class=\"container\">\n  <h4 class=\"text-right italic\">\"{{ (coach | async)?.description }}\"</h4>\n  <br>\n  <div>\n    <form>\n      <div class=\"row\">\n        <div class=\"col s12\">\n          <label for=\"message\">Envoyer un message à {{(coach | async)?.display_name}}</label>\n          <textarea name=\"message\" id=\"message\" class=\"message-field\"></textarea>\n        </div>\n      </div>\n      <div class=\"input-field\">\n        <button class=\"btn-basic btn-plain btn-blue right\">Envoyer</button>\n      </div>\n    </form>\n  </div>\n</div>\n\n\n<!--<div id=\"profile-page\" class=\"container\">-->\n  <!--&lt;!&ndash; profile-page-header &ndash;&gt;-->\n  <!--<div id=\"profile-page-header\" class=\"card\">-->\n    <!--<div class=\"card-image waves-effect waves-block waves-light\">-->\n      <!--<img class=\"activator\" src=\"images/user-profile-bg.jpg\" alt=\"user background\">-->\n    <!--</div>-->\n    <!--<figure class=\"card-profile-image\">-->\n      <!--<img src=\"{{ coach.avatar_url}}\" alt=\"profile image\"-->\n           <!--class=\"circle z-depth-2 responsive-img activator\">-->\n    <!--</figure>-->\n    <!--<div class=\"card-content\">-->\n      <!--<div class=\"row\">-->\n        <!--<div class=\"col s3 offset-s2\">-->\n          <!--<h4 class=\"card-title grey-text text-darken-4\">{{ coach.display_name }}</h4>-->\n          <!--<p class=\"medium-small grey-text\">Coach</p>-->\n        <!--</div>-->\n        <!--<div class=\"col s2 center-align\">-->\n          <!--<h4 class=\"card-title grey-text text-darken-4\">10+</h4>-->\n          <!--<p class=\"medium-small grey-text\">Work Experience</p>-->\n        <!--</div>-->\n        <!--<div class=\"col s2 center-align\">-->\n          <!--<h4 class=\"card-title grey-text text-darken-4\">6</h4>-->\n          <!--<p class=\"medium-small grey-text\">Completed Sessions</p>-->\n        <!--</div>-->\n        <!--<div class=\"col s2 center-align\">-->\n          <!--<h4 class=\"card-title grey-text text-darken-4\">$ 1,253,000</h4>-->\n          <!--<p class=\"medium-small grey-text\">Business Profit</p>-->\n        <!--</div>-->\n        <!--<div class=\"col s1 right-align\">-->\n          <!--<a class=\"btn-floating activator waves-effect waves-light darken-2 right\">-->\n            <!--<i class=\"mdi-action-perm-identity\"></i>-->\n          <!--</a>-->\n        <!--</div>-->\n      <!--</div>-->\n    <!--</div>-->\n    <!--<div class=\"card-reveal\">-->\n      <!--<p>-->\n            <!--<span class=\"card-title grey-text text-darken-4\">{{ coach.display_name }} <i-->\n              <!--class=\"mdi-navigation-close right\"></i></span>-->\n        <!--<span><i class=\"mdi-action-perm-identity cyan-text text-darken-2\"></i>Coach</span>-->\n      <!--</p>-->\n\n      <!--<p>Coach description</p>-->\n\n      <!--<p><i class=\"mdi-action-perm-phone-msg cyan-text text-darken-2\"></i> +1 (612) 222 8989</p>-->\n      <!--<p><i class=\"mdi-communication-email cyan-text text-darken-2\"></i> {{ coach.email }}</p>-->\n      <!--<p><i class=\"mdi-social-cake cyan-text text-darken-2\"></i> Start Date : {{ coach.start_date }}</p>-->\n      <!--<p><i class=\"mdi-device-airplanemode-on cyan-text text-darken-2\"></i> BAR - AUS</p>-->\n      <!--<p><i class=\"mdi-social-cake cyan-text text-darken-2\"></i> eritis id : {{ coach.id }}</p>-->\n\n    <!--</div>-->\n  <!--</div>-->\n  <!--&lt;!&ndash;/ profile-page-header &ndash;&gt;-->\n\n  <!--&lt;!&ndash; profile-page-content &ndash;&gt;-->\n  <!--<div id=\"profile-page-content\" class=\"row\">-->\n    <!--&lt;!&ndash; profile-page-sidebar&ndash;&gt;-->\n    <!--<div id=\"profile-page-sidebar\" class=\"col s12 m4\">-->\n      <!--&lt;!&ndash; Profile About  &ndash;&gt;-->\n      <!--<div class=\"card light-blue\">-->\n        <!--<div class=\"card-content white-text\">-->\n          <!--<span class=\"card-title\">About Me!</span>-->\n          <!--<p>Coach description</p>-->\n\n        <!--</div>-->\n      <!--</div>-->\n      <!--&lt;!&ndash; Profile About  &ndash;&gt;-->\n\n      <!--&lt;!&ndash; Profile About Details  &ndash;&gt;-->\n      <!--<ul id=\"profile-page-about-details\" class=\"collection z-depth-1\">-->\n        <!--<li class=\"collection-item\">-->\n          <!--<div class=\"row\">-->\n            <!--<div class=\"col s5 grey-text darken-1\"><i class=\"mdi-action-wallet-travel\"></i> Project</div>-->\n            <!--<div class=\"col s7 grey-text text-darken-4 right-align\">ABC Name</div>-->\n          <!--</div>-->\n        <!--</li>-->\n        <!--<li class=\"collection-item\">-->\n          <!--<div class=\"row\">-->\n            <!--<div class=\"col s5 grey-text darken-1\"><i class=\"mdi-social-poll\"></i> Skills</div>-->\n            <!--<div class=\"col s7 grey-text text-darken-4 right-align\">HTML, CSS</div>-->\n          <!--</div>-->\n        <!--</li>-->\n        <!--<li class=\"collection-item\">-->\n          <!--<div class=\"row\">-->\n            <!--<div class=\"col s5 grey-text darken-1\"><i class=\"mdi-social-domain\"></i> Lives in</div>-->\n            <!--<div class=\"col s7 grey-text text-darken-4 right-align\">NY, USA</div>-->\n          <!--</div>-->\n        <!--</li>-->\n        <!--<li class=\"collection-item\">-->\n          <!--<div class=\"row\">-->\n            <!--<div class=\"col s5 grey-text darken-1\"><i class=\"mdi-social-cake\"></i> Birth date</div>-->\n            <!--<div class=\"col s7 grey-text text-darken-4 right-align\">18th June, 1991</div>-->\n          <!--</div>-->\n        <!--</li>-->\n      <!--</ul>-->\n      <!--&lt;!&ndash;/ Profile About Details  &ndash;&gt;-->\n\n      <!--&lt;!&ndash; Profile About  &ndash;&gt;-->\n\n    <!--</div>-->\n  <!--</div>-->\n<!--</div>-->\n\n\n\n\n"
 
 /***/ }),
 
@@ -5888,7 +6494,7 @@ module.exports = "<div class=\"container\">\n  <div class=\"row coach_card\">\n\
 /***/ 652:
 /***/ (function(module, exports) {
 
-module.exports = "<!--<rb-header></rb-header>-->\n<div class=\"container\">\n\n  <div *ngIf=\"(coachee | async)?.selectedCoach\">\n    <!-- Coachee has selected a coach -->\n\n    <h4>Vous avez sélectionné un coach </h4>\n\n    <p>{{(coachee | async)?.selectedCoach.display_name}}</p>\n\n    <rb-coach-details class=\"col s4\" [coach]=\"(coachee | async)?.selectedCoach\"></rb-coach-details>\n\n  </div>\n\n  <div *ngIf=\"(coachee | async)?.selectedCoach == null\">\n\n    <h4>Nous avons sélectionné des coachs pour vous</h4>\n\n    <div class=\"row\">\n      <rb-coach-item class=\"col s4\" *ngFor=\"let coach of coachs | async\" [coach]=\"coach\"\n                     (click)=\"onPotentialCoachSelected(coach)\"></rb-coach-item>\n    </div>\n  </div>\n\n  <div *ngIf=\"potSelectedCoach\">\n    <button class=\"btn cyan waves-effect waves-light right\" (click)=\"onFinalCoachSelected(potSelectedCoach)\">\n      Sélectionner ce coach<i\n      class=\"mdi-content-send right\"></i></button>\n\n    <rb-profile-coach-summary class=\"col s4\"\n                              [coach]=\"potSelectedCoach\"></rb-profile-coach-summary>\n\n    <button class=\"btn cyan waves-effect waves-light right\" (click)=\"onFinalCoachSelected(potSelectedCoach)\">\n      Sélectionner ce coach<i\n      class=\"mdi-content-send right\"></i></button>\n  </div>\n\n\n</div>\n\n"
+module.exports = "<!--<rb-header></rb-header>-->\n<div class=\"container\">\n\n  <div *ngIf=\"(coachee | async)?.selectedCoach\">\n    <!-- Coachee has selected a coach -->\n\n    <h4>Vous avez sélectionné un coach </h4>\n\n    <p>{{(coachee | async)?.selectedCoach.display_name}}</p>\n\n    <rb-coach-details class=\"col s4\" [iCoach]=\"(coachee | async)?.selectedCoach\"></rb-coach-details>\n\n  </div>\n\n  <div *ngIf=\"(coachee | async)?.selectedCoach == null\">\n\n    <h4>Nous avons sélectionné des coachs pour vous</h4>\n\n    <div class=\"row\">\n      <rb-coach-item class=\"col s4\" *ngFor=\"let coach of coachs | async\" [coach]=\"coach\"\n                     (click)=\"onPotentialCoachSelected(coach)\"></rb-coach-item>\n    </div>\n  </div>\n\n  <div *ngIf=\"potSelectedCoach\">\n    <button class=\"btn cyan waves-effect waves-light right\" (click)=\"onFinalCoachSelected(potSelectedCoach)\">\n      Sélectionner ce coach<i\n      class=\"mdi-content-send right\"></i></button>\n\n    <rb-profile-coach-summary class=\"col s4\"\n                              [coach]=\"potSelectedCoach\"></rb-profile-coach-summary>\n\n    <button class=\"btn cyan waves-effect waves-light right\" (click)=\"onFinalCoachSelected(potSelectedCoach)\">\n      Sélectionner ce coach<i\n      class=\"mdi-content-send right\"></i></button>\n  </div>\n\n\n</div>\n\n"
 
 /***/ }),
 
@@ -5902,7 +6508,7 @@ module.exports = "<!--start container-->\n<div class=\"container\">\n\n  <div id
 /***/ 654:
 /***/ (function(module, exports) {
 
-module.exports = "<!--<rb-header></rb-header>-->\n<!--start container-->\n<div class=\"container\">\n\n  <div id=\"profile-page\" class=\"section\">\n    <!-- profile-page-header -->\n    <div id=\"profile-page-header\" class=\"card\">\n      <div class=\"card-image waves-effect waves-block waves-light\">\n        <img class=\"activator\" src=\"images/user-profile-bg.jpg\" alt=\"user background\">\n      </div>\n      <figure class=\"card-profile-image\">\n        <img src=\"{{ ( coach | async)?.avatar_url}}\" alt=\"profile image\"\n             class=\"circle z-depth-2 responsive-img activator\">\n      </figure>\n      <div class=\"card-content\">\n        <div class=\"row\">\n          <div class=\"col s3 offset-s2\">\n            <h4 class=\"card-title grey-text text-darken-4\">{{ (coach | async)?.display_name }}</h4>\n            <p class=\"medium-small grey-text\">Coach</p>\n          </div>\n          <div class=\"col s2 center-align\">\n            <h4 class=\"card-title grey-text text-darken-4\">10+</h4>\n            <p class=\"medium-small grey-text\">Work Experience</p>\n          </div>\n          <div class=\"col s2 center-align\">\n            <h4 class=\"card-title grey-text text-darken-4\">6</h4>\n            <p class=\"medium-small grey-text\">Completed Sessions</p>\n          </div>\n          <div class=\"col s2 center-align\">\n            <h4 class=\"card-title grey-text text-darken-4\">$ 1,253,000</h4>\n            <p class=\"medium-small grey-text\">Business Profit</p>\n          </div>\n          <div class=\"col s1 right-align\">\n            <a class=\"btn-floating activator waves-effect waves-light darken-2 right\">\n              <i class=\"mdi-action-perm-identity\"></i>\n            </a>\n          </div>\n        </div>\n      </div>\n      <div class=\"card-reveal\">\n        <p>\n            <span class=\"card-title grey-text text-darken-4\">{{ (coach | async)?.display_name }} <i\n              class=\"mdi-navigation-close right\"></i></span>\n          <span><i class=\"mdi-action-perm-identity cyan-text text-darken-2\"></i>Coach</span>\n        </p>\n\n        <p>Coach description</p>\n\n        <p><i class=\"mdi-action-perm-phone-msg cyan-text text-darken-2\"></i> +1 (612) 222 8989</p>\n        <p><i class=\"mdi-communication-email cyan-text text-darken-2\"></i> {{ (coach | async)?.email }}</p>\n        <p><i class=\"mdi-social-cake cyan-text text-darken-2\"></i> Start Date : {{ (coach | async)?.start_date }}</p>\n        <p><i class=\"mdi-device-airplanemode-on cyan-text text-darken-2\"></i> BAR - AUS</p>\n        <p><i class=\"mdi-social-cake cyan-text text-darken-2\"></i> eritis id : {{ (coach | async)?.id }}</p>\n\n      </div>\n    </div>\n    <!--/ profile-page-header -->\n\n    <!-- profile-page-content -->\n    <div id=\"profile-page-content\" class=\"row\">\n      <!-- profile-page-sidebar-->\n      <div id=\"profile-page-sidebar\" class=\"col s12 m4\">\n        <!-- Profile About  -->\n        <div class=\"card light-blue\">\n          <div class=\"card-content white-text\">\n            <span class=\"card-title\">A propos</span>\n            <p> {{ (coach | async)?.description }}</p>\n          </div>\n        </div>\n        <!-- Profile About  -->\n\n        <!-- Profile About Details  -->\n        <ul id=\"profile-page-about-details\" class=\"collection z-depth-1\">\n          <li class=\"collection-item\">\n            <div class=\"row\">\n              <div class=\"col s5 grey-text darken-1\"><i class=\"mdi-action-wallet-travel\"></i> Project</div>\n              <div class=\"col s7 grey-text text-darken-4 right-align\">ABC Name</div>\n            </div>\n          </li>\n          <li class=\"collection-item\">\n            <div class=\"row\">\n              <div class=\"col s5 grey-text darken-1\"><i class=\"mdi-social-poll\"></i> Skills</div>\n              <div class=\"col s7 grey-text text-darken-4 right-align\">HTML, CSS</div>\n            </div>\n          </li>\n          <li class=\"collection-item\">\n            <div class=\"row\">\n              <div class=\"col s5 grey-text darken-1\"><i class=\"mdi-social-domain\"></i> Lives in</div>\n              <div class=\"col s7 grey-text text-darken-4 right-align\">NY, USA</div>\n            </div>\n          </li>\n          <li class=\"collection-item\">\n            <div class=\"row\">\n              <div class=\"col s5 grey-text darken-1\"><i class=\"mdi-social-cake\"></i> Birth date</div>\n              <div class=\"col s7 grey-text text-darken-4 right-align\">18th June, 1991</div>\n            </div>\n          </li>\n        </ul>\n        <!--/ Profile About Details  -->\n\n        <!-- Profile About  -->\n\n        <!-- Profile Edit  -->\n        <div class=\"card\">\n          <div class=\"card-content\">\n            <span class=\"card-title\">Modifier votre profile</span>\n\n            <!-- update display name -->\n            <form [formGroup]=\"formCoach\" (ngSubmit)=\"submitCoachProfilUpdate()\">\n              <div class=\"row\">\n                <div class=\"input-field col s10\">\n                  <input id=\"edit_username\" type=\"text\" formControlName=\"displayName\" class=\"validate\">\n                  <label for=\"edit_username\">Username</label>\n                </div>\n              </div>\n\n              <div class=\"row\">\n                <div class=\"input-field col s10\">\n                  <textarea id=\"edit_description\" class=\"materialize-textarea validate\"\n                            formControlName=\"description\"></textarea>\n                  <label for=\"edit_description\">Description</label>\n                </div>\n              </div>\n\n              <div class=\"row\">\n                <div class=\"input-field col s10\">\n                  <input id=\"edit_avatar_url\" type=\"text\" formControlName=\"avatar\" class=\"validate\">\n                  <label for=\"edit_avatar_url\">Avatar url</label>\n                </div>\n              </div>\n\n              <button type=\"submit\" class=\"btn-basic btn-plain btn-blue btn-small right\" [disabled]=\"!formCoach.valid\">Mettre à jour</button>\n\n            </form>\n\n          </div>\n        </div>\n        <!-- / Profile Edit  -->\n      </div>\n    </div>\n  </div>\n</div>\n\n\n"
+module.exports = "<!--<rb-header></rb-header>-->\n<!--start container-->\n<div class=\"container\">\n\n  <div id=\"profile-page\" class=\"section\">\n    <!-- profile-page-header -->\n    <div id=\"profile-page-header\" class=\"card\">\n      <div class=\"card-image waves-effect waves-block waves-light\">\n        <img class=\"activator\" src=\"images/user-profile-bg.jpg\" alt=\"user background\">\n      </div>\n      <figure class=\"card-profile-image\">\n        <img src=\"{{ ( coach | async)?.avatar_url}}\" alt=\"profile image\"\n             class=\"circle z-depth-2 responsive-img activator\">\n      </figure>\n      <div class=\"card-content\">\n        <div class=\"row\">\n          <div class=\"col s3 offset-s2\">\n            <h4 class=\"card-title grey-text text-darken-4\">{{ (coach | async)?.display_name }}</h4>\n            <p class=\"medium-small grey-text\">Coach</p>\n          </div>\n          <div class=\"col s2 center-align\">\n            <h4 class=\"card-title grey-text text-darken-4\">10+</h4>\n            <p class=\"medium-small grey-text\">Work Experience</p>\n          </div>\n          <div class=\"col s2 center-align\">\n            <h4 class=\"card-title grey-text text-darken-4\">6</h4>\n            <p class=\"medium-small grey-text\">Completed Sessions</p>\n          </div>\n          <div class=\"col s2 center-align\">\n            <h4 class=\"card-title grey-text text-darken-4\">$ 1,253,000</h4>\n            <p class=\"medium-small grey-text\">Business Profit</p>\n          </div>\n          <div class=\"col s1 right-align\">\n            <a class=\"btn-floating activator waves-effect waves-light darken-2 right\">\n              <i class=\"mdi-action-perm-identity\"></i>\n            </a>\n          </div>\n        </div>\n      </div>\n      <div class=\"card-reveal\">\n        <p>\n            <span class=\"card-title grey-text text-darken-4\">{{ (coach | async)?.display_name }} <i\n              class=\"mdi-navigation-close right\"></i></span>\n          <span><i class=\"mdi-action-perm-identity cyan-text text-darken-2\"></i>Coach</span>\n        </p>\n\n        <p>Coach description</p>\n\n        <p><i class=\"mdi-action-perm-phone-msg cyan-text text-darken-2\"></i> +1 (612) 222 8989</p>\n        <p><i class=\"mdi-communication-email cyan-text text-darken-2\"></i> {{ (coach | async)?.email }}</p>\n        <p><i class=\"mdi-social-cake cyan-text text-darken-2\"></i> Start Date : {{ (coach | async)?.start_date }}</p>\n        <p><i class=\"mdi-device-airplanemode-on cyan-text text-darken-2\"></i> BAR - AUS</p>\n        <p><i class=\"mdi-social-cake cyan-text text-darken-2\"></i> eritis id : {{ (coach | async)?.id }}</p>\n\n      </div>\n    </div>\n    <!--/ profile-page-header -->\n\n    <!-- profile-page-content -->\n    <div id=\"profile-page-content\" class=\"row\">\n      <!-- profile-page-sidebar-->\n      <div id=\"profile-page-sidebar\" class=\"col s12 m4\">\n        <!-- Profile About  -->\n        <div class=\"card light-blue\">\n          <div class=\"card-content white-text\">\n            <span class=\"card-title\">A propos</span>\n            <p> {{ (coach | async)?.description }}</p>\n          </div>\n        </div>\n        <!-- Profile About  -->\n\n        <!-- Profile About Details  -->\n        <ul id=\"profile-page-about-details\" class=\"collection z-depth-1\">\n          <li class=\"collection-item\">\n            <div class=\"row\">\n              <div class=\"col s5 grey-text darken-1\"><i class=\"mdi-action-wallet-travel\"></i> Project</div>\n              <div class=\"col s7 grey-text text-darken-4 right-align\">ABC Name</div>\n            </div>\n          </li>\n          <li class=\"collection-item\">\n            <div class=\"row\">\n              <div class=\"col s5 grey-text darken-1\"><i class=\"mdi-social-poll\"></i> Skills</div>\n              <div class=\"col s7 grey-text text-darken-4 right-align\">HTML, CSS</div>\n            </div>\n          </li>\n          <li class=\"collection-item\">\n            <div class=\"row\">\n              <div class=\"col s5 grey-text darken-1\"><i class=\"mdi-social-domain\"></i> Lives in</div>\n              <div class=\"col s7 grey-text text-darken-4 right-align\">NY, USA</div>\n            </div>\n          </li>\n          <li class=\"collection-item\">\n            <div class=\"row\">\n              <div class=\"col s5 grey-text darken-1\"><i class=\"mdi-social-cake\"></i> Birth date</div>\n              <div class=\"col s7 grey-text text-darken-4 right-align\">18th June, 1991</div>\n            </div>\n          </li>\n        </ul>\n        <!--/ Profile About Details  -->\n\n        <!-- Profile About  -->\n\n        <!-- Profile Edit  -->\n        <div class=\"card\">\n          <div class=\"card-content\">\n            <span class=\"card-title\">Modifier votre profile</span>\n\n            <!-- update display name -->\n            <form [formGroup]=\"formCoach\" (ngSubmit)=\"submitCoachProfilUpdate()\">\n              <div class=\"row\">\n                <div class=\"col s10\">\n                  <label for=\"edit_username\">Username</label>\n                  <input id=\"edit_username\" type=\"text\" formControlName=\"displayName\" class=\"validate\">\n                </div>\n              </div>\n\n              <div class=\"row\">\n                <div class=\"col s10\">\n                  <label for=\"edit_description\">Description</label>\n                  <textarea id=\"edit_description\" class=\"materialize-textarea validate\"\n                            formControlName=\"description\"></textarea>\n                </div>\n              </div>\n\n              <div class=\"row\">\n                <div class=\"col s10\">\n                  <label for=\"edit_avatar_url\">Avatar url</label>\n                  <input id=\"edit_avatar_url\" type=\"text\" formControlName=\"avatar\" class=\"validate\">\n                </div>\n              </div>\n\n              <button type=\"submit\" class=\"btn-basic btn-plain btn-blue btn-small right\" [disabled]=\"!formCoach.valid\">Mettre à jour</button>\n\n            </form>\n\n          </div>\n        </div>\n        <!-- / Profile Edit  -->\n      </div>\n    </div>\n  </div>\n</div>\n\n\n"
 
 /***/ }),
 
@@ -5923,11 +6529,18 @@ module.exports = "<!--<rb-header></rb-header>-->\n<!--start container-->\n<div c
 /***/ 657:
 /***/ (function(module, exports) {
 
-module.exports = "<main>\n\n  <div class=\"bg-top-image\"></div>\n  <div class=\"bg-top-filter\"></div>\n\n  <header class=\"section\">\n    <!--<div class=\"navbar\">-->\n      <!--<nav>-->\n        <!--<div class=\"navbar-color\">-->\n          <!--<div class=\"col s12\">-->\n            <!--<a [routerLink]=\"['/']\" class=\"logo-text\"><img src=\"assets/img/logo-eritis-new.png\" alt=\"Eritis\"></a>-->\n          <!--</div>-->\n        <!--</div>&lt;!&ndash;end navbar-color&ndash;&gt;-->\n      <!--</nav>-->\n    <!--</div>&lt;!&ndash;end navbar&ndash;&gt;-->\n\n    <!--<div class=\"container\">-->\n      <!--<h1 class=\"header-title\">Atteignez vos objectifs</h1>-->\n      <!--<h3 class=\"header-subtitle\">Séances de coaching individuel avec un coach certifié</h3>-->\n\n      <!--<div class=\"row\">-->\n        <!--<div class=\"header-btn col-xs-12 col-sm-6\">-->\n          <!--<a pageScroll href=\"#coach_section\" class=\"btn-basic\">En savoir plus</a>-->\n        <!--</div>-->\n        <!--<div class=\"header-btn col-xs-12 col-sm-6\">-->\n          <!--<button class=\"btn-basic btn-plain btn-connexion\" (click)=\"activateLogin()\"><i class=\"material-icons\">perm_identity</i>-->\n            <!--Connexion-->\n          <!--</button>-->\n        <!--</div>-->\n      <!--</div>-->\n\n      <!--<rb-signin *ngIf=\"loginActivated\"></rb-signin>-->\n\n      <!--<a pageScroll href=\"#presentation\" class=\"header-arrow-bottom\"><i class=\"fa fa-angle-down\" aria-hidden=\"true\"></i></a>-->\n\n    <!--</div>-->\n  </header> <!--end header-->\n\n  <div class=\"content\">\n\n    <section id=\"presentation\" class=\"section\">\n      <div class=\"container\">\n        <h2 class=\"text-center section_title presentation_title\">Construisez le coaching qui correspond à vos\n          besoins</h2>\n        <div class=\"row\">\n          <div class=\"col-sm-12 col-lg-4\">\n            <div class=\"presentation_item text-center\">\n              <img src=\"assets/img/todos.svg\" class=\"desc_icon\"/>\n              <h3 class=\"presentation_item_title\">Définissez votre besoin​</h3>\n              <p class=\"presentation_item_text\">Utilisez l'outil de réservation et organisez votre séance de\n                coaching.</p>\n            </div>\n          </div>\n\n          <div class=\"col-sm-12 col-lg-4\">\n            <div class=\"presentation_item text-center\">\n              <img src=\"assets/img/confirm-user.svg\" class=\"desc_icon\"/>\n              <h3 class=\"presentation_item_title\">Trouvez votre coach</h3>\n              <p class=\"presentation_item_text\">Connectez-vous sur votre plateforme pour votre séance de 45 min.</p>\n            </div>\n          </div>\n\n          <div class=\"col-sm-12 col-lg-4\">\n            <div class=\"presentation_item text-center\">\n              <img src=\"assets/img/presentation.svg\" class=\"desc_icon\"/>\n              <h3 class=\"presentation_item_title\">Suivez votre progression</h3>\n              <p class=\"presentation_item_text\">Chaque séance se conclue par un compte rendu avec un plan d'action.</p>\n            </div>\n          </div>\n        </div> <!--end row-->\n      </div> <!--end container-->\n    </section> <!--end section-->\n\n\n    <section id=\"coach_section\" class=\"section\">\n      <div class=\"container\">\n        <h2 class=\"text-center section_title coach_section_title\">Conçu par une équipe de coachs certifiés</h2>\n        <h5 class=\"text-center coach_section_subtitle\">\n          Notre équipe de coachs expérimentés constitue un label de qualité\n          sans équivalent sur le marché du coaching professionnel.\n        </h5>\n\n        <div class=\"small-line-container\">\n          <div class=\"small-line\"></div>\n        </div>\n\n        <div class=\"row\">\n          <div class=\"col-sm-12 col-lg-4 coach_description\">\n            <img class=\"coach_img\"\n                 src=\"https://static.wixstatic.com/media/04261a_d639816d3928429d8a34a774be2c77c2~mv2.png/v1/fill/w_298,h_298,al_c,usm_0.66_1.00_0.01/04261a_d639816d3928429d8a34a774be2c77c2~mv2.png\">\n            <h4>Etienne Roy</h4>\n            <p>\n              20 ans d'expérience en accompagnement d'équipes, de cadres dirigeants et d'organisation\n              dans des phases de changement.\n            </p>\n          </div>\n\n          <div class=\"col-sm-12 col-lg-4 coach_description\">\n            <img class=\"coach_img\"\n                 src=\"https://static.wixstatic.com/media/04261a_992204f8b935467e90154abc73a30105~mv2.png/v1/fill/w_298,h_298,al_c,lg_1/04261a_992204f8b935467e90154abc73a30105~mv2.png\">\n            <h4>Elaine Lecoeur</h4>\n            <p>\n              Canadienne, installée en France depuis 1995 et forte de 20 ans d'expérience\n              en entreprise, c'est sur ce terrain que j'avance avec vous pour construire les\n              environnements apprenants adaptés à ces nouveaux enjeux.\n            </p>\n          </div>\n\n          <div class=\"col-xs-12 col-lg-4 coach_description\">\n            <img class=\"coach_img\"\n                 src=\"https://static.wixstatic.com/media/04261a_c405cc6001b041b997493ad886d4781b~mv2.png/v1/fill/w_298,h_298,al_c,lg_1/04261a_c405cc6001b041b997493ad886d4781b~mv2.png\">\n            <h4>Annette Leclerc Vanel</h4>\n            <p>\n              Directrice d'agences opérationnelles et directrice de secteur dans les métiers\n              des services pendant 20 ans, Annette est coach depuis 18 ans.\n            </p>\n          </div>\n        </div><!--end row-->\n\n        <a pageScroll href=\"#contact\" class=\"btn-basic\">Contactez-nous</a>\n\n      </div><!--end container-->\n    </section><!--end section-->\n\n  </div><!--end content-->\n\n\n  <footer class=\"footer section\" id=\"contact\">\n    <div class=\"container\">\n      <div class=\"row\">\n        <div class=\"col-sm-12 col-lg-5\">\n          <div class=\"address\">\n            <h4>Eritis</h4>\n            <p>15 Wilmer place\n              <br>London\n              <br>78 Avenue de Saint-Mandé\n              <br>75012 Paris, France\n            </p>\n          </div>\n        </div>\n        <div class=\"col-sm-12 col-lg-7\">\n          <form [formGroup]=\"contactForm\" (ngSubmit)=\"onContactSubmit()\">\n            <div class=\"input_field\">\n              <label for=\"name\">Nom</label>\n              <input type=\"text\" name=\"name\" id=\"name\" formControlName=\"name\">\n            </div>\n            <br>\n            <div class=\"input_field\">\n              <label for=\"mail\">Adresse Mail</label>\n              <input type=\"text\" name=\"mail\" id=\"mail\" formControlName=\"mail\">\n            </div>\n            <br>\n            <div class=\"input_field\">\n              <label for=\"message\">Message</label>\n              <textarea name=\"message\" class=\"materialize-textarea\" id=\"message\" formControlName=\"message\"></textarea>\n            </div>\n            <div class=\"input_field text-right\">\n              <button type=\"submit\" name=\"submit\" class=\"btn-basic btn-submit\" [disabled]=\"!contactForm.valid\">Envoyer\n              </button>\n            </div>\n          </form>\n\n        </div>\n      </div><!--end row-->\n    </div><!--end container-->\n  </footer>\n\n\n</main>\n\n<script type=\"text/javascript\">\n  $('.navbar-fixed').hide();\n</script>\n"
+module.exports = "<main>\n\n  <div class=\"bg-top-image\"></div>\n  <div class=\"bg-top-filter\"></div>\n\n  <header class=\"section\">\n    <!--<div class=\"navbar\">-->\n      <!--<nav>-->\n        <!--<div class=\"navbar-color\">-->\n          <!--<div class=\"col s12\">-->\n            <!--<a [routerLink]=\"['/']\" class=\"logo-text\"><img src=\"assets/img/logo-eritis-new.png\" alt=\"Eritis\"></a>-->\n          <!--</div>-->\n        <!--</div>&lt;!&ndash;end navbar-color&ndash;&gt;-->\n      <!--</nav>-->\n    <!--</div>&lt;!&ndash;end navbar&ndash;&gt;-->\n\n    <!--<div class=\"container\">-->\n      <!--<h1 class=\"header-title\">Atteignez vos objectifs</h1>-->\n      <!--<h3 class=\"header-subtitle\">Séances de coaching individuel avec un coach certifié</h3>-->\n\n      <!--<div class=\"row\">-->\n        <!--<div class=\"header-btn col-xs-12 col-sm-6\">-->\n          <!--<a pageScroll href=\"#coach_section\" class=\"btn-basic\">En savoir plus</a>-->\n        <!--</div>-->\n        <!--<div class=\"header-btn col-xs-12 col-sm-6\">-->\n          <!--<button class=\"btn-basic btn-plain btn-connexion\" (click)=\"activateLogin()\"><i class=\"material-icons\">perm_identity</i>-->\n            <!--Connexion-->\n          <!--</button>-->\n        <!--</div>-->\n      <!--</div>-->\n\n      <!--<rb-signin *ngIf=\"loginActivated\"></rb-signin>-->\n\n      <!--<a pageScroll href=\"#presentation\" class=\"header-arrow-bottom\"><i class=\"fa fa-angle-down\" aria-hidden=\"true\"></i></a>-->\n\n    <!--</div>-->\n  </header> <!--end header-->\n\n  <div class=\"content\">\n\n    <section id=\"presentation\" class=\"section\">\n      <div class=\"container\">\n        <h2 class=\"text-center section_title presentation_title\">Construisez le coaching qui correspond à vos\n          besoins</h2>\n        <div class=\"row\">\n          <div class=\"col-sm-12 col-lg-4\">\n            <div class=\"presentation_item text-center\">\n              <img src=\"assets/img/todos.svg\" class=\"desc_icon\"/>\n              <h3 class=\"presentation_item_title\">Définissez votre besoin​</h3>\n              <p class=\"presentation_item_text\">Utilisez l'outil de réservation et organisez votre séance de\n                coaching.</p>\n            </div>\n          </div>\n\n          <div class=\"col-sm-12 col-lg-4\">\n            <div class=\"presentation_item text-center\">\n              <img src=\"assets/img/confirm-user.svg\" class=\"desc_icon\"/>\n              <h3 class=\"presentation_item_title\">Trouvez votre coach</h3>\n              <p class=\"presentation_item_text\">Connectez-vous sur votre plateforme pour votre séance de 45 min.</p>\n            </div>\n          </div>\n\n          <div class=\"col-sm-12 col-lg-4\">\n            <div class=\"presentation_item text-center\">\n              <img src=\"assets/img/presentation.svg\" class=\"desc_icon\"/>\n              <h3 class=\"presentation_item_title\">Suivez votre progression</h3>\n              <p class=\"presentation_item_text\">Chaque séance se conclue par un compte rendu avec un plan d'action.</p>\n            </div>\n          </div>\n        </div> <!--end row-->\n      </div> <!--end container-->\n    </section> <!--end section-->\n\n\n    <section id=\"coach_section\" class=\"section\">\n      <div class=\"container\">\n        <h2 class=\"text-center section_title coach_section_title\">Conçu par une équipe de coachs certifiés</h2>\n        <h5 class=\"text-center coach_section_subtitle\">\n          Notre équipe de coachs expérimentés constitue un label de qualité\n          sans équivalent sur le marché du coaching professionnel.\n        </h5>\n\n        <div class=\"small-line-container\">\n          <div class=\"small-line\"></div>\n        </div>\n\n        <div class=\"row\">\n          <div class=\"col-sm-12 col-lg-4 coach_description\">\n            <img class=\"coach_img\"\n                 src=\"https://static.wixstatic.com/media/04261a_d639816d3928429d8a34a774be2c77c2~mv2.png/v1/fill/w_298,h_298,al_c,usm_0.66_1.00_0.01/04261a_d639816d3928429d8a34a774be2c77c2~mv2.png\">\n            <h4>Etienne Roy</h4>\n            <p>\n              20 ans d'expérience en accompagnement d'équipes, de cadres dirigeants et d'organisation\n              dans des phases de changement.\n            </p>\n          </div>\n\n          <div class=\"col-sm-12 col-lg-4 coach_description\">\n            <img class=\"coach_img\"\n                 src=\"https://static.wixstatic.com/media/04261a_992204f8b935467e90154abc73a30105~mv2.png/v1/fill/w_298,h_298,al_c,lg_1/04261a_992204f8b935467e90154abc73a30105~mv2.png\">\n            <h4>Elaine Lecoeur</h4>\n            <p>\n              Canadienne, installée en France depuis 1995 et forte de 20 ans d'expérience\n              en entreprise, c'est sur ce terrain que j'avance avec vous pour construire les\n              environnements apprenants adaptés à ces nouveaux enjeux.\n            </p>\n          </div>\n\n          <div class=\"col-xs-12 col-lg-4 coach_description\">\n            <img class=\"coach_img\"\n                 src=\"https://static.wixstatic.com/media/04261a_c405cc6001b041b997493ad886d4781b~mv2.png/v1/fill/w_298,h_298,al_c,lg_1/04261a_c405cc6001b041b997493ad886d4781b~mv2.png\">\n            <h4>Annette Leclerc Vanel</h4>\n            <p>\n              Directrice d'agences opérationnelles et directrice de secteur dans les métiers\n              des services pendant 20 ans, Annette est coach depuis 18 ans.\n            </p>\n          </div>\n        </div><!--end row-->\n\n        <a pageScroll href=\"#contact\" class=\"btn-basic\">Contactez-nous</a>\n\n      </div><!--end container-->\n    </section><!--end section-->\n\n  </div><!--end content-->\n\n\n  <footer class=\"footer section\" id=\"contact\">\n    <div class=\"container\">\n      <div class=\"row\">\n        <div class=\"col-sm-12 col-lg-5\">\n          <div class=\"address\">\n            <h4>Eritis</h4>\n            <p>15 Wilmer place\n              <br>London\n              <br>78 Avenue de Saint-Mandé\n              <br>75012 Paris, France\n            </p>\n          </div>\n        </div>\n        <div class=\"col-sm-12 col-lg-7\">\n          <form [formGroup]=\"contactForm\" (ngSubmit)=\"onContactSubmit()\">\n            <div class=\"input_field\">\n              <label for=\"name\">Nom</label>\n              <input type=\"text\" name=\"name\" id=\"name\" formControlName=\"name\" placeholder=\"Nom\">\n            </div>\n            <br>\n            <div class=\"input_field\">\n              <label for=\"mail\">Adresse Mail</label>\n              <input type=\"text\" name=\"mail\" id=\"mail\" formControlName=\"mail\" placeholder=\"exemple@mail.com\">\n            </div>\n            <br>\n            <div class=\"input_field\">\n              <label for=\"message\">Message</label>\n              <textarea name=\"message\" class=\"materialize-textarea\" id=\"message\" formControlName=\"message\" placeholder=\"Message...\"></textarea>\n            </div>\n            <div class=\"input_field text-right\">\n              <button type=\"submit\" name=\"submit\" class=\"btn-basic btn-submit\" [disabled]=\"!contactForm.valid\">Envoyer\n              </button>\n            </div>\n          </form>\n\n        </div>\n      </div><!--end row-->\n    </div><!--end container-->\n  </footer>\n\n\n</main>\n\n<script type=\"text/javascript\">\n  $('.navbar-fixed').hide();\n</script>\n"
 
 /***/ }),
 
-/***/ 84:
+/***/ 82:
+/***/ (function(module, exports, __webpack_require__) {
+
+module.exports = __webpack_require__.p + "eritis-mountain-bg-2.cbc21344ba5faf2ce1c2.jpg";
+
+/***/ }),
+
+/***/ 85:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -5974,573 +6587,6 @@ FirebaseService = __decorate([
 ], FirebaseService);
 
 //# sourceMappingURL=/Users/guillaume/angular/eritis_fe/src/firebase.service.js.map
-
-/***/ }),
-
-/***/ 9:
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_router__ = __webpack_require__(21);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__angular_core__ = __webpack_require__(1);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_rxjs__ = __webpack_require__(35);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_rxjs___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_2_rxjs__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_rxjs_observable_PromiseObservable__ = __webpack_require__(162);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_rxjs_observable_PromiseObservable___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_3_rxjs_observable_PromiseObservable__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__angular_http__ = __webpack_require__(82);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__environments_environment__ = __webpack_require__(61);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__firebase_service__ = __webpack_require__(84);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7__model_Coach__ = __webpack_require__(31);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_8__model_Coachee__ = __webpack_require__(48);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_9__model_Rh__ = __webpack_require__(52);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_10__model_PotentialCoachee__ = __webpack_require__(232);
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return AuthService; });
-var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
-    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-    return c > 3 && r && Object.defineProperty(target, key, r), r;
-};
-var __metadata = (this && this.__metadata) || function (k, v) {
-    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
-};
-
-
-
-
-
-
-
-
-
-
-
-var AuthService = AuthService_1 = (function () {
-    function AuthService(firebase, router, httpService) {
-        this.firebase = firebase;
-        this.router = router;
-        this.httpService = httpService;
-        this.onAuthStateChangedCalled = false;
-        // private user: User
-        this.isUserAuth = new __WEBPACK_IMPORTED_MODULE_2_rxjs__["BehaviorSubject"](false); //NOT auth by default
-        // private ApiUserSubject = new BehaviorSubject<ApiUser>(null);//NOT auth by default
-        this.ApiUserSubject = new __WEBPACK_IMPORTED_MODULE_2_rxjs__["Subject"](); //NOT auth by default
-        /* flag to know if we are in the sign in or sign up process. Block updateAuthStatus(FBuser) is true */
-        this.isSignInOrUp = false;
-        this.ApiUser = null;
-        firebase.auth().onAuthStateChanged(function (user) {
-            console.log("onAuthStateChanged, user : " + user);
-            this.onAuthStateChangedCalled = true;
-            this.updateAuthStatus(user);
-        }.bind(this));
-        console.log("ctr done");
-    }
-    /*
-     * Get connected user from backend
-     */
-    AuthService.prototype.refreshConnectedUser = function () {
-        console.log("refreshConnectedUser");
-        if (this.ApiUser != null) {
-            if (this.ApiUser instanceof __WEBPACK_IMPORTED_MODULE_7__model_Coach__["a" /* Coach */]) {
-                return this.fetchCoach(this.ApiUser.id);
-            }
-            else if (this.ApiUser instanceof __WEBPACK_IMPORTED_MODULE_8__model_Coachee__["a" /* Coachee */]) {
-                return this.fetchCoachee(this.ApiUser.id);
-            }
-            else if (this.ApiUser instanceof __WEBPACK_IMPORTED_MODULE_9__model_Rh__["a" /* Rh */]) {
-                return this.fetchRh(this.ApiUser.id);
-            }
-        }
-        else {
-            console.log("refreshConnectedUser, no connected user");
-        }
-        return __WEBPACK_IMPORTED_MODULE_2_rxjs__["Observable"].from(null);
-    };
-    AuthService.prototype.fetchCoach = function (userId) {
-        var _this = this;
-        var param = [userId];
-        var obs = this.get(AuthService_1.GET_COACH_FOR_ID, param);
-        return obs.map(function (res) {
-            console.log("fetchCoach, obtained from API : ", res);
-            var coach = _this.parseCoach(res.json());
-            _this.onAPIuserObtained(coach, _this.ApiUser.firebaseToken);
-            return coach;
-        });
-    };
-    AuthService.prototype.fetchCoachee = function (userId) {
-        var _this = this;
-        var param = [userId];
-        var obs = this.get(AuthService_1.GET_COACHEE_FOR_ID, param);
-        return obs.map(function (res) {
-            console.log("fetchCoachee, obtained from API : ", res);
-            var coachee = _this.parseCoachee(res.json());
-            _this.onAPIuserObtained(coachee, _this.ApiUser.firebaseToken);
-            return coachee;
-        });
-    };
-    AuthService.prototype.fetchRh = function (userId) {
-        var _this = this;
-        var param = [userId];
-        var obs = this.get(AuthService_1.GET_RH_FOR_ID, param);
-        return obs.map(function (res) {
-            console.log("fetchRh, obtained from API : ", res);
-            var rh = _this.parseRh(res.json());
-            _this.onAPIuserObtained(rh, _this.ApiUser.firebaseToken);
-            return rh;
-        });
-    };
-    AuthService.prototype.getConnectedUser = function () {
-        return this.ApiUser;
-    };
-    AuthService.prototype.getConnectedUserObservable = function () {
-        return this.ApiUserSubject.asObservable();
-    };
-    AuthService.prototype.isAuthenticated = function () {
-        return this.isUserAuth.asObservable();
-    };
-    AuthService.prototype.post = function (path, params, body) {
-        var _this = this;
-        var method = this.getConnectedApiUser().flatMap(function (firebaseUser) {
-            return _this.getHeader(firebaseUser).flatMap(function (headers) {
-                return _this.httpService.post(_this.generatePath(path, params), body, { headers: headers });
-            });
-        });
-        return method;
-    };
-    AuthService.prototype.postNotAuth = function (path, params, body) {
-        return this.httpService.post(this.generatePath(path, params), body);
-    };
-    AuthService.prototype.put = function (path, params, body) {
-        var _this = this;
-        var method = this.getConnectedApiUser().flatMap(function (firebaseUser) {
-            return _this.getHeader(firebaseUser).flatMap(function (headers) {
-                return _this.httpService.put(_this.generatePath(path, params), body, { headers: headers });
-            });
-        });
-        return method;
-    };
-    AuthService.prototype.get = function (path, params) {
-        return this.getWithSearchParams(path, params, null);
-    };
-    AuthService.prototype.getWithSearchParams = function (path, params, searchParams) {
-        var _this = this;
-        console.log("1. get");
-        var method = this.getConnectedApiUser().flatMap(function (firebaseUser) {
-            return _this.getHeader(firebaseUser).flatMap(function (headers) {
-                console.log("4. start request");
-                return _this.httpService.get(_this.generatePath(path, params), { headers: headers, search: searchParams });
-            });
-        });
-        return method;
-    };
-    AuthService.prototype.delete = function (path, params) {
-        var _this = this;
-        var method = this.getConnectedApiUser().flatMap(function (firebaseUser) {
-            return _this.getHeader(firebaseUser).flatMap(function (headers) {
-                console.log("4. start request");
-                return _this.httpService.delete(_this.generatePath(path, params), { headers: headers });
-            });
-        });
-        return method;
-    };
-    AuthService.prototype.getNotAuth = function (path, params) {
-        return this.httpService.get(this.generatePath(path, params));
-    };
-    AuthService.prototype.getPotentialCoachee = function (path, params) {
-        var _this = this;
-        return this.httpService.get(this.generatePath(path, params)).map(function (res) {
-            return _this.parsePotentialCoachee(res.json());
-        });
-    };
-    AuthService.prototype.getConnectedApiUser = function () {
-        console.log("2. getConnectedApiUser");
-        if (this.ApiUser) {
-            console.log("getConnectedApiUser, user OK");
-            return __WEBPACK_IMPORTED_MODULE_2_rxjs__["Observable"].of(this.ApiUser);
-        }
-        else {
-            console.log("getConnectedApiUser, NO user");
-            //check if onAuthStateChanged was called
-            if (this.onAuthStateChangedCalled) {
-                console.log("getConnectedApiUser, user state changed already call");
-                //now we know we really don't have a user
-                return __WEBPACK_IMPORTED_MODULE_2_rxjs__["Observable"].throw('No current user');
-            }
-            else {
-                console.log("getConnectedApiUser, wait for change state");
-                return this.ApiUserSubject.map(function (apiUser) {
-                    if (apiUser) {
-                        console.log("getConnectedApiUser, got event, with user");
-                        return apiUser;
-                    }
-                    else {
-                        console.log("getConnectedApiUser, got event, no user after state change");
-                        return __WEBPACK_IMPORTED_MODULE_2_rxjs__["Observable"].throw('No user after state changed');
-                    }
-                });
-            }
-        }
-    };
-    AuthService.prototype.getHeader = function (user) {
-        console.log("getHeader");
-        if (user) {
-            // console.log("getHeader, currentUser : ", user);
-            var token = user.firebaseToken;
-            if (token) {
-                // console.log("getHeader, token : ", token);
-                var headers = new __WEBPACK_IMPORTED_MODULE_4__angular_http__["d" /* Headers */]();
-                headers.append('Authorization', 'Bearer ' + token);
-                return __WEBPACK_IMPORTED_MODULE_2_rxjs__["Observable"].of(headers);
-            }
-            else {
-                return __WEBPACK_IMPORTED_MODULE_2_rxjs__["Observable"].throw('No token');
-            }
-        }
-        else {
-            console.log("getHeader, NO user");
-            return __WEBPACK_IMPORTED_MODULE_2_rxjs__["Observable"].throw('No current user');
-        }
-    };
-    AuthService.prototype.generatePath = function (path, params) {
-        // console.log("generatePath, path : ", path);
-        // console.log("generatePath, params : ", params);
-        var completedPath = "";
-        var segs = path.split("/");
-        var paramIndex = 0;
-        for (var _i = 0, segs_1 = segs; _i < segs_1.length; _i++) {
-            var seg = segs_1[_i];
-            if (seg == "" || seg == null) {
-                continue;
-            }
-            // console.log("generatePath, seg : ", seg);
-            // console.log("generatePath, paramIndex : ", paramIndex);
-            completedPath += "/";
-            if (seg.charAt(0) == ":") {
-                completedPath += params[paramIndex];
-                paramIndex++;
-            }
-            else {
-                completedPath += seg;
-            }
-        }
-        //always add a "/" at the end
-        completedPath += "/";
-        // console.log("generatePath, completedPath : ", completedPath);
-        // console.log("generatePath, BACKEND_BASE_URL : ", environment.BACKEND_BASE_URL);
-        var finalUrl = __WEBPACK_IMPORTED_MODULE_5__environments_environment__["a" /* environment */].BACKEND_BASE_URL + completedPath;
-        console.log("generatePath, finalUrl : ", finalUrl);
-        return finalUrl;
-    };
-    AuthService.prototype.updateAuthStatus = function (fbUser) {
-        var _this = this;
-        console.log("updateAuthStatus isSignInOrUp : ", this.isSignInOrUp);
-        if (this.isSignInOrUp) {
-            return;
-        }
-        console.log("updateAuthStatus user : ", fbUser);
-        if (fbUser) {
-            if (this.ApiUser == null) {
-                console.log("updateAuthStatus, get A USER");
-                var firebaseObs = __WEBPACK_IMPORTED_MODULE_3_rxjs_observable_PromiseObservable__["PromiseObservable"].create(fbUser.getToken());
-                firebaseObs.subscribe(function (token) {
-                    //get user from API
-                    _this.getUserForFirebaseId(fbUser.uid, token).subscribe();
-                });
-            }
-            else {
-                console.log("updateAuthStatus already have a user API");
-            }
-        }
-        else {
-            console.log("updateAuthStatus NO user");
-            this.ApiUser = null;
-            this.ApiUserSubject.next(null);
-            this.isUserAuth.next(false);
-        }
-    };
-    /* when we obtained a User from the API ( coach or coachee ) */
-    AuthService.prototype.onAPIuserObtained = function (user, firebaseToken) {
-        console.log("onAPIuserObtained, user : ", user);
-        if (user) {
-            //keep current user
-            this.ApiUser = user;
-            //save token
-            this.ApiUser.firebaseToken = firebaseToken;
-            //dispatch
-            this.ApiUserSubject.next(user);
-            this.isUserAuth.next(true);
-        }
-        else {
-            this.ApiUserSubject.next(null);
-            this.isUserAuth.next(false);
-        }
-        return user;
-    };
-    AuthService.prototype.getUserForFirebaseId = function (firebaseId, token) {
-        var _this = this;
-        console.log("getUserForFirebaseId : ", firebaseId);
-        var params = [firebaseId];
-        var headers = new __WEBPACK_IMPORTED_MODULE_4__angular_http__["d" /* Headers */]();
-        headers.append('Authorization', 'Bearer ' + token);
-        return this.httpService.get(this.generatePath(AuthService_1.LOGIN, params), { headers: headers }).map(function (response) {
-            var apiUser = response.json();
-            var res = _this.parseAPIuser(apiUser);
-            console.log("getUserForFirebaseId, apiUser : ", apiUser);
-            // console.log("getUserForFirebaseId, token : ", token);
-            return _this.onAPIuserObtained(res, token);
-        });
-    };
-    AuthService.prototype.signUpCoach = function (user) {
-        return this.signup(user, AuthService_1.POST_SIGN_UP_COACH);
-    };
-    AuthService.prototype.signUpCoachee = function (user) {
-        //add plan
-        return this.signup(user, AuthService_1.POST_SIGN_UP_COACHEE);
-    };
-    AuthService.prototype.signUpRh = function (user) {
-        return this.signup(user, AuthService_1.POST_SIGN_UP_RH);
-    };
-    AuthService.prototype.signup = function (user, path) {
-        var _this = this;
-        console.log("1. user signUp : ", user);
-        this.isSignInOrUp = true;
-        //create user with email and pwd
-        var firebasePromise = this.firebase.auth().createUserWithEmailAndPassword(user.email, user.password)
-            .then(function (fbUser) {
-            console.log("2. authService, user sign up, success : ", fbUser);
-            //user successfully sign up in Firebase
-            console.log("3. fb user, start getToken");
-            return fbUser.getToken();
-        });
-        var firebaseObs = __WEBPACK_IMPORTED_MODULE_3_rxjs_observable_PromiseObservable__["PromiseObservable"].create(firebasePromise);
-        return firebaseObs.flatMap(function (token) {
-            //user should be ok just after a sign up
-            var fbUser = _this.firebase.auth().currentUser;
-            var body = {
-                email: fbUser.email,
-                uid: fbUser.uid,
-                plan_id: user.contractPlanId
-            };
-            var params = [fbUser.uid];
-            var headers = new __WEBPACK_IMPORTED_MODULE_4__angular_http__["d" /* Headers */]();
-            headers.append('Authorization', 'Bearer ' + token);
-            // start sign up request
-            return _this.httpService.post(_this.generatePath(path, params), body, { headers: headers })
-                .map(function (response) {
-                var loginResponse = response.json();
-                console.log("signUp, loginResponse : ", loginResponse);
-                // return json;
-                _this.isSignInOrUp = false;
-                return _this.onAPIuserObtained(_this.parseAPIuser(loginResponse), token);
-            });
-        });
-    };
-    AuthService.prototype.parseAPIuser = function (response) {
-        console.log("parseAPIuser, response :", response);
-        if (response.coach) {
-            var coach = response.coach;
-            //coach
-            return this.parseCoach(coach);
-        }
-        else if (response.coachee) {
-            var coachee = response.coachee;
-            //coachee
-            return this.parseCoachee(coachee);
-        }
-        else if (response.rh) {
-            var rh = response.rh;
-            return this.parseRh(rh);
-        }
-        return null;
-    };
-    AuthService.prototype.parseCoach = function (json) {
-        var coach = new __WEBPACK_IMPORTED_MODULE_7__model_Coach__["a" /* Coach */](json.id);
-        coach.email = json.email;
-        coach.display_name = json.display_name;
-        coach.avatar_url = json.avatar_url;
-        coach.start_date = json.start_date;
-        coach.description = json.description;
-        coach.chat_room_url = json.chat_room_url;
-        return coach;
-    };
-    AuthService.prototype.parseCoachee = function (json) {
-        // TODO : don't really need to manually parse the received Json
-        var coachee = new __WEBPACK_IMPORTED_MODULE_8__model_Coachee__["a" /* Coachee */](json.id);
-        coachee.id = json.id;
-        coachee.email = json.email;
-        coachee.display_name = json.display_name;
-        coachee.avatar_url = json.avatar_url;
-        coachee.start_date = json.start_date;
-        coachee.selectedCoach = json.selectedCoach;
-        coachee.contractPlan = json.plan;
-        coachee.availableSessionsCount = json.available_sessions_count;
-        coachee.updateAvailableSessionCountDate = json.update_sessions_count_date;
-        coachee.associatedRh = json.associatedRh;
-        coachee.last_objective = json.last_objective;
-        return coachee;
-    };
-    AuthService.prototype.parseRh = function (json) {
-        var rh = new __WEBPACK_IMPORTED_MODULE_9__model_Rh__["a" /* Rh */](json.id);
-        rh.email = json.email;
-        rh.display_name = json.display_name;
-        rh.start_date = json.start_date;
-        rh.avatar_url = json.avatar_url;
-        return rh;
-    };
-    AuthService.prototype.parsePotentialCoachee = function (json) {
-        var potentialCoachee = new __WEBPACK_IMPORTED_MODULE_10__model_PotentialCoachee__["a" /* PotentialCoachee */](json.id);
-        potentialCoachee.email = json.email;
-        potentialCoachee.start_date = json.create_date;
-        potentialCoachee.plan = json.plan;
-        return potentialCoachee;
-    };
-    AuthService.prototype.signIn = function (user) {
-        var _this = this;
-        console.log("1. user signIn : ", user);
-        this.isSignInOrUp = true;
-        //fb sign in with email and pwd
-        var firebasePromise = this.firebase.auth().signInWithEmailAndPassword(user.email, user.password)
-            .then(function (fbUser) {
-            console.log("2. authService, user sign up, success : ", fbUser);
-            //user successfully sign up in Firebase
-            console.log("3. fb user, start getToken");
-            return fbUser.getToken();
-        });
-        var firebaseObs = __WEBPACK_IMPORTED_MODULE_3_rxjs_observable_PromiseObservable__["PromiseObservable"].create(firebasePromise);
-        return firebaseObs.flatMap(function (token) {
-            //user should be ok just after a sign up
-            var fbUser = _this.firebase.auth().currentUser;
-            //now sign up in AppEngine
-            _this.isSignInOrUp = false;
-            return _this.getUserForFirebaseId(fbUser.uid, token);
-        });
-    };
-    AuthService.prototype.loginOut = function () {
-        console.log("user loginOut");
-        this.firebase.auth().signOut();
-        this.updateAuthStatus(null);
-        this.router.navigate(['/welcome']);
-    };
-    AuthService.prototype.updateCoacheeForId = function (id, displayName, avatarUrl) {
-        var _this = this;
-        console.log("updateCoacheeForId, id", id);
-        var body = {
-            display_name: displayName,
-            avatar_url: avatarUrl,
-        };
-        var params = [id];
-        return this.put(AuthService_1.UPDATE_COACHEE, params, body).map(function (response) {
-            return _this.onUserResponse(response);
-        });
-    };
-    AuthService.prototype.updateCoachForId = function (id, displayName, description, avatarUrl) {
-        var _this = this;
-        console.log("updateCoachDisplayNameForId, id", id);
-        var body = {
-            display_name: displayName,
-            description: description,
-            avatar_url: avatarUrl,
-        };
-        var params = [id];
-        return this.put(AuthService_1.UPDATE_COACH, params, body).map(function (response) {
-            //convert to coach
-            return _this.onUserResponse(response);
-        });
-    };
-    // /**
-    //  *
-    //  * @param coacheeId
-    //  * @param coachId
-    //  * @returns {Observable<Coachee>}
-    //  */
-    // updateCoacheeSelectedCoach(coacheeId: string, coachId: string): Observable<Coachee> {
-    //   console.log("updateCoacheeSelectedCoach, coacheeId", coacheeId);
-    //   console.log("updateCoacheeSelectedCoach, coachId", coachId);
-    //
-    //   let params = [coacheeId, coachId];
-    //   return this.put(AuthService.UPDATE_COACHEE_SELECTED_COACH, params, null).map(
-    //     (response: Response) => {
-    //       //convert to coachee
-    //       return this.parseCoachee(response.json());
-    //     });
-    // }
-    /**
-     *
-     * @param response
-     * @returns {Coach|Coachee}
-     */
-    AuthService.prototype.onUserResponse = function (response) {
-        var json = response.json();
-        console.log("onUserResponse, response json : ", json);
-        var res = this.parseAPIuser(json);
-        console.log("onUserResponse, parsed user : ", res);
-        //dispatch
-        return this.onAPIuserObtained(res, this.ApiUser.firebaseToken);
-    };
-    return AuthService;
-}());
-/* contract plan*/
-AuthService.GET_CONTRACT_PLANS = "v1/plans/";
-AuthService.POST_POTENTIAL_COACHEE = "/v1/potentials/coachees";
-AuthService.POST_POTENTIAL_COACH = "/v1/potentials/coachs";
-AuthService.POST_POTENTIAL_RH = "/v1/potentials/rhs";
-AuthService.LOGIN = "/login/:firebaseId";
-AuthService.GET_POTENTIAL_COACHEE_FOR_TOKEN = "/v1/potentials/coachees/:token";
-AuthService.GET_POTENTIAL_COACH_FOR_TOKEN = "/v1/potentials/coachs/:token";
-AuthService.GET_POTENTIAL_RH_FOR_TOKEN = "/v1/potentials/rhs/:token";
-/* coachee */
-AuthService.UPDATE_COACHEE = "/coachees/:id";
-AuthService.POST_SIGN_UP_COACHEE = "/v1/coachees";
-AuthService.GET_COACHEES = "v1/coachees";
-AuthService.GET_COACHEE_FOR_ID = "v1/coachees/:id";
-AuthService.GET_COACHEE_NOTIFICATIONS = "v1/coachees/:id/notifications";
-AuthService.PUT_COACHEE_NOTIFICATIONS_READ = "v1/coachees/:id/notifications/read";
-/* coach */
-AuthService.UPDATE_COACH = "/coachs/:id";
-AuthService.POST_SIGN_UP_COACH = "/v1/coachs";
-AuthService.GET_COACHS = "/coachs";
-AuthService.GET_COACH_FOR_ID = "/coachs/:id";
-AuthService.GET_COACH_NOTIFICATIONS = "v1/coachs/:id/notifications";
-AuthService.PUT_COACH_NOTIFICATIONS_READ = "v1/coachs/:id/notifications/read";
-/* rh */
-AuthService.POST_SIGN_UP_RH = "/v1/rhs";
-AuthService.GET_COACHEES_FOR_RH = "/v1/rhs/:uid/coachees";
-AuthService.GET_POTENTIAL_COACHEES_FOR_RH = "/v1/rhs/:uid/potentials";
-AuthService.GET_RH_FOR_ID = "/rh/:id";
-AuthService.GET_USAGE_RATE_FOR_RH = "/v1/rhs/:id/usage";
-AuthService.GET_RH_NOTIFICATIONS = "v1/rhs/:id/notifications";
-AuthService.PUT_RH_NOTIFICATIONS_READ = "v1/rhs/:id/notifications/read";
-/* admin */
-AuthService.GET_ADMIN = "/v1/admins/user";
-AuthService.ADMIN_GET_COACHS = "v1/admins/coachs";
-AuthService.ADMIN_GET_COACHEES = "v1/admins/coachees";
-AuthService.ADMIN_GET_RHS = "v1/admins/rhs";
-/*Meeting*/
-AuthService.POST_MEETING = "/meeting";
-AuthService.DELETE_MEETING = "/meeting/:meetingId";
-AuthService.GET_MEETING_REVIEWS = "/meeting/:meetingId/reviews";
-AuthService.POST_MEETING_REVIEW = "/meeting/:meetingId/review";
-AuthService.PUT_MEETING_REVIEW = "/meeting/reviews/:reviewId"; //update review
-AuthService.DELETE_MEETING_REVIEW = "/meeting/reviews/:reviewId"; //delete review
-AuthService.CLOSE_MEETING = "/meeting/:meetingId/close";
-AuthService.GET_MEETINGS_FOR_COACHEE_ID = "/meetings/coachee/:coacheeId";
-AuthService.GET_MEETINGS_FOR_COACH_ID = "/meetings/coach/:coachId";
-AuthService.POST_MEETING_POTENTIAL_DATE = "/meeting/:meetingId/potential";
-AuthService.GET_MEETING_POTENTIAL_DATES = "/meeting/:meetingId/potentials";
-AuthService.PUT_POTENTIAL_DATE_TO_MEETING = "/meeting/potential/:potentialId"; //update potential date
-AuthService.DELETE_POTENTIAL_DATE = "/meeting/potentials/:potentialId"; //delete potential date
-AuthService.PUT_FINAL_DATE_TO_MEETING = "/meeting/:meetingId/date/:potentialId"; //set the potential date as the meeting selected date
-AuthService.GET_AVAILABLE_MEETINGS = "v1/meetings"; //get available meetings ( meetings with NO coach associated )
-AuthService.PUT_COACH_TO_MEETING = "v1/meeting/:meetingId/coach/:coachId"; //associate coach with meeting
-/* HR */
-AuthService.POST_COACHEE_OBJECTIVE = "/v1/rhs/:uidRH/coachees/:uidCoachee/objective"; //create new objective for this coachee
-AuthService = AuthService_1 = __decorate([
-    __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_1__angular_core__["Injectable"])(),
-    __metadata("design:paramtypes", [typeof (_a = typeof __WEBPACK_IMPORTED_MODULE_6__firebase_service__["a" /* FirebaseService */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_6__firebase_service__["a" /* FirebaseService */]) === "function" && _a || Object, typeof (_b = typeof __WEBPACK_IMPORTED_MODULE_0__angular_router__["a" /* Router */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_0__angular_router__["a" /* Router */]) === "function" && _b || Object, typeof (_c = typeof __WEBPACK_IMPORTED_MODULE_4__angular_http__["b" /* Http */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_4__angular_http__["b" /* Http */]) === "function" && _c || Object])
-], AuthService);
-
-var AuthService_1, _a, _b, _c;
-//# sourceMappingURL=/Users/guillaume/angular/eritis_fe/src/auth.service.js.map
 
 /***/ }),
 

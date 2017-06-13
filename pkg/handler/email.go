@@ -49,7 +49,7 @@ const RH_WELCOME_MSG = `
 
 		<p>Nous vous remercions d'avoir rejoint la communauté Eritis. Votre inscription sur notre plateforme est confirmée.</p>
 
-		<p>Afin de commencer à utiliser nos services connectez-vous sur Eritis.co.uk avec vos identifiants.</p>
+		<p>Afin de commencer à utiliser nos services connectez-vous sur <a href="%s">%s</a> avec vos identifiants.</p>
 
 		<p>A très bientôt sur notre plateforme,</p>
 
@@ -97,7 +97,7 @@ const COACHEE_WELCOME_MSG = `
 
 		<p>Nous vous remercions d'avoir rejoint la communauté Eritis. Votre inscription sur notre plateforme est confirmée.</p>
 
-		<p>Afin de commencer à utiliser nos services, connectez-vous sur Eritis.co.uk avec vos identifiants.</p>
+		<p>Afin de commencer à utiliser nos services, connectez-vous sur <a href="%s">%s</a> avec vos identifiants.</p>
 
 		<p>A très bientôt sur notre plateforme,</p>
 
@@ -118,7 +118,7 @@ const COACH_WELCOME_MSG = `
 
 		<p>Nous vous remercions d'avoir rejoint la communauté Eritis. Votre inscription sur notre plateforme est confirmée.</p>
 
-		<p>Afin de commencer à utiliser nos services, connectez-vous sur Eritis.co.uk avec vos identifiants.</p>
+		<p>Afin de commencer à utiliser nos services, connectez-vous sur <a href="%s">%s</a> avec vos identifiants.</p>
 
 		<p>A très bientôt sur notre plateforme,</p>
 
@@ -177,7 +177,7 @@ const COACH_SELECTED_FOR_SESSION_MSG = `
 	</head>
 	<body>
 		<p>Bonjour,
-		<p>Le coach %s a accepté votre demande. Pour y accéder, connectez-vous à votre espace personnel sur Eritis.fr</p>
+		<p>Le coach %s a accepté votre demande. Pour y accéder, connectez-vous à votre espace personnel sur <a href="%s">%s</a></p>
 		<p>A très bientôt sur notre plateforme,</p>
 		<p>L’équipe Eritis</p>
 	</body>
@@ -193,7 +193,23 @@ const MEETING_TIME_SELECTED_FOR_SESSION_MSG = `
 	</head>
 	<body>
 		<p>Bonjour,
-		<p>Le coach %s a accepté votre demande. Votre séance de coaching se tiendra donc le %s. Pour y accéder, connectez-vous à votre espace personnel sur Eritis.fr</p>
+		<p>Le coach %s a accepté votre demande. Votre séance de coaching se tiendra donc le %s. Pour y accéder, connectez-vous à votre espace personnel sur <a href="%s">%s</a></p>
+		<p>A très bientôt sur notre plateforme,</p>
+		<p>L’équipe Eritis</p>
+	</body>
+</html>
+`
+
+const MEETING_CREATED_TITLE = `Rendez-vous pris!`
+const MEETING_CREATED_MSG = `
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html style="color:black;">
+
+	</head>
+	<body>
+		<p>Bonjour,</p>
+		<p>Nous vous informons que vous avez pris un rendez-vous. Pour y accéder, connectez-vous sur <a href="%s">%s</a>,</p>
 		<p>A très bientôt sur notre plateforme,</p>
 		<p>L’équipe Eritis</p>
 	</body>
@@ -222,7 +238,7 @@ func HandleContact(w http.ResponseWriter, r *http.Request) {
 		}
 		log.Debugf(ctx, "handle contact, contact %s", contact)
 
-		err = contactEritis(ctx, contact.Name, contact.Email, contact.Message)// POST /api/v1/contact
+		err = contactEritis(ctx, contact.Name, contact.Email, contact.Message) // POST /api/v1/contact
 		if err != nil {
 			response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
 			return
@@ -251,7 +267,12 @@ func contactEritis(ctx context.Context, name string, email string, message strin
 }
 
 func sendWelcomeEmailToCoach(ctx context.Context, coach *model.Coach) error {
-	err := utils.SendEmailToGivenEmail(ctx, coach.Email, COACH_WELCOME_TITLE, fmt.Sprintf(COACH_WELCOME_MSG))
+	baseUrl, err := utils.GetSiteUrl(ctx)
+	if err != nil {
+		log.Errorf(ctx, "Couldn't send email: %v", err)
+		return err
+	}
+	err = utils.SendEmailToGivenEmail(ctx, coach.Email, COACH_WELCOME_TITLE, fmt.Sprintf(COACH_WELCOME_MSG, baseUrl, baseUrl))
 	if err != nil {
 		log.Errorf(ctx, "Couldn't send email: %v", err)
 		return err
@@ -260,7 +281,12 @@ func sendWelcomeEmailToCoach(ctx context.Context, coach *model.Coach) error {
 }
 
 func sendWelcomeEmailToCoachee(ctx context.Context, coachee *model.Coachee) error {
-	err := utils.SendEmailToGivenEmail(ctx, coachee.Email, COACHEE_WELCOME_TITLE, fmt.Sprintf(COACHEE_WELCOME_MSG))
+	baseUrl, err := utils.GetSiteUrl(ctx)
+	if err != nil {
+		log.Errorf(ctx, "Couldn't send email: %v", err)
+		return err
+	}
+	err = utils.SendEmailToGivenEmail(ctx, coachee.Email, COACHEE_WELCOME_TITLE, fmt.Sprintf(COACHEE_WELCOME_MSG, baseUrl, baseUrl))
 	if err != nil {
 		log.Errorf(ctx, "Couldn't send email: %v", err)
 		return err
@@ -269,7 +295,12 @@ func sendWelcomeEmailToCoachee(ctx context.Context, coachee *model.Coachee) erro
 }
 
 func sendWelcomeEmailToRh(ctx context.Context, rh *model.Rh) error {
-	err := utils.SendEmailToGivenEmail(ctx, rh.Email, RH_WELCOME_TITLE, fmt.Sprintf(RH_WELCOME_MSG))
+	baseUrl, err := utils.GetSiteUrl(ctx)
+	if err != nil {
+		log.Errorf(ctx, "Couldn't send email: %v", err)
+		return err
+	}
+	err = utils.SendEmailToGivenEmail(ctx, rh.Email, RH_WELCOME_TITLE, fmt.Sprintf(RH_WELCOME_MSG, baseUrl, baseUrl))
 	if err != nil {
 		log.Errorf(ctx, "Couldn't send email: %v", err)
 		return err
@@ -318,6 +349,20 @@ func SendInviteEmailToNewRh(ctx context.Context, email string) error {
 
 func SendImminentMeeting(ctx context.Context, email string) error {
 	err := utils.SendEmailToGivenEmail(ctx, email, IMMINENT_MEETING_TITLE, fmt.Sprintf(IMMINENT_MEETING_MSG))
+	if err != nil {
+		log.Errorf(ctx, "Couldn't send email: %v", err)
+		return err
+	}
+	return nil
+}
+
+func sendMeetingCreatedEmailToCoachee(ctx context.Context, coachee *model.Coachee) error {
+	baseUrl, err := utils.GetSiteUrl(ctx)
+	if err != nil {
+		log.Errorf(ctx, "Couldn't send email: %v", err)
+		return err
+	}
+	err = utils.SendEmailToGivenEmail(ctx, coachee.Email, MEETING_CREATED_TITLE, fmt.Sprintf(MEETING_CREATED_MSG, baseUrl, baseUrl))
 	if err != nil {
 		log.Errorf(ctx, "Couldn't send email: %v", err)
 		return err

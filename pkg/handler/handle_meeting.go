@@ -183,7 +183,7 @@ func HandleMeeting(w http.ResponseWriter, r *http.Request) {
 		//get all Meetings with no Coach associated
 		contains = strings.Contains(r.URL.Path, "/api/v1/meetings")
 		if contains {
-			getMeetingsWithNoAssociatedCoach(w, r) // GET /api/v1/meetings
+			getAvailableMeetings(w, r) // GET /api/v1/meetings
 			return
 
 		}
@@ -272,22 +272,18 @@ func handleCreateMeeting(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	////if this coachee already have a coach associated then auto associate this new meeting
-	//if coachee.SelectedCoach != nil {
-	//	//associate a MeetingCoach with meetingCoachee
-	//	err = model.Associate(ctx, coachee.SelectedCoach, meeting)
-	//	if err != nil {
-	//		response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
-	//		return
-	//	}
-	//}
-
 	//decrease number of available sessions and save
 	err = coachee.DecreaseAvailableSessionsCount(ctx)
 	if err != nil {
 		response.RespondErr(ctx, w, r, err, http.StatusBadRequest)
 		return
 	}
+
+	// send email and notif
+	sendMeetingCreatedEmailToCoachee(ctx, coachee) //TODO could be on a thread
+
+	// send notification to associated HR
+	model.CreateNotification(ctx, fmt.Sprintf(model.TO_HR_MEETING_CREATED, coachee.Email), coachee.AssociatedRh)
 
 	response.Respond(ctx, w, r, meeting, http.StatusCreated)
 }
@@ -302,7 +298,7 @@ func getAllMeetingsForCoach(w http.ResponseWriter, r *http.Request, uid string) 
 		return
 	}
 
-	var meetings []*model.ApiMeeting
+	var meetings []*model.ApiMeetingCoachee
 	meetings, err = model.GetMeetingsForCoach(ctx, key);
 	if err != nil {
 		response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
@@ -323,7 +319,7 @@ func getAllMeetingsForCoachee(w http.ResponseWriter, r *http.Request, uid string
 		return
 	}
 
-	var meetings []*model.ApiMeeting
+	var meetings []*model.ApiMeetingCoachee
 	err = datastore.RunInTransaction(ctx, func(ctx context.Context) error {
 		log.Debugf(ctx, "getAllMeetingsForCoachee, transaction start")
 
@@ -451,7 +447,7 @@ func closeMeeting(w http.ResponseWriter, r *http.Request, meetingId string) {
 
 	log.Debugf(ctx, "closeMeeting, got review %s : ", review)
 
-	var ApiMeeting *model.ApiMeeting
+	var ApiMeeting *model.ApiMeetingCoachee
 	err = datastore.RunInTransaction(ctx, func(ctx context.Context) error {
 		var err error
 		var meeting *model.MeetingCoachee
@@ -492,7 +488,7 @@ func closeMeeting(w http.ResponseWriter, r *http.Request, meetingId string) {
 		//TODO send email
 
 		//add notification to coachee
-		model.CreateNotification(ctx, model.MEETING_CLOSED_BY_COACH, meeting.Key.Parent())
+		model.CreateNotification(ctx, model.TO_COACHEE_MEETING_CLOSED_BY_COACH, meeting.Key.Parent())
 
 		return nil
 	}, &datastore.TransactionOptions{XG: true})
@@ -574,7 +570,7 @@ func getPotentialsTimeForAMeeting(w http.ResponseWriter, r *http.Request, meetin
 // set this potentialMeetingTime as this meeting MeetingTime
 func setTimeForMeeting(w http.ResponseWriter, r *http.Request, meetingId string, potentialId string) {
 	ctx := appengine.NewContext(r)
-	log.Debugf(ctx, "setPotentialTimeForMeeting, meetingId %s", meetingId)
+	log.Debugf(ctx, "setTimeForMeeting, meetingId %s", meetingId)
 
 	meetingKey, err := datastore.DecodeKey(meetingId)
 	if err != nil {
@@ -604,12 +600,19 @@ func setTimeForMeeting(w http.ResponseWriter, r *http.Request, meetingId string,
 	}
 
 	//send email coachee
+	baseUrl, err := utils.GetSiteUrl(ctx)
+	if err != nil {
+		response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
+	}
 	// TODO convert date
 	err = utils.SendEmailToGivenEmail(ctx, meetingApi.Coachee.Email,
-		MEETING_TIME_SELECTED_FOR_SESSION_TITLE, fmt.Sprintf(MEETING_TIME_SELECTED_FOR_SESSION_MSG, meetingApi.Coach.DisplayName, meetingApi.AgreedTime.StartDate))
+		MEETING_TIME_SELECTED_FOR_SESSION_TITLE, fmt.Sprintf(MEETING_TIME_SELECTED_FOR_SESSION_MSG, meetingApi.Coach.DisplayName, meetingApi.AgreedTime.StartDate, baseUrl, baseUrl))
+	// send email to coach
 
 	//add notification to coachee
-	model.CreateNotification(ctx, model.MEETING_TIME_SELECTED_FOR_SESSION, meeting.Key.Parent())
+	model.CreateNotification(ctx, model.TO_COACHEE_MEETING_TIME_SELECTED_FOR_SESSION, meeting.Key.Parent())
+	// TODO add notification to HR
+	// model.CreateNotification(ctx, model.MEETING_TIME_SELECTED_FOR_SESSION, meeting.Key.Parent())
 
 	response.Respond(ctx, w, r, meetingApi, http.StatusOK)
 
@@ -643,12 +646,16 @@ func setCoachForMeeting(w http.ResponseWriter, r *http.Request, meetingId string
 		return
 	}
 
-	//send email coachee
+	//send email to coachee
+	baseUrl, err := utils.GetSiteUrl(ctx)
+	if err != nil {
+		response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
+	}
 	err = utils.SendEmailToGivenEmail(ctx, meetingApi.Coachee.Email,
-		COACH_SELECTED_FOR_SESSION_TITLE, fmt.Sprintf(COACH_SELECTED_FOR_SESSION_MSG, meetingApi.Coach.DisplayName))
+		COACH_SELECTED_FOR_SESSION_TITLE, fmt.Sprintf(COACH_SELECTED_FOR_SESSION_MSG, meetingApi.Coach.DisplayName, baseUrl, baseUrl))
 
 	//send notification
-	content := fmt.Sprintf(model.COACH_SELECTED_FOR_SESSION, meetingApi.Coach.DisplayName)
+	content := fmt.Sprintf(model.TO_COACHEE_COACH_SELECTED_FOR_SESSION, meetingApi.Coach.DisplayName)
 	model.CreateNotification(ctx, content, meetingCoachee.Key.Parent())
 
 	// send response
@@ -700,7 +707,7 @@ func deletePotentialDate(w http.ResponseWriter, r *http.Request, meetingTimeId s
 	//TODO send email
 
 	//send notification
-	model.CreateNotification(ctx, model.MEETING_TIME_REMOVED, meetingKey.Parent())
+	model.CreateNotification(ctx, model.TO_COACH_MEETING_TIME_REMOVED, meetingKey.Parent())
 
 	response.Respond(ctx, w, r, nil, http.StatusOK)
 }
@@ -769,16 +776,17 @@ func handleCoacheeCancelMeeting(w http.ResponseWriter, r *http.Request, meetingI
 				return err
 			}
 
+			// remove meeting coach
 			err = meetingCoach.Delete(ctx)
 			if err != nil {
 				return err
 			}
+
+			//TODO send email
+
+			//add notification to coach
+			model.CreateNotification(ctx, model.TO_COACH_MEETING_CANCELED_BY_COACHEE, meetingCoachee.MeetingCoachKey.Parent())
 		}
-
-		//TODO send email
-
-		//add notification to coach
-		model.CreateNotification(ctx, model.MEETING_CANCELED_BY_COACHEE, meetingCoachee.MeetingCoachKey.Parent())
 
 		log.Debugf(ctx, "handleCoacheeCancelMeeting, RunInTransaction DONE")
 
@@ -853,18 +861,18 @@ func updateMeetingPotentialTime(w http.ResponseWriter, r *http.Request, potentia
 	response.Respond(ctx, w, r, meetingTime, http.StatusOK)
 }
 
-func getMeetingsWithNoAssociatedCoach(w http.ResponseWriter, r *http.Request) {
+func getAvailableMeetings(w http.ResponseWriter, r *http.Request) {
 	ctx := appengine.NewContext(r)
-	log.Debugf(ctx, "getMeetingsWithNoAssociatedCoach")
+	log.Debugf(ctx, "getAvailableMeetings")
 
-	meetings, err := model.GetMeetingsWithNoCoach(ctx)
+	meetings, err := model.GetAvailableMeetings(ctx)
 	if err != nil {
 		response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
 		return
 	}
 
 	//convert to API object
-	var apiMeetings []*model.ApiMeeting = make([]*model.ApiMeeting, len(meetings))
+	var apiMeetings []*model.ApiMeetingCoachee = make([]*model.ApiMeetingCoachee, len(meetings))
 	for i, meeting := range meetings {
 		apiMeetings[i], err = meeting.ConvertToAPIMeeting(ctx)
 		if err != nil {

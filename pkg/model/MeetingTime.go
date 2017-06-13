@@ -69,24 +69,6 @@ func GetMeetingPotentialTimes(ctx context.Context, meetingKey *datastore.Key) ([
 	return times, nil
 }
 
-//get all potential times for the given meeting and coach
-func getMeetingPotentialTimesForCoach(ctx context.Context, meetingKey *datastore.Key, coachKey *datastore.Key) ([]*MeetingTime, error) {
-	log.Debugf(ctx, "getMeetingPotentialTimesForCoach, meeting key %s, %s", meetingKey, coachKey)
-
-	var times []*MeetingTime
-	keys, err := datastore.NewQuery(MEETING_TIME_ENTITY).Ancestor(meetingKey).Filter("Origin =", coachKey).GetAll(ctx, &times)
-	if err != nil {
-		return nil, err
-	}
-
-	log.Debugf(ctx, "GetMeetingPotentialTimes, potentials count %s", len(times))
-
-	for i, meetingTime := range times {
-		meetingTime.Key = keys[i]
-	}
-	return times, nil
-}
-
 //remove all the meetingTimes associated with this meeting
 func ClearAllMeetingTimesForAMeeting(ctx context.Context, meetingKey *datastore.Key) error {
 	log.Debugf(ctx, "clearAllMeetingTimesForAMeeting, meeting key %s", meetingKey)
@@ -109,7 +91,7 @@ func ClearAllMeetingTimesForAMeeting(ctx context.Context, meetingKey *datastore.
 }
 
 // update potential time
-func (p *MeetingTime)UpdateMeetingPotentialTime(ctx context.Context) (error) {
+func (p *MeetingTime) UpdateMeetingPotentialTime(ctx context.Context) (error) {
 	log.Debugf(ctx, "updateeMeetingPotentialTime, potential key %s", p.Key)
 
 	key, err := datastore.Put(ctx, p.Key, p)
@@ -126,21 +108,3 @@ func DeleteMeetingTime(ctx context.Context, meetingTimeKey *datastore.Key) (erro
 	err := datastore.Delete(ctx, meetingTimeKey)
 	return err
 }
-
-////remove all Meeting time for the given coach & meeting
-//func clearMeetingTimeForCoach(ctx context.Context, meetingKey *datastore.Key, coachKey *datastore.Key) error {
-//	log.Debugf(ctx, "clearMeetingTimeForCoach")
-//
-//	times, err := getMeetingPotentialTimesForCoach(ctx, meetingKey, coachKey)
-//	if err != nil {
-//		return err
-//	}
-//
-//	if times != nil {
-//		for _, t := range times {
-//			deleteMeetingTime(ctx, t.Key)
-//		}
-//	}
-//
-//	return nil
-//}

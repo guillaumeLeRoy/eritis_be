@@ -4,6 +4,7 @@ import (
 	"google.golang.org/appengine/datastore"
 	"golang.org/x/net/context"
 	"google.golang.org/appengine/log"
+	"time"
 )
 
 const MEETING_COACH_ENTITY string = "MeetingCoach"
@@ -12,12 +13,14 @@ const MEETING_COACH_ENTITY string = "MeetingCoach"
 type MeetingCoach struct {
 	Key               *datastore.Key `json:"id" datastore:"-"`
 	MeetingCoacheeKey *datastore.Key `json:"-"`
+	CreatedDate       time.Time `json:"created_date"`
 }
 
 func create(ctx context.Context, coachKey *datastore.Key, meetingCoacheeKey *datastore.Key) (*MeetingCoach, error) {
 	log.Debugf(ctx, "Create meeting")
 
 	var meetingCoach MeetingCoach
+	meetingCoach.CreatedDate = time.Now()
 	meetingCoach.Key = datastore.NewIncompleteKey(ctx, MEETING_COACH_ENTITY, coachKey)
 
 	//associate with a MeetingCoachee
@@ -61,7 +64,7 @@ func (m *MeetingCoach) Delete(ctx context.Context) error {
 }
 
 //convert given MeetingCoach into a APImeeting
-func (m *MeetingCoach)GetAPIMeeting(ctx context.Context) (*ApiMeeting, error) {
+func (m *MeetingCoach) GetAPIMeeting(ctx context.Context) (*ApiMeetingCoachee, error) {
 	log.Debugf(ctx, "GetAPIMeeting", m)
 
 	meetingCoachee, err := GetMeeting(ctx, m.MeetingCoacheeKey)
@@ -77,16 +80,16 @@ func (m *MeetingCoach)GetAPIMeeting(ctx context.Context) (*ApiMeeting, error) {
 	return apiMeeting, nil
 }
 
-func GetMeetingsForCoach(ctx context.Context, coachKey *datastore.Key) ([]*ApiMeeting, error) {
+func GetMeetingsForCoach(ctx context.Context, coachKey *datastore.Key) ([]*ApiMeetingCoachee, error) {
 	log.Debugf(ctx, "GetMeetingsForCoach, key %s", coachKey)
 
 	var meetings []*MeetingCoach
-	keys, err := datastore.NewQuery(MEETING_COACH_ENTITY).Ancestor(coachKey).GetAll(ctx, &meetings)
+	keys, err := datastore.NewQuery(MEETING_COACH_ENTITY).Ancestor(coachKey).Order("CreatedDate").GetAll(ctx, &meetings)
 	if err != nil {
 		return nil, err
 	}
 
-	var apiMeetings []*ApiMeeting = make([]*ApiMeeting, len(meetings))
+	var apiMeetings []*ApiMeetingCoachee = make([]*ApiMeetingCoachee, len(meetings))
 	for i, meeting := range meetings {
 		meeting.Key = keys[i]
 		//convert to ApiMeeting
@@ -95,14 +98,3 @@ func GetMeetingsForCoach(ctx context.Context, coachKey *datastore.Key) ([]*ApiMe
 
 	return apiMeetings, nil
 }
-
-//func findForCoachKey(ctx context.Context, coachKey *datastore.Key) error {
-//
-//	var meetingsCoach []*MeetingCoach
-//	keys, err := datastore.NewQuery(MEETING_COACH_ENTITY).Ancestor(coachKey).GetAll(ctx, &meetingsCoach)
-//	if err != nil {
-//		return err
-//	}
-//
-//	return nil
-//}

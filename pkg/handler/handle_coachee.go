@@ -8,6 +8,7 @@ import (
 	"eritis_be/pkg/model"
 	"eritis_be/pkg/response"
 	"strings"
+	"fmt"
 )
 
 func HandleCoachees(w http.ResponseWriter, r *http.Request) {
@@ -40,7 +41,7 @@ func HandleCoachees(w http.ResponseWriter, r *http.Request) {
 				//get uid param
 				uid, ok := params[":uid"]
 				if ok {
-					getAllNotificationsForCoachee(w, r, uid)// GET /api/v1/coachees/:uid/notifications
+					getAllNotificationsForCoachee(w, r, uid) // GET /api/v1/coachees/:uid/notifications
 					return
 				}
 			}
@@ -56,14 +57,14 @@ func HandleCoachees(w http.ResponseWriter, r *http.Request) {
 			params := response.PathParams(ctx, r, "/api/v1/coachees/:uid")
 			userId, ok := params[":uid"]
 			if ok {
-				handleGetCoacheeForId(w, r, userId)// GET /api/v1/coachees/:uid
+				handleGetCoacheeForId(w, r, userId) // GET /api/v1/coachees/:uid
 				return
 			}
 
 			/**
 			 GET all coachees
 			 */
-			handleGetAllCoachees(w, r)// GET /api/v1/coachees
+			handleGetAllCoachees(w, r) // GET /api/v1/coachees
 			return
 		}
 		http.NotFound(w, r)
@@ -84,7 +85,7 @@ func HandleCoachees(w http.ResponseWriter, r *http.Request) {
 		params := response.PathParams(ctx, r, "/api/coachees/:coacheeId")
 		coacheeId, ok := params[":coacheeId"]
 		if ok {
-			handleUpdateCoacheeForId(w, r, coacheeId)// PUT /api/coachees/ID
+			handleUpdateCoacheeForId(w, r, coacheeId) // PUT /api/coachees/ID
 			return
 		}
 
@@ -170,63 +171,6 @@ func handleUpdateCoacheeForId(w http.ResponseWriter, r *http.Request, id string)
 	response.Respond(ctx, w, r, api, http.StatusOK)
 }
 
-///*
-//Given coachee ( for coacheeId ) wants to select the given coach ( for coachId )
-//*/
-//func handleUpdateSelectedCoach(w http.ResponseWriter, r *http.Request, coacheeId string, coachId string) {
-//	ctx := appengine.NewContext(r)
-//	log.Debugf(ctx, "handleUpdateSelectedCoach %s", coacheeId)
-//
-//	//get coachee
-//	coacheeKey, err := datastore.DecodeKey(coacheeId)
-//	if err != nil {
-//		response.RespondErr(ctx, w, r, err, http.StatusBadRequest)
-//		return
-//	}
-//
-//	coachee, err := model.GetCoachee(ctx, coacheeKey)
-//	if err != nil {
-//		response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
-//		return
-//	}
-//
-//	//get coach
-//	coachKey, err := datastore.DecodeKey(coachId)
-//	if err != nil {
-//		response.RespondErr(ctx, w, r, err, http.StatusBadRequest)
-//		return
-//	}
-//	coach, err := model.GetCoach(ctx, coachKey)
-//	if err != nil {
-//		response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
-//		return
-//	}
-//
-//	//update Coachee selected coach
-//	//update coachee's meeting with the selected coach
-//	err = coachee.UpdateSelectedCoach(ctx, coach)
-//	if err != nil {
-//		response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
-//		return
-//	}
-//
-//	//send an email to the Coach to notify that he was selected
-//	err = sendEmailToSelectedCoach(ctx, coach, coachee)
-//	if err != nil {
-//		response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
-//		return
-//	}
-//
-//	//return API object
-//	api, err := coachee.GetAPICoachee(ctx)
-//	if err != nil {
-//		response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
-//		return
-//	}
-//
-//	response.Respond(ctx, w, r, api, http.StatusOK)
-//}
-
 func handleCreateCoachee(w http.ResponseWriter, r *http.Request) {
 	ctx := appengine.NewContext(r)
 	log.Debugf(ctx, "handleCreateCoachee")
@@ -248,8 +192,10 @@ func handleCreateCoachee(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	rhKey := potentialCoachee.Key.Parent()
+
 	//we have 1 potential Coachee
-	coachee, err := model.CreateCoachee(ctx, &body.FirebaseUser, potentialCoachee.PlanId, potentialCoachee.Key.Parent())
+	coachee, err := model.CreateCoachee(ctx, &body.FirebaseUser, potentialCoachee.PlanId, rhKey)
 	if err != nil {
 		response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
 		return
@@ -263,7 +209,10 @@ func handleCreateCoachee(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//send welcome email
-	sendWelcomeEmailToCoachee(ctx, coachee)//TODO could be on a thread
+	sendWelcomeEmailToCoachee(ctx, coachee) //TODO could be on a thread
+
+	// send notification to HR
+	model.CreateNotification(ctx, fmt.Sprintf(model.TO_HR_COACHEE_INVITE_ACCEPTED, coachee.Email), rhKey)
 
 	//construct response
 	apiCoachee, err := coachee.GetAPICoachee(ctx)
@@ -272,6 +221,6 @@ func handleCreateCoachee(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var res = &model.Login{Coachee:apiCoachee}
+	var res = &model.Login{Coachee: apiCoachee}
 	response.Respond(ctx, w, r, res, http.StatusCreated)
 }
