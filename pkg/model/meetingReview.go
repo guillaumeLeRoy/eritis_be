@@ -22,10 +22,11 @@ type MeetingReview struct {
 type ReviewType string
 
 const (
-	SESSION_CONTEXT ReviewType = "SESSION_CONTEXT"
-	SESSION_GOAL ReviewType = "SESSION_GOAL"
-	SESSION_VALUE ReviewType = "SESSION_VALUE"
+	SESSION_CONTEXT   ReviewType = "SESSION_CONTEXT"
+	SESSION_GOAL      ReviewType = "SESSION_GOAL"
+	SESSION_VALUE     ReviewType = "SESSION_VALUE"
 	SESSION_NEXT_STEP ReviewType = "SESSION_NEXT_STEP"
+	SESSION_REPORT    ReviewType = "SESSION_REPORT"
 )
 
 func ConvertToReviewType(reviewType string) (ReviewType, error) {
@@ -37,6 +38,8 @@ func ConvertToReviewType(reviewType string) (ReviewType, error) {
 		return SESSION_CONTEXT, nil
 	} else if strings.Compare(reviewType, string(SESSION_GOAL)) == 0 {
 		return SESSION_GOAL, nil
+	} else if strings.Compare(reviewType, string(SESSION_REPORT)) == 0 {
+		return SESSION_REPORT, nil
 	}
 
 	return "", errors.New("can't convert reviewType")
@@ -60,7 +63,7 @@ func CreateReview(ctx context.Context, meetingKey *datastore.Key, comment string
 	return &review, nil
 }
 
-func (r *MeetingReview)UpdateReview(ctx context.Context, reviewKey *datastore.Key, comment string) (*MeetingReview, error) {
+func (r *MeetingReview) UpdateReview(ctx context.Context, reviewKey *datastore.Key, comment string) (*MeetingReview, error) {
 	log.Debugf(ctx, "Create createReview")
 
 	r.Comment = comment
@@ -110,7 +113,7 @@ func GetReviewsForMeetingAndForType(ctx context.Context, meetingKey *datastore.K
 	return reviews, nil
 }
 
-func DeleteAllReviewsForMeeting(ctx context.Context, meetingKey  *datastore.Key) error {
+func DeleteAllReviewsForMeeting(ctx context.Context, meetingKey *datastore.Key) error {
 	log.Debugf(ctx, "deleteAllReviewsForMeeting, meeting key %s", meetingKey)
 
 	//get times

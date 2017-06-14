@@ -88,10 +88,10 @@ func HandleMeeting(w http.ResponseWriter, r *http.Request) {
 		//close meeting with review
 		contains = strings.Contains(r.URL.Path, "close")
 		if contains {
-			params := response.PathParams(ctx, r, "/api/meeting/:uid/close")
+			params := response.PathParams(ctx, r, "/api/v1/meetings/:uid/close")
 			uid, ok := params[":uid"]
 			if ok {
-				closeMeeting(w, r, uid) // PUT /api/meeting/:uid/close
+				closeMeeting(w, r, uid) // PUT /api/v1/meetings/:uid/close
 				return
 			}
 		}
@@ -437,7 +437,6 @@ func closeMeeting(w http.ResponseWriter, r *http.Request, meetingId string) {
 
 	var review struct {
 		Comment string `json:"comment"`
-		Type    string `json:"type"`
 	}
 	err = response.Decode(r, &review)
 	if err != nil {
@@ -459,13 +458,13 @@ func closeMeeting(w http.ResponseWriter, r *http.Request, meetingId string) {
 		log.Debugf(ctx, "closeMeeting, get meeting", meeting)
 
 		//convert
-		reviewType, err := model.ConvertToReviewType(review.Type)
-		if err != nil {
-			return err
-		}
+		// reviewType, err := model.ConvertToReviewType(review.Type)
+		//if err != nil {
+		//return err
+		//}
 
 		//create review
-		meetingRev, err := model.CreateReview(ctx, meeting.Key, review.Comment, reviewType)
+		meetingRev, err := model.CreateReview(ctx, meeting.Key, review.Comment, model.SESSION_REPORT)
 		if err != nil {
 			return err
 		}
@@ -489,6 +488,12 @@ func closeMeeting(w http.ResponseWriter, r *http.Request, meetingId string) {
 
 		//add notification to coachee
 		model.CreateNotification(ctx, model.TO_COACHEE_MEETING_CLOSED_BY_COACH, meeting.Key.Parent())
+
+		//add notification to HR
+		model.CreateNotification(ctx, fmt.Sprintf(model.TO_HR_MEETING_CLOSED, ApiMeeting.Coachee.DisplayName), meeting.Key.Parent())
+
+		//add notification to coach
+		model.CreateNotification(ctx, fmt.Sprintf(model.TO_COACH_MEETING_CLOSED, ApiMeeting.Coachee.DisplayName), meeting.Key.Parent())
 
 		return nil
 	}, &datastore.TransactionOptions{XG: true})

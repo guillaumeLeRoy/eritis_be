@@ -17,10 +17,12 @@ const TO_COACHEE_MEETING_CLOSED_BY_COACH = "Félicitation! N’hesitez pas à co
 // to coach
 const TO_COACH_MEETING_CANCELED_BY_COACHEE = "La séance a été annulée par votre coaché"
 const TO_COACH_MEETING_TIME_REMOVED = "Votre coach a supprimé l'horaire de votre séance"
+const TO_COACH_MEETING_CLOSED = "Vous avez achevé votre séance avec %s"
 
 // to HR
 const TO_HR_MEETING_CREATED = "%s a créé une séance"
 const TO_HR_COACHEE_INVITE_ACCEPTED = "%s s'est inscrit sur Eritis"
+const TO_HR_MEETING_CLOSED = "Une séance vient de s'achever pour %s"
 
 type Notification struct {
 	Key     *datastore.Key `json:"id" datastore:"-"`
