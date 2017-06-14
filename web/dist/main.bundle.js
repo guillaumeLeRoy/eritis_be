@@ -15,7 +15,7 @@ webpackJsonp([0,3],{
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__firebase_service__ = __webpack_require__(85);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_7__model_Coach__ = __webpack_require__(31);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_8__model_Coachee__ = __webpack_require__(48);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_9__model_Rh__ = __webpack_require__(52);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_9__model_Rh__ = __webpack_require__(59);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_10__model_PotentialCoachee__ = __webpack_require__(232);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return AuthService; });
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
@@ -1967,6 +1967,58 @@ var AvailableMeetingsComponent = (function () {
             });
         });
     };
+    AvailableMeetingsComponent.prototype.confirmPotentialDate = function (meetingId) {
+        var _this = this;
+        var minDate = new Date(this.selectedDate);
+        minDate.setHours(this.selectedHour);
+        var maxDate = new Date(this.selectedDate);
+        maxDate.setHours(this.selectedHour + 1);
+        var timestampMin = +minDate.getTime().toFixed(0) / 1000;
+        var timestampMax = +maxDate.getTime().toFixed(0) / 1000;
+        // create new date
+        this.meetingService.addPotentialDateToMeeting(meetingId, timestampMin, timestampMax).subscribe(function (meetingDate) {
+            console.log('addPotentialDateToMeeting, meetingDate : ', meetingDate);
+            // validate date
+            _this.meetingService.setFinalDateToMeeting(meetingId, meetingDate.id).subscribe(function (meeting) {
+                console.log("confirmPotentialDate, response", meeting);
+                _this.onRefreshRequested();
+                Materialize.toast('Meeting validé !', 3000, 'rounded');
+            }, function (error) {
+                console.log('get potentials dates error', error);
+                Materialize.toast('Erreur lors de la validation du meeting', 3000, 'rounded');
+            });
+        }, function (error) {
+            console.log('addPotentialDateToMeeting error', error);
+        });
+    };
+    AvailableMeetingsComponent.prototype.onSubmitValidateMeeting = function () {
+        var _this = this;
+        this.user.take(1).subscribe(function (user) {
+            _this.meetingService.associateCoachToMeeting(_this.selectedMeeting.id, user.id).subscribe(function (meeting) {
+                console.log('on meeting associated : ', meeting);
+                //navigate to dashboard
+                _this.confirmPotentialDate(meeting.id);
+                _this.coachValidateModalVisibility(false);
+            });
+        });
+    };
+    AvailableMeetingsComponent.prototype.coachValidateModalVisibility = function (isVisible) {
+        if (isVisible) {
+            $('#coach_cancel_meeting').openModal();
+        }
+        else {
+            $('#coach_cancel_meeting').closeModal();
+        }
+    };
+    AvailableMeetingsComponent.prototype.openCoachValidateMeetingModal = function ($event) {
+        this.selectedMeeting = $event.meeting;
+        this.selectedDate = $event.selectedDate;
+        this.selectedHour = $event.selectedHour;
+        this.coachValidateModalVisibility(true);
+    };
+    AvailableMeetingsComponent.prototype.cancelCoachValidateMeeting = function () {
+        this.coachValidateModalVisibility(false);
+    };
     return AvailableMeetingsComponent;
 }());
 AvailableMeetingsComponent = __decorate([
@@ -1993,7 +2045,7 @@ var _a, _b, _c, _d;
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__service_auth_service__ = __webpack_require__(10);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__model_Coach__ = __webpack_require__(31);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__model_Coachee__ = __webpack_require__(48);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__model_Rh__ = __webpack_require__(52);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__model_Rh__ = __webpack_require__(59);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return MeetingListComponent; });
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -2503,7 +2555,7 @@ var _a, _b, _c;
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__angular_forms__ = __webpack_require__(13);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_rxjs_Observable__ = __webpack_require__(0);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_rxjs_Observable___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_2_rxjs_Observable__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__model_Rh__ = __webpack_require__(52);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__model_Rh__ = __webpack_require__(59);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__service_auth_service__ = __webpack_require__(10);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return ProfileRhComponent; });
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
@@ -2701,7 +2753,7 @@ var Coach = (function () {
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__(1);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__model_Coach__ = __webpack_require__(31);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__auth_service__ = __webpack_require__(10);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__model_Rh__ = __webpack_require__(52);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__model_Rh__ = __webpack_require__(59);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return CoachCoacheeService; });
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -3201,7 +3253,7 @@ var _a;
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_rxjs___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_3_rxjs__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__model_Coach__ = __webpack_require__(31);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__model_Coachee__ = __webpack_require__(48);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__model_Rh__ = __webpack_require__(52);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__model_Rh__ = __webpack_require__(59);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_7__service_coach_coachee_service__ = __webpack_require__(32);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return HeaderComponent; });
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
@@ -3504,7 +3556,7 @@ var MeetingItemCoachComponent = (function () {
         this.formBuilder = formBuilder;
         this.meetingService = meetingService;
         this.cd = cd;
-        this.dateAgreed = new __WEBPACK_IMPORTED_MODULE_0__angular_core__["EventEmitter"]();
+        this.onValidateDateBtnClick = new __WEBPACK_IMPORTED_MODULE_0__angular_core__["EventEmitter"]();
         // @Output()
         // dateRemoved = new EventEmitter();
         this.cancelMeetingTimeEvent = new __WEBPACK_IMPORTED_MODULE_0__angular_core__["EventEmitter"]();
@@ -3579,30 +3631,6 @@ var MeetingItemCoachComponent = (function () {
             _this.loadPotentialDays();
         }, function (error) {
             console.log('get potentials dates error', error);
-        });
-    };
-    MeetingItemCoachComponent.prototype.confirmPotentialDate = function () {
-        var _this = this;
-        var minDate = new Date(this.selectedDate);
-        minDate.setHours(this.selectedHour);
-        var maxDate = new Date(this.selectedDate);
-        maxDate.setHours(this.selectedHour + 1);
-        var timestampMin = +minDate.getTime().toFixed(0) / 1000;
-        var timestampMax = +maxDate.getTime().toFixed(0) / 1000;
-        // create new date
-        this.meetingService.addPotentialDateToMeeting(this.meeting.id, timestampMin, timestampMax).subscribe(function (meetingDate) {
-            console.log('addPotentialDateToMeeting, meetingDate : ', meetingDate);
-            // validate date
-            _this.meetingService.setFinalDateToMeeting(_this.meeting.id, meetingDate.id).subscribe(function (meeting) {
-                console.log("confirmPotentialDate, response", meeting);
-                _this.dateAgreed.emit();
-                Materialize.toast('Meeting validé !', 3000, 'rounded');
-            }, function (error) {
-                console.log('get potentials dates error', error);
-                Materialize.toast('Erreur lors de la validation du meeting', 3000, 'rounded');
-            });
-        }, function (error) {
-            console.log('addPotentialDateToMeeting error', error);
         });
     };
     MeetingItemCoachComponent.prototype.submitCloseMeetingForm = function () {
@@ -3736,39 +3764,8 @@ var MeetingItemCoachComponent = (function () {
     MeetingItemCoachComponent.prototype.getDate = function (date) {
         return (new Date(date)).getDate() + ' ' + this.months[(new Date(date)).getMonth()];
     };
-    MeetingItemCoachComponent.prototype.toggleShowDetails = function () {
-        this.showDetails = this.showDetails ? false : true;
-    };
-    MeetingItemCoachComponent.prototype.openModal = function () {
-        console.log('openModal, agreed date : ', this.meeting.agreed_date);
-        console.log('openModal, meeting : ', this.meeting);
-        // $('#deleteModal').openModal();
-        this.cancelMeetingTimeEvent.emit(this.meeting); //TODO to improve
-    };
-    MeetingItemCoachComponent.prototype.onSubmitValidateMeeting = function (meeting) {
-        var _this = this;
-        this.user.take(1).subscribe(function (user) {
-            _this.meetingService.associateCoachToMeeting(_this.meeting.id, user.id).subscribe(function (meeting) {
-                console.log('on meeting associated : ', meeting);
-                //navigate to dashboard
-                _this.confirmPotentialDate();
-                _this.cd.detectChanges();
-            });
-        });
-    };
-    MeetingItemCoachComponent.prototype.coachValidateModalVisibility = function (isVisible) {
-        if (isVisible) {
-            $('#coach_cancel_meeting').openModal();
-        }
-        else {
-            $('#coach_cancel_meeting').closeModal();
-        }
-    };
-    MeetingItemCoachComponent.prototype.openCoachValidateMeetingModal = function (meeting) {
-        this.coachValidateModalVisibility(true);
-    };
-    MeetingItemCoachComponent.prototype.cancelCoachValidateMeeting = function () {
-        this.coachValidateModalVisibility(false);
+    MeetingItemCoachComponent.prototype.onValidateDateClick = function () {
+        this.onValidateDateBtnClick.emit({ selectedDate: this.selectedDate, selectedHour: this.selectedHour, meeting: this.meeting });
     };
     return MeetingItemCoachComponent;
 }());
@@ -3779,7 +3776,7 @@ __decorate([
 __decorate([
     __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__angular_core__["Output"])(),
     __metadata("design:type", Object)
-], MeetingItemCoachComponent.prototype, "dateAgreed", void 0);
+], MeetingItemCoachComponent.prototype, "onValidateDateBtnClick", void 0);
 __decorate([
     __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__angular_core__["Output"])(),
     __metadata("design:type", Object)
@@ -4434,11 +4431,9 @@ var _a, _b, _c, _d, _e;
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__model_Coachee__ = __webpack_require__(48);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__model_PotentialCoachee__ = __webpack_require__(232);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__service_coach_coachee_service__ = __webpack_require__(32);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__service_auth_service__ = __webpack_require__(10);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__model_Rh__ = __webpack_require__(52);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6_rxjs_Observable__ = __webpack_require__(0);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6_rxjs_Observable___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_6_rxjs_Observable__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_7__service_meetings_service__ = __webpack_require__(37);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_rxjs_Observable__ = __webpack_require__(0);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4_rxjs_Observable___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_4_rxjs_Observable__);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__service_meetings_service__ = __webpack_require__(37);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return MeetingItemRhComponent; });
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -4455,16 +4450,17 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 
 
 
-
-
 var MeetingItemRhComponent = (function () {
     // private coacheeUsageRate: Observable<RhUsageRate>;
-    function MeetingItemRhComponent(authService, meetingsService, coachCoacheeService, cd) {
-        this.authService = authService;
+    function MeetingItemRhComponent(meetingsService, coachCoacheeService, cd) {
         this.meetingsService = meetingsService;
         this.coachCoacheeService = coachCoacheeService;
         this.cd = cd;
-        this.objectiveChanged = new __WEBPACK_IMPORTED_MODULE_0__angular_core__["EventEmitter"]();
+        /**
+         * Event emitted when user clicks on the "Objective" btn.
+         * @type {EventEmitter<string>} the coacheeId
+         */
+        this.onUpdateObjectiveBtnClick = new __WEBPACK_IMPORTED_MODULE_0__angular_core__["EventEmitter"]();
         this.months = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
         this.showDetails = false;
         this.hasBookedMeeting = false;
@@ -4511,7 +4507,7 @@ var MeetingItemRhComponent = (function () {
                     _this.getGoal(meeting.id);
                 }
             }
-            _this.meetings = __WEBPACK_IMPORTED_MODULE_6_rxjs_Observable__["Observable"].of(bookedMeetings);
+            _this.meetings = __WEBPACK_IMPORTED_MODULE_4_rxjs_Observable__["Observable"].of(bookedMeetings);
             _this.cd.detectChanges();
             _this.loading = false;
         });
@@ -4533,56 +4529,11 @@ var MeetingItemRhComponent = (function () {
         var _this = this;
         this.coachCoacheeService.getUsageRate(rhId).subscribe(function (rate) {
             console.log("getUsageRate, rate : ", rate);
-            _this.coacheeUsageRate = __WEBPACK_IMPORTED_MODULE_6_rxjs_Observable__["Observable"].of(rate);
+            _this.coacheeUsageRate = __WEBPACK_IMPORTED_MODULE_4_rxjs_Observable__["Observable"].of(rate);
         });
     };
-    MeetingItemRhComponent.prototype.updateCoacheeObjectivePanelVisibility = function (visible) {
-        if (visible) {
-            $('#add_new_objective_modal').openModal();
-        }
-        else {
-            $('#add_new_objective_modal').closeModal();
-        }
-    };
-    MeetingItemRhComponent.prototype.cancelAddNewObjectiveModal = function () {
-        this.updateCoacheeObjectivePanelVisibility(false);
-    };
-    MeetingItemRhComponent.prototype.validateAddNewObjectiveModal = function () {
-        var _this = this;
-        console.log('validateAddNewObjectiveModal');
-        // TODO start loader
-        var user = this.authService.getConnectedUser();
-        if (user == null) {
-            var userObs = this.authService.getConnectedUserObservable();
-            userObs.take(1).subscribe(function (user) {
-                console.log('validateAddNewObjectiveModal, got connected user');
-                if (user instanceof __WEBPACK_IMPORTED_MODULE_5__model_Rh__["a" /* Rh */]) {
-                    _this.makeAPICallToAddNewObjective(user);
-                }
-            });
-            return;
-        }
-        if (user instanceof __WEBPACK_IMPORTED_MODULE_5__model_Rh__["a" /* Rh */]) {
-            this.makeAPICallToAddNewObjective(user);
-        }
-    };
-    MeetingItemRhComponent.prototype.makeAPICallToAddNewObjective = function (user) {
-        var _this = this;
-        this.updateCoacheeObjectivePanelVisibility(false);
-        //call API
-        this.coachCoacheeService.addObjectiveToCoachee(user.id, this.coachee.id, this.coacheeNewObjective).subscribe(function (obj) {
-            console.log('addObjectiveToCoachee, SUCCESS', obj);
-            // close modal
-            _this.updateCoacheeObjectivePanelVisibility(false);
-            _this.objectiveChanged.emit(_this.coacheeNewObjective);
-            Materialize.toast("L'objectif a été modifié !", 3000, 'rounded');
-            // TODO stop loader
-            // clean
-            _this.coacheeNewObjective = null;
-        }, function (error) {
-            console.log('addObjectiveToCoachee, error', error);
-            Materialize.toast("Imposible de modifier l'objectif", 3000, 'rounded');
-        });
+    MeetingItemRhComponent.prototype.onClickAddObjectiveBtn = function () {
+        this.onUpdateObjectiveBtnClick.emit(this.coachee.id);
     };
     return MeetingItemRhComponent;
 }());
@@ -4597,17 +4548,17 @@ __decorate([
 __decorate([
     __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__angular_core__["Output"])(),
     __metadata("design:type", Object)
-], MeetingItemRhComponent.prototype, "objectiveChanged", void 0);
+], MeetingItemRhComponent.prototype, "onUpdateObjectiveBtnClick", void 0);
 MeetingItemRhComponent = __decorate([
     __webpack_require__.i(__WEBPACK_IMPORTED_MODULE_0__angular_core__["Component"])({
         selector: 'rb-meeting-item-rh',
         template: __webpack_require__(646),
         styles: [__webpack_require__(604)]
     }),
-    __metadata("design:paramtypes", [typeof (_c = typeof __WEBPACK_IMPORTED_MODULE_4__service_auth_service__["a" /* AuthService */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_4__service_auth_service__["a" /* AuthService */]) === "function" && _c || Object, typeof (_d = typeof __WEBPACK_IMPORTED_MODULE_7__service_meetings_service__["a" /* MeetingsService */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_7__service_meetings_service__["a" /* MeetingsService */]) === "function" && _d || Object, typeof (_e = typeof __WEBPACK_IMPORTED_MODULE_3__service_coach_coachee_service__["a" /* CoachCoacheeService */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_3__service_coach_coachee_service__["a" /* CoachCoacheeService */]) === "function" && _e || Object, typeof (_f = typeof __WEBPACK_IMPORTED_MODULE_0__angular_core__["ChangeDetectorRef"] !== "undefined" && __WEBPACK_IMPORTED_MODULE_0__angular_core__["ChangeDetectorRef"]) === "function" && _f || Object])
+    __metadata("design:paramtypes", [typeof (_c = typeof __WEBPACK_IMPORTED_MODULE_5__service_meetings_service__["a" /* MeetingsService */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_5__service_meetings_service__["a" /* MeetingsService */]) === "function" && _c || Object, typeof (_d = typeof __WEBPACK_IMPORTED_MODULE_3__service_coach_coachee_service__["a" /* CoachCoacheeService */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_3__service_coach_coachee_service__["a" /* CoachCoacheeService */]) === "function" && _d || Object, typeof (_e = typeof __WEBPACK_IMPORTED_MODULE_0__angular_core__["ChangeDetectorRef"] !== "undefined" && __WEBPACK_IMPORTED_MODULE_0__angular_core__["ChangeDetectorRef"]) === "function" && _e || Object])
 ], MeetingItemRhComponent);
 
-var _a, _b, _c, _d, _e, _f;
+var _a, _b, _c, _d, _e;
 //# sourceMappingURL=/Users/guillaume/angular/eritis_fe/src/meeting-item-rh.component.js.map
 
 /***/ }),
@@ -4622,7 +4573,7 @@ var _a, _b, _c, _d, _e, _f;
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_rxjs_Observable__ = __webpack_require__(0);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_rxjs_Observable___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_3_rxjs_Observable__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__model_ContractPlan__ = __webpack_require__(368);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__model_Rh__ = __webpack_require__(52);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__model_Rh__ = __webpack_require__(59);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return MeetingListRhComponent; });
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -4732,7 +4683,7 @@ var MeetingListRhComponent = (function () {
         }
     };
     /*************************************
-     ----------- Modal control ------------
+     ----------- Modal control for Potential Coachee ------------
      *************************************/
     MeetingListRhComponent.prototype.addPotentialCoacheeModalVisibility = function (isVisible) {
         if (isVisible) {
@@ -4765,6 +4716,62 @@ var MeetingListRhComponent = (function () {
                 Materialize.toast("Impossible d'ajouter le collaborateur", 3000, 'rounded');
             });
         });
+    };
+    /*************************************
+     ----------- Modal control for new coachee's objective ------------
+     *************************************/
+    MeetingListRhComponent.prototype.updateCoacheeObjectivePanelVisibility = function (visible) {
+        if (visible) {
+            $('#add_new_objective_modal').openModal();
+        }
+        else {
+            $('#add_new_objective_modal').closeModal();
+        }
+    };
+    MeetingListRhComponent.prototype.makeAPICallToAddNewObjective = function (user) {
+        var _this = this;
+        this.updateCoacheeObjectivePanelVisibility(false);
+        //call API
+        this.coachCoacheeService.addObjectiveToCoachee(user.id, this.addNewObjectiveCoacheeId, this.coacheeNewObjective).subscribe(function (obj) {
+            console.log('addObjectiveToCoachee, SUCCESS', obj);
+            // close modal
+            _this.updateCoacheeObjectivePanelVisibility(false);
+            _this.onRefreshRequested();
+            Materialize.toast("L'objectif a été modifié !", 3000, 'rounded');
+            // TODO stop loader
+            // clean
+            _this.coacheeNewObjective = null;
+        }, function (error) {
+            console.log('addObjectiveToCoachee, error', error);
+            Materialize.toast("Imposible de modifier l'objectif", 3000, 'rounded');
+        });
+    };
+    MeetingListRhComponent.prototype.startAddNewObjectiveFlow = function (coacheeId) {
+        console.log('startAddNewObjectiveFlow, coacheeId : ', coacheeId);
+        this.updateCoacheeObjectivePanelVisibility(true);
+        this.addNewObjectiveCoacheeId = coacheeId;
+    };
+    MeetingListRhComponent.prototype.cancelAddNewObjectiveModal = function () {
+        this.updateCoacheeObjectivePanelVisibility(false);
+    };
+    MeetingListRhComponent.prototype.validateAddNewObjectiveModal = function () {
+        var _this = this;
+        console.log('validateAddNewObjectiveModal');
+        // TODO start loader
+        var user = this.authService.getConnectedUser();
+        if (user == null) {
+            var userObs = this.authService.getConnectedUserObservable();
+            userObs.take(1).subscribe(function (user) {
+                console.log('validateAddNewObjectiveModal, got connected user');
+                if (user instanceof __WEBPACK_IMPORTED_MODULE_5__model_Rh__["a" /* Rh */]) {
+                    _this.makeAPICallToAddNewObjective(user);
+                }
+            });
+            return;
+        }
+        if (user instanceof __WEBPACK_IMPORTED_MODULE_5__model_Rh__["a" /* Rh */]) {
+            this.makeAPICallToAddNewObjective(user);
+        }
     };
     return MeetingListRhComponent;
 }());
@@ -5567,25 +5574,6 @@ var Coachee = (function () {
 
 /***/ }),
 
-/***/ 52:
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return Rh; });
-/**
- * Created by guillaume on 15/05/2017.
- */
-var Rh = (function () {
-    function Rh(id) {
-        this.id = id;
-    }
-    return Rh;
-}());
-
-//# sourceMappingURL=/Users/guillaume/angular/eritis_fe/src/Rh.js.map
-
-/***/ }),
-
 /***/ 585:
 /***/ (function(module, exports, __webpack_require__) {
 
@@ -5673,6 +5661,25 @@ exports.push([module.i, ".message-container:first-of-type {\n  border-top-width:
 
 /*** EXPORTS FROM exports-loader ***/
 module.exports = module.exports.toString();
+
+/***/ }),
+
+/***/ 59:
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return Rh; });
+/**
+ * Created by guillaume on 15/05/2017.
+ */
+var Rh = (function () {
+    function Rh(id) {
+        this.id = id;
+    }
+    return Rh;
+}());
+
+//# sourceMappingURL=/Users/guillaume/angular/eritis_fe/src/Rh.js.map
 
 /***/ }),
 
@@ -6410,14 +6417,14 @@ module.exports = "<!--<rb-header></rb-header>-->\n<div class=\"container\">\n\n 
 /***/ 640:
 /***/ (function(module, exports) {
 
-module.exports = "\n<div class=\"container\">\n  <div class=\"row\">\n    <div class=\"col s12\">\n\n      <div class=\"row\">\n        <h4 class=\"col-lg-12 black-text\">Demandes disponibles</h4>\n        <div class=\"card collection col-lg-12\">\n\n          <div *ngIf=\"hasAvailableMeetings\">\n            <div class=\"collection-item\" *ngFor=\"let meeting of availableMeetings | async\">\n              <rb-meeting-item-coach [meeting]=\"meeting\"\n                                     (dateAgreed)=\"onRefreshRequested($event)\">\n              </rb-meeting-item-coach>\n            </div>\n          </div>\n\n          <div *ngIf=\"!hasAvailableMeetings\" class=\"collection-item text-center\">\n            <h5 class=\"no-meeting\">Les demandes disponibles apparaîtront ici</h5>\n          </div>\n\n          <!--<button (click)=\"onSelectMeetingBtnClicked(meeting)\">Select</button>-->\n\n        </div><!--end card-->\n      </div>\n    </div>\n  </div>\n</div>\n"
+module.exports = "\n<div class=\"container\">\n  <div class=\"row\">\n    <div class=\"col s12\">\n\n      <div class=\"row\">\n        <h4 class=\"col-lg-12 black-text\">Demandes disponibles</h4>\n        <div class=\"card collection col-lg-12\">\n\n          <div *ngIf=\"hasAvailableMeetings\">\n            <div class=\"collection-item\" *ngFor=\"let meeting of availableMeetings | async\">\n              <rb-meeting-item-coach [meeting]=\"meeting\"\n                                     (onValidateDateBtnClick)=\"openCoachValidateMeetingModal($event)\">\n              </rb-meeting-item-coach>\n            </div>\n          </div>\n\n          <div *ngIf=\"!hasAvailableMeetings\" class=\"collection-item text-center\">\n            <h5 class=\"no-meeting\">Les demandes disponibles apparaîtront ici</h5>\n          </div>\n\n          <!--<button (click)=\"onSelectMeetingBtnClicked(meeting)\">Select</button>-->\n\n        </div><!--end card-->\n      </div>\n    </div>\n  </div>\n</div>\n\n<!-- Modal Coach Validate Meeting -->\n<div id=\"coach_cancel_meeting\" class=\"modal\">\n  <div class=\"action-modal-content\">\n    <div class=\"daction-modal-message\">\n      <h5 class=\"black-text center\">Vous ne pourrez pas annuler ce meeting, êtes-vous sûr de vouloir valider ce créneau ?</h5>\n    </div>\n    <div class=\"action-modal-footer\">\n      <button class=\"btn-basic btn-plain btn-small\" (click)=\"cancelCoachValidateMeeting()\">Annuler</button>\n      <button class=\"btn-basic btn-blue btn-small\" (click)=\"onSubmitValidateMeeting()\">Valider</button>\n    </div>\n  </div>\n</div>\n"
 
 /***/ }),
 
 /***/ 641:
 /***/ (function(module, exports) {
 
-module.exports = "<div class=\"meeting-item col-lg-12\" [class.closed]=\"!meeting.isOpen\" [class.unbooked]=\"!meeting.agreed_date\">\n  <!--<span class=\"card-title\">Vous avez choisi {{ coach.display_name }} pour être votre coach.</span>-->\n\n  <div class=\"preloader-wrapper active\" *ngIf=\"loading\">\n    <div class=\"spinner-layer spinner-blue-only\">\n      <div class=\"circle-clipper left\">\n        <div class=\"circle\"></div>\n      </div>\n      <div class=\"gap-patch\">\n        <div class=\"circle\"></div>\n      </div>\n      <div class=\"circle-clipper right\">\n        <div class=\"circle\"></div>\n      </div>\n    </div>\n  </div>\n\n  <div class=\"row\" *ngIf=\"!loading\">\n\n    <!-- COACHEE -->\n    <div class=\"meeting-item-header col-md-12 col-lg-5\">\n      <div>\n        <div class=\"meeting-item-coach\">\n          <div>\n            <!-- image coach-->\n            <img *ngIf=\"meeting.coachee\" class=\"meeting-item-coach-avatar circle img-responsive\" alt=\"coachee\"\n                 [src]=\"meeting.coachee.avatar_url\">\n            <img *ngIf=\"!meeting.coachee\" class=\"meeting-item-coach-avatar circle img-responsive\" alt=\"coachee\"\n                 src=\"https://s-media-cache-ak0.pinimg.com/originals/af/25/49/af25490494d3338afef00869c59fdd37.png\">\n          </div>\n\n          <div>\n            <p class=\"meeting-item-coach black-text bold\" *ngIf=\"meeting.coachee\">{{ meeting.coachee.display_name }}</p>\n            <p class=\"italic\">Company name</p>\n          </div>\n        </div><!--end meeting-item-coach-->\n\n        <!-- DATE -->\n        <div class=\"meeting-item-date\" *ngIf=\"meeting.agreed_date\">\n          <span class=\"meeting-item-date-date\">{{ getDate(meeting.agreed_date.start_date) }}</span>\n          <span class=\"meeting-item-date-hour\">{{ printTimeString(meeting.agreed_date.start_date) }}</span>\n        </div>\n\n        <div class=\"meeting-item-date\" *ngIf=\"!meeting.agreed_date\">\n          <span class=\"meeting-item-date-date\">{{ getDate(meeting.created_date) }}</span>\n          <span class=\"meeting-item-date-hour\">{{ printTimeString(meeting.created_date) }}</span>\n        </div>\n      </div>\n    </div>\n\n    <!-- GOAL & REVIEW -->\n    <div class=\"meeting-item-body col-md-12 col-lg-7\">\n      <div class=\"meeting-item-body-content\">\n        <p>\n          <span class=\"black-text bold\">Objectif personnel: </span>\n          <span *ngIf=\"meeting.coachee.last_objective != null\">{{ meeting.coachee.last_objective.objective }}</span>\n          <span *ngIf=\"meeting.coachee.last_objective == null\">n/a</span>\n        </p>\n        <br>\n        <p class=\"meeting-item-goal\">\n          <span class=\"black-text bold\">Objectif de la séance: </span>\n          <span *ngIf=\"hasGoal\">{{(goal | async)}}</span>\n          <span *ngIf=\"!hasGoal\" class=\"red-text\">Pas encore défini...</span>\n        </p>\n        <br>\n        <p><span class=\"black-text bold\">Context :</span> {{ (context | async) }}</p>\n\n        <!--Complétées-->\n        <div *ngIf=\"!meeting.isOpen\" class=\"meeting-review\">\n          <div *ngIf=\"hasValue && hasNextStep\">\n            <br>\n            <p><span class=\"black-text bold\">En quoi la séance a-t-elle été utile ? </span>{{ reviewValue }}</p>\n            <br>\n            <p><span class=\"black-text bold\">Avec quoi êtes vous reparti ? </span>{{ reviewNextStep }}</p>\n          </div>\n        </div><!--end meeting-review-->\n\n        <!--Demandes disponibles-->\n        <div *ngIf=\"!meeting.agreed_date\" class=\"meeting-review\">\n          <div>\n            <br>\n            <p><span class=\"black-text bold\">Disponibilités :</span></p>\n            <div class=\"meeting-potential\" *ngFor=\"let potential of potentialDates | async\">\n              <span class=\"meeting-potential-date\">{{ getDate(potential.start_date) }}</span>\n              <span class=\"meeting-potential-hours\">{{ printTimeString(potential.start_date) }} - {{ printTimeString(potential.end_date) }}</span>\n            </div>\n            <br>\n            <form class=\"confirm-meeting-form\">\n              <!--<span class=\"black-text bold\">Réponse :</span>-->\n              <div class=\"input-field\">\n                <select [(ngModel)]=\"selectedDate\" name=\"meeting-date\" class=\"browser-default\"\n                        (change)=\"loadPotentialHours(selectedDate)\">\n                  <option value=\"0\" disabled selected>Date</option>\n                  <option *ngFor=\"let d of potentialDays | async\" [ngValue]=\" d \">\n                    {{ getDate(d) }}\n                  </option>\n                </select>\n              </div>\n              <div class=\"input-field\">\n                <select [(ngModel)]=\"selectedHour\" name=\"meeting-hour\" class=\"browser-default\"\n                        materialize=\"material_select\">\n                  <option value=\"0\" disabled selected>Heure</option>\n                  <option *ngFor=\"let h of potentialHours | async\" [ngValue]=\"h\">\n                    {{ printTimeNumber(h) }} - {{ printTimeNumber(h+1) }}\n                  </option>\n                </select>\n              </div>\n              <!--<div>-->\n                <!--<button type=\"submit\" class=\"btn-basic btn-blue btn-small\"-->\n                        <!--[disabled]=\"!selectedDate || !selectedHour\"-->\n                        <!--(click)=\"openCoachValidateMeetingModal()\">Devenir coach-->\n                <!--</button>-->\n              <!--</div>-->\n            </form>\n          </div>\n        </div><!--end meeting-review-->\n      </div>\n\n      <div class=\"meeting-item-body-buttons\" *ngIf=\"meeting.isOpen\">\n        <!--<button class=\"btn-basic btn-plain btn-blue btn-small\"-->\n                <!--(click)=\"toggleShowDetails()\">DETAIL-->\n        <!--</button>-->\n        <button type=\"submit\" class=\"btn-basic btn-blue btn-plain btn-small\"\n                *ngIf=\"!meeting.agreed_date\"\n                [disabled]=\"!selectedDate || !selectedHour\"\n                (click)=\"openCoachValidateMeetingModal()\">Coacher\n        </button>\n        <!--<button class=\"btn-basic btn-cancel\"-->\n                <!--*ngIf=\"meeting.agreed_date\"-->\n                <!--(click)=\"openModal()\">-->\n          <!--<i class=\"material-icons\">clear</i>-->\n        <!--</button>-->\n      </div>\n    </div><!--end meeting-item-body-->\n\n  </div><!--end row-->\n\n</div><!--end meeting-item-->\n\n\n<!-- Modal Coach Validate Meeting -->\n<div id=\"coach_cancel_meeting\" class=\"modal\">\n  <div class=\"action-modal-content\">\n    <div class=\"daction-modal-message\">\n      <h5 class=\"black-text center\">Vous ne pourrez pas annuler ce meeting, êtes-vous sûr de vouloir valider ce créneau ?</h5>\n    </div>\n    <div class=\"action-modal-footer\">\n      <button class=\"btn-basic btn-plain btn-small\" (click)=\"cancelCoachValidateMeeting()\">Annuler</button>\n      <button class=\"btn-basic btn-blue btn-small\" (click)=\"onSubmitValidateMeeting()\">Valider</button>\n    </div>\n  </div>\n</div>\n\n\n<!--\n<div class=\"card\">\n  <div class=\"card-content\">\n    <span class=\"card-title\">Vous avez été choisi par {{ coachee.display_name }} pour une séance.</span>\n\n\n    &lt;!&ndash; Meeting is closed&ndash;&gt;\n    <div *ngIf=\"!meeting.isOpen\">\n      <h4>Meeting is now closed</h4>\n    </div>\n\n    &lt;!&ndash; Meeting is open &ndash;&gt;\n    <div *ngIf=\"meeting.isOpen\">\n      <div class=\"col s12\" *ngIf=\"meeting.agreed_date == null\">\n\n        &lt;!&ndash; no potential dates selected&ndash;&gt;\n        <div class=\"section\" *ngIf=\"(potentialDates | async)== null\">\n          <h5>Votre coachee doit d'abord indiquer ses préférences horaires</h5>\n        </div>\n\n        &lt;!&ndash; some potential dates selected&ndash;&gt;\n        <div class=\"section\" *ngIf=\"(potentialDates | async)!= null\">\n          <h5>Votre coachee a indiqué ses préférences horaires</h5>\n\n          &lt;!&ndash; list of potential dates &ndash;&gt;\n          <div *ngFor=\"let date of potentialDates | async\">\n            <h6>Possible date</h6>\n            <p>Le : {{date.start_date | date}}</p>\n            <p>De : {{date.start_date | date:'shortTime'}}</p>\n            <p>A : {{date.end_date | date:'shortTime'}}</p>\n\n            <button class=\"btn cyan waves-effect waves-light right\" (click)=\"confirmPotentialDate(date)\">\n              Confirmer cette date\n              <i class=\"mdi-content-send right\"></i>\n            </button>\n\n          </div>\n        </div>\n\n      </div>\n\n      <div class=\"col s12\" *ngIf=\"meeting.agreed_date \">\n        <h5>Votre meeting est le : {{meeting.agreed_date.start_date | date}} à {{meeting.agreed_date.start_date | date:'shortTime'}} </h5>\n      </div>\n\n    </div>\n\n\n    &lt;!&ndash; check if you have some reviews&ndash;&gt;\n    <div class=\"container\" *ngIf=\"(hasSomeReviews | async)\">\n\n      <h4>Comments</h4>\n\n      &lt;!&ndash; list of reviews &ndash;&gt;\n      <div *ngFor=\"let review of reviews | async\">\n\n        <div class=\"card\">\n          <div class=\"card-content\">\n            <span class=\"card-title\">Meeting Review</span>\n            <div class=\"list-group-item-text\">at : {{review.date}}</div>\n            <div class=\"list-group-item-text\">comment : {{review.comment}}</div>\n            <div class=\"list-group-item-text\">score : {{review.score}}</div>\n          </div>\n        </div>\n      </div>\n\n    </div>\n    &lt;!&ndash; /reviews&ndash;&gt;\n\n    &lt;!&ndash; Display Close Form is the Meeting is still open &ndash;&gt;\n    <div *ngIf=\"meeting.isOpen\" class=\"card\">\n\n      <div class=\"card-content\">\n\n        <h5>Close this meeting</h5>\n\n        <form [formGroup]=\"closeMeetingForm\" (ngSubmit)=\"submitCloseMeetingForm()\">\n\n          <div class=\"form-group\">\n            <label for=\"recap\">Résumé du meeting</label>\n            <input\n              type=\"text\"\n              id=\"recap\"\n              class=\"form-control\"\n              formControlName=\"recap\">\n          </div>\n\n          &lt;!&ndash;<button type=\"submit\" class=\"btn btn-success\">Envoyer</button>&ndash;&gt;\n          &lt;!&ndash;<button type=\"submit\" class=\"btn btn-success\" [disabled]=\"!closeMeetingForm.valid\">Envoyer</button>&ndash;&gt;\n          <button class=\"btn cyan waves-effect waves-light right\" type=\"submit\" name=\"action\">\n            Fermer le meeting\n            <i class=\"mdi-content-send right\"></i>\n          </button>\n        </form>\n      </div>\n    </div>\n\n\n  </div>\n\n\n</div>\n-->\n"
+module.exports = "<div class=\"meeting-item col-lg-12\" [class.closed]=\"!meeting.isOpen\" [class.unbooked]=\"!meeting.agreed_date\">\n  <!--<span class=\"card-title\">Vous avez choisi {{ coach.display_name }} pour être votre coach.</span>-->\n\n  <div class=\"preloader-wrapper active\" *ngIf=\"loading\">\n    <div class=\"spinner-layer spinner-blue-only\">\n      <div class=\"circle-clipper left\">\n        <div class=\"circle\"></div>\n      </div>\n      <div class=\"gap-patch\">\n        <div class=\"circle\"></div>\n      </div>\n      <div class=\"circle-clipper right\">\n        <div class=\"circle\"></div>\n      </div>\n    </div>\n  </div>\n\n  <div class=\"row\" *ngIf=\"!loading\">\n\n    <!-- COACHEE -->\n    <div class=\"meeting-item-header col-md-12 col-lg-5\">\n      <div>\n        <div class=\"meeting-item-coach\">\n          <div>\n            <!-- image coach-->\n            <img *ngIf=\"meeting.coachee\" class=\"meeting-item-coach-avatar circle img-responsive\" alt=\"coachee\"\n                 [src]=\"meeting.coachee.avatar_url\">\n            <img *ngIf=\"!meeting.coachee\" class=\"meeting-item-coach-avatar circle img-responsive\" alt=\"coachee\"\n                 src=\"https://s-media-cache-ak0.pinimg.com/originals/af/25/49/af25490494d3338afef00869c59fdd37.png\">\n          </div>\n\n          <div>\n            <p class=\"meeting-item-coach black-text bold\" *ngIf=\"meeting.coachee\">{{ meeting.coachee.display_name }}</p>\n            <p class=\"italic\">Company name</p>\n          </div>\n        </div><!--end meeting-item-coach-->\n\n        <!-- DATE -->\n        <div class=\"meeting-item-date\" *ngIf=\"meeting.agreed_date\">\n          <span class=\"meeting-item-date-date\">{{ getDate(meeting.agreed_date.start_date) }}</span>\n          <span class=\"meeting-item-date-hour\">{{ printTimeString(meeting.agreed_date.start_date) }}</span>\n        </div>\n\n        <div class=\"meeting-item-date\" *ngIf=\"!meeting.agreed_date\">\n          <span class=\"meeting-item-date-date\">{{ getDate(meeting.created_date) }}</span>\n          <span class=\"meeting-item-date-hour\">{{ printTimeString(meeting.created_date) }}</span>\n        </div>\n      </div>\n    </div>\n\n    <!-- GOAL & REVIEW -->\n    <div class=\"meeting-item-body col-md-12 col-lg-7\">\n      <div class=\"meeting-item-body-content\">\n        <p>\n          <span class=\"black-text bold\">Objectif personnel: </span>\n          <span *ngIf=\"meeting.coachee.last_objective != null\">{{ meeting.coachee.last_objective.objective }}</span>\n          <span *ngIf=\"meeting.coachee.last_objective == null\">n/a</span>\n        </p>\n        <br>\n        <p class=\"meeting-item-goal\">\n          <span class=\"black-text bold\">Objectif de la séance: </span>\n          <span *ngIf=\"hasGoal\">{{(goal | async)}}</span>\n          <span *ngIf=\"!hasGoal\" class=\"red-text\">Pas encore défini...</span>\n        </p>\n        <br>\n        <p><span class=\"black-text bold\">Context :</span> {{ (context | async) }}</p>\n\n        <!--Complétées-->\n        <div *ngIf=\"!meeting.isOpen\" class=\"meeting-review\">\n          <div *ngIf=\"hasValue && hasNextStep\">\n            <br>\n            <p><span class=\"black-text bold\">En quoi la séance a-t-elle été utile ? </span>{{ reviewValue }}</p>\n            <br>\n            <p><span class=\"black-text bold\">Avec quoi êtes vous reparti ? </span>{{ reviewNextStep }}</p>\n          </div>\n        </div><!--end meeting-review-->\n\n        <!--Demandes disponibles-->\n        <div *ngIf=\"!meeting.agreed_date\" class=\"meeting-review\">\n          <div>\n            <br>\n            <p><span class=\"black-text bold\">Disponibilités :</span></p>\n            <div class=\"meeting-potential\" *ngFor=\"let potential of potentialDates | async\">\n              <span class=\"meeting-potential-date\">{{ getDate(potential.start_date) }}</span>\n              <span class=\"meeting-potential-hours\">{{ printTimeString(potential.start_date) }} - {{ printTimeString(potential.end_date) }}</span>\n            </div>\n            <br>\n            <form class=\"confirm-meeting-form\">\n              <!--<span class=\"black-text bold\">Réponse :</span>-->\n              <div class=\"input-field\">\n                <select [(ngModel)]=\"selectedDate\" name=\"meeting-date\" class=\"browser-default\"\n                        (change)=\"loadPotentialHours(selectedDate)\">\n                  <option value=\"0\" disabled selected>Date</option>\n                  <option *ngFor=\"let d of potentialDays | async\" [ngValue]=\" d \">\n                    {{ getDate(d) }}\n                  </option>\n                </select>\n              </div>\n              <div class=\"input-field\">\n                <select [(ngModel)]=\"selectedHour\" name=\"meeting-hour\" class=\"browser-default\"\n                        materialize=\"material_select\">\n                  <option value=\"0\" disabled selected>Heure</option>\n                  <option *ngFor=\"let h of potentialHours | async\" [ngValue]=\"h\">\n                    {{ printTimeNumber(h) }} - {{ printTimeNumber(h+1) }}\n                  </option>\n                </select>\n              </div>\n              <!--<div>-->\n                <!--<button type=\"submit\" class=\"btn-basic btn-blue btn-small\"-->\n                        <!--[disabled]=\"!selectedDate || !selectedHour\"-->\n                        <!--(click)=\"openCoachValidateMeetingModal()\">Devenir coach-->\n                <!--</button>-->\n              <!--</div>-->\n            </form>\n          </div>\n        </div><!--end meeting-review-->\n      </div>\n\n      <div class=\"meeting-item-body-buttons\" *ngIf=\"meeting.isOpen\">\n        <!--<button class=\"btn-basic btn-plain btn-blue btn-small\"-->\n                <!--(click)=\"toggleShowDetails()\">DETAIL-->\n        <!--</button>-->\n        <button type=\"submit\" class=\"btn-basic btn-blue btn-plain btn-small\"\n                *ngIf=\"!meeting.agreed_date\"\n                [disabled]=\"!selectedDate || !selectedHour\"\n                (click)=\"onValidateDateClick()\">Coacher\n        </button>\n        <!--<button class=\"btn-basic btn-cancel\"-->\n                <!--*ngIf=\"meeting.agreed_date\"-->\n                <!--(click)=\"openModal()\">-->\n          <!--<i class=\"material-icons\">clear</i>-->\n        <!--</button>-->\n      </div>\n    </div><!--end meeting-item-body-->\n\n  </div><!--end row-->\n\n</div><!--end meeting-item-->\n\n\n<!--\n<div class=\"card\">\n  <div class=\"card-content\">\n    <span class=\"card-title\">Vous avez été choisi par {{ coachee.display_name }} pour une séance.</span>\n\n\n    &lt;!&ndash; Meeting is closed&ndash;&gt;\n    <div *ngIf=\"!meeting.isOpen\">\n      <h4>Meeting is now closed</h4>\n    </div>\n\n    &lt;!&ndash; Meeting is open &ndash;&gt;\n    <div *ngIf=\"meeting.isOpen\">\n      <div class=\"col s12\" *ngIf=\"meeting.agreed_date == null\">\n\n        &lt;!&ndash; no potential dates selected&ndash;&gt;\n        <div class=\"section\" *ngIf=\"(potentialDates | async)== null\">\n          <h5>Votre coachee doit d'abord indiquer ses préférences horaires</h5>\n        </div>\n\n        &lt;!&ndash; some potential dates selected&ndash;&gt;\n        <div class=\"section\" *ngIf=\"(potentialDates | async)!= null\">\n          <h5>Votre coachee a indiqué ses préférences horaires</h5>\n\n          &lt;!&ndash; list of potential dates &ndash;&gt;\n          <div *ngFor=\"let date of potentialDates | async\">\n            <h6>Possible date</h6>\n            <p>Le : {{date.start_date | date}}</p>\n            <p>De : {{date.start_date | date:'shortTime'}}</p>\n            <p>A : {{date.end_date | date:'shortTime'}}</p>\n\n            <button class=\"btn cyan waves-effect waves-light right\" (click)=\"confirmPotentialDate(date)\">\n              Confirmer cette date\n              <i class=\"mdi-content-send right\"></i>\n            </button>\n\n          </div>\n        </div>\n\n      </div>\n\n      <div class=\"col s12\" *ngIf=\"meeting.agreed_date \">\n        <h5>Votre meeting est le : {{meeting.agreed_date.start_date | date}} à {{meeting.agreed_date.start_date | date:'shortTime'}} </h5>\n      </div>\n\n    </div>\n\n\n    &lt;!&ndash; check if you have some reviews&ndash;&gt;\n    <div class=\"container\" *ngIf=\"(hasSomeReviews | async)\">\n\n      <h4>Comments</h4>\n\n      &lt;!&ndash; list of reviews &ndash;&gt;\n      <div *ngFor=\"let review of reviews | async\">\n\n        <div class=\"card\">\n          <div class=\"card-content\">\n            <span class=\"card-title\">Meeting Review</span>\n            <div class=\"list-group-item-text\">at : {{review.date}}</div>\n            <div class=\"list-group-item-text\">comment : {{review.comment}}</div>\n            <div class=\"list-group-item-text\">score : {{review.score}}</div>\n          </div>\n        </div>\n      </div>\n\n    </div>\n    &lt;!&ndash; /reviews&ndash;&gt;\n\n    &lt;!&ndash; Display Close Form is the Meeting is still open &ndash;&gt;\n    <div *ngIf=\"meeting.isOpen\" class=\"card\">\n\n      <div class=\"card-content\">\n\n        <h5>Close this meeting</h5>\n\n        <form [formGroup]=\"closeMeetingForm\" (ngSubmit)=\"submitCloseMeetingForm()\">\n\n          <div class=\"form-group\">\n            <label for=\"recap\">Résumé du meeting</label>\n            <input\n              type=\"text\"\n              id=\"recap\"\n              class=\"form-control\"\n              formControlName=\"recap\">\n          </div>\n\n          &lt;!&ndash;<button type=\"submit\" class=\"btn btn-success\">Envoyer</button>&ndash;&gt;\n          &lt;!&ndash;<button type=\"submit\" class=\"btn btn-success\" [disabled]=\"!closeMeetingForm.valid\">Envoyer</button>&ndash;&gt;\n          <button class=\"btn cyan waves-effect waves-light right\" type=\"submit\" name=\"action\">\n            Fermer le meeting\n            <i class=\"mdi-content-send right\"></i>\n          </button>\n        </form>\n      </div>\n    </div>\n\n\n  </div>\n\n\n</div>\n-->\n"
 
 /***/ }),
 
@@ -6452,14 +6459,14 @@ module.exports = "<!--<rb-header></rb-header>-->\n\n<div class=\"container\">\n 
 /***/ 646:
 /***/ (function(module, exports) {
 
-module.exports = "<div class=\"meeting-item col-lg-12\" (click)=\"toggleShowDetails()\">\n\n  <div class=\"preloader-wrapper active\" *ngIf=\"loading\">\n    <div class=\"spinner-layer spinner-blue-only\">\n      <div class=\"circle-clipper left\">\n        <div class=\"circle\"></div>\n      </div>\n      <div class=\"gap-patch\">\n        <div class=\"circle\"></div>\n      </div>\n      <div class=\"circle-clipper right\">\n        <div class=\"circle\"></div>\n      </div>\n    </div>\n  </div>\n\n  <div *ngIf=\"!loading\">\n\n    <!-- COACHEE -->\n    <div *ngIf=\"coachee != null\" class=\"row\">\n      <div class=\"meeting-item-header col-md-12 col-lg-5\">\n        <div>\n          <div class=\"meeting-item-coach\">\n            <div>\n              <!-- image coachee -->\n              <img class=\"meeting-item-coach-avatar circle img-responsive\" alt=\"coachee\" [src]=\"coachee.avatar_url\">\n            </div>\n\n            <div>\n              <p class=\"meeting-item-coach black-text bold\">{{ coachee.display_name }}</p>\n              <p class=\"italic\">Inscrit le {{ printDateString(coachee.start_date) }}</p>\n            </div>\n          </div>\n\n          <!--USAGE-->\n          <div class=\"meeting-item-date\">\n            <div class=\"meeting-item-date-date\">\n              <span class=\"usage-title\">Utilisation: </span>\n              <span class=\"blue-text\">{{ (coacheeUsageRate | async)?.usage_rate}}%</span>\n            </div>\n          </div>\n        </div>\n      </div>\n\n      <!-- GOAL -->\n      <div class=\"meeting-item-body col-md-12 col-lg-7\">\n        <div class=\"meeting-item-body-content\">\n          <p class=\"meeting-item-goal\">\n            <span class=\"black-text bold\">Objectif personnel: </span>\n            <span *ngIf=\"coachee.last_objective\">{{ coachee.last_objective.objective }}</span>\n            <span *ngIf=\"!coachee.last_objective\">n/a</span>\n          </p>\n        </div>\n\n        <div class=\"meeting-item-body-buttons\">\n          <button class=\"btn-basic btn-blue btn-plain btn-small\" (click)=\"updateCoacheeObjectivePanelVisibility(true)\" *ngIf=\"!coachee.last_objective\">\n            Ajouter un objectif\n          </button>\n          <button class=\"btn-basic btn-blue btn-plain btn-small\" (click)=\"updateCoacheeObjectivePanelVisibility(true)\" *ngIf=\"coachee.last_objective\">\n            Modifier l'objectif\n          </button>\n        </div>\n      </div><!--end meeting-item-body-->\n\n      <div *ngIf=\"showDetails\" class=\"meeting-review\">\n        <div>\n          <h5><span class=\"blue-text\">{{ coachee.plan.sessions_count }}</span> séances/mois</h5>\n          <br>\n          <div *ngIf=\"!hasBookedMeeting\"><p>Pas encore de séance réalisée</p><br></div>\n          <div *ngIf=\"hasBookedMeeting\">\n            <div *ngFor=\"let meeting of (meetings | async)\">\n              <p>\n                <span class=\"meeting-list-date\">{{ printDateString(meeting.agreed_date.start_date) }}</span>\n                <span class=\"black-text bold\">Objectif de la séance: </span>\n                <span>{{ goals[meeting.id] }}</span>\n              </p>\n              <br>\n            </div>\n          </div>\n        </div>\n      </div><!--end meeting-review-->\n\n    </div><!--end coachee-->\n\n    <!-- POTENTIAL COACHEE -->\n    <div *ngIf=\"potentialCoachee != null\" class=\"row\">\n      <div class=\"meeting-item-header col-lg-12\">\n        <div class=\"meeting-item-coach\">\n          <div>\n            <!-- image coachee -->\n            <img class=\"meeting-item-coach-avatar circle img-responsive\" alt=\"potentialCoachee\"\n                 src=\"https://s-media-cache-ak0.pinimg.com/originals/af/25/49/af25490494d3338afef00869c59fdd37.png\">\n          </div>\n\n          <div>\n            <p class=\"meeting-item-coach\">{{ potentialCoachee.email }}</p>\n          </div>\n        </div>\n\n        <!-- PLAN -->\n        <div class=\"meeting-item-date\">\n          <span class=\"meeting-item-date-date\"><span class=\"blue-text\">{{ potentialCoachee.plan.sessions_count }}</span> séances</span>\n        </div>\n      </div>\n    </div><!--end potentialCoachee-->\n\n  </div><!--end row-->\n\n  <!-- Modal RH add new objective to Coachee -->\n  <div id=\"add_new_objective_modal\" class=\"modal\">\n    <div class=\"action-modal-content\">\n      <div class=\"action-modal-message\">\n        <label>Définissez un objectif</label>\n        <input type=\"text\" placeholder=\"Objectif\" id=\"\" [(ngModel)]=\"coacheeNewObjective\">\n      </div>\n      <div class=\"action-modal-footer\">\n        <button class=\"btn-basic btn-plain btn-small\" (click)=\"cancelAddNewObjectiveModal()\">Annuler</button>\n        <button class=\"btn-basic btn-blue btn-plain btn-small\" (click)=\"validateAddNewObjectiveModal()\"\n                [disabled]=\"!coacheeNewObjective\">Ajouter\n        </button>\n      </div>\n    </div>\n  </div>\n\n</div><!--end meeting-item-->\n"
+module.exports = "<div class=\"meeting-item col-lg-12\" (click)=\"toggleShowDetails()\">\n\n  <div class=\"preloader-wrapper active\" *ngIf=\"loading\">\n    <div class=\"spinner-layer spinner-blue-only\">\n      <div class=\"circle-clipper left\">\n        <div class=\"circle\"></div>\n      </div>\n      <div class=\"gap-patch\">\n        <div class=\"circle\"></div>\n      </div>\n      <div class=\"circle-clipper right\">\n        <div class=\"circle\"></div>\n      </div>\n    </div>\n  </div>\n\n  <div *ngIf=\"!loading\">\n\n    <!-- COACHEE -->\n    <div *ngIf=\"coachee != null\" class=\"row\">\n      <div class=\"meeting-item-header col-md-12 col-lg-5\">\n        <div>\n          <div class=\"meeting-item-coach\">\n            <div>\n              <!-- image coachee -->\n              <img class=\"meeting-item-coach-avatar circle img-responsive\" alt=\"coachee\" [src]=\"coachee.avatar_url\">\n            </div>\n\n            <div>\n              <p class=\"meeting-item-coach black-text bold\">{{ coachee.display_name }}</p>\n              <p class=\"italic\">Inscrit le {{ printDateString(coachee.start_date) }}</p>\n            </div>\n          </div>\n\n          <!--USAGE-->\n          <div class=\"meeting-item-date\">\n            <div class=\"meeting-item-date-date\">\n              <span class=\"usage-title\">Utilisation: </span>\n              <span class=\"blue-text\">{{ (coacheeUsageRate | async)?.usage_rate}}%</span>\n            </div>\n          </div>\n        </div>\n      </div>\n\n      <!-- GOAL -->\n      <div class=\"meeting-item-body col-md-12 col-lg-7\">\n        <div class=\"meeting-item-body-content\">\n          <p class=\"meeting-item-goal\">\n            <span class=\"black-text bold\">Objectif personnel: </span>\n            <span *ngIf=\"coachee.last_objective\">{{ coachee.last_objective.objective }}</span>\n            <span *ngIf=\"!coachee.last_objective\">n/a</span>\n          </p>\n        </div>\n\n        <div class=\"meeting-item-body-buttons\">\n          <button class=\"btn-basic btn-blue btn-plain btn-small\" (click)=\"onClickAddObjectiveBtn()\"\n                  *ngIf=\"!coachee.last_objective\">\n            Ajouter un objectif\n          </button>\n          <button class=\"btn-basic btn-blue btn-plain btn-small\" (click)=\"onClickAddObjectiveBtn()\"\n                  *ngIf=\"coachee.last_objective\">\n            Modifier l'objectif\n          </button>\n        </div>\n      </div><!--end meeting-item-body-->\n\n      <div *ngIf=\"showDetails\" class=\"meeting-review\">\n        <div>\n          <h5><span class=\"blue-text\">{{ coachee.plan.sessions_count }}</span> séances/mois</h5>\n          <br>\n          <div *ngIf=\"!hasBookedMeeting\"><p>Pas encore de séance réalisée</p><br></div>\n          <div *ngIf=\"hasBookedMeeting\">\n            <div *ngFor=\"let meeting of (meetings | async)\">\n              <p>\n                <span class=\"meeting-list-date\">{{ printDateString(meeting.agreed_date.start_date) }}</span>\n                <span class=\"black-text bold\">Objectif de la séance: </span>\n                <span>{{ goals[meeting.id] }}</span>\n              </p>\n              <br>\n            </div>\n          </div>\n        </div>\n      </div><!--end meeting-review-->\n\n    </div><!--end coachee-->\n\n    <!-- POTENTIAL COACHEE -->\n    <div *ngIf=\"potentialCoachee != null\" class=\"row\">\n      <div class=\"meeting-item-header col-lg-12\">\n        <div class=\"meeting-item-coach\">\n          <div>\n            <!-- image coachee -->\n            <img class=\"meeting-item-coach-avatar circle img-responsive\" alt=\"potentialCoachee\"\n                 src=\"https://s-media-cache-ak0.pinimg.com/originals/af/25/49/af25490494d3338afef00869c59fdd37.png\">\n          </div>\n\n          <div>\n            <p class=\"meeting-item-coach\">{{ potentialCoachee.email }}</p>\n          </div>\n        </div>\n\n        <!-- PLAN -->\n        <div class=\"meeting-item-date\">\n          <span class=\"meeting-item-date-date\"><span class=\"blue-text\">{{ potentialCoachee.plan.sessions_count }}</span> séances</span>\n        </div>\n      </div>\n    </div><!--end potentialCoachee-->\n\n  </div><!--end row-->\n\n</div><!--end meeting-item-->\n"
 
 /***/ }),
 
 /***/ 647:
 /***/ (function(module, exports) {
 
-module.exports = "<h4 class=\"text-right welcome-message\">Bonjour {{(user | async)?.display_name}},<br>\n    Le taux total d'utilisation de vos collaborateurs est de <span class=\"blue-text\">{{(rhUsageRate | async)?.usage_rate}}%</span>\n</h4>\n<p class=\"text-right\">\n  <span class=\"blue-text\">Cliquez</span> ici pour ajouter un collaborateur\n  <a class=\"btn-floating btn-large waves-effect waves-light add-meeting-btn\"\n     (click)=\"addPotentialCoacheeModalVisibility(true)\">\n    <i class=\"material-icons\">add</i>\n  </a>\n</p>\n\n\n\n<div class=\"row\">\n  <h4 class=\"col-lg-12 black-text\">Collaborateurs</h4>\n  <div class=\"card collection col-lg-12\">\n\n    <div *ngIf=\"hasCollaborators\">\n      <div class=\"collection-item\" *ngFor=\"let coachee of coachees | async\">\n        <rb-meeting-item-rh [coachee]=\"coachee\"\n                            [potentialCoachee]=\"null\">\n        </rb-meeting-item-rh>\n      </div>\n    </div>\n\n    <div *ngIf=\"!hasCollaborators\" class=\"collection-item text-center\">\n      <h5 class=\"no-meeting\">Vos collaborateurs apparaîtront ici</h5>\n    </div>\n\n  </div><!--end card-->\n</div><!--end row-->\n\n<div class=\"row\">\n  <h4 class=\"col-lg-12 black-text\">Collaborateurs invités en attente</h4>\n  <div class=\"card collection col-lg-12\">\n\n    <div *ngIf=\"hasPotentialCollaborators\">\n      <div class=\"collection-item\" *ngFor=\"let potentialCoachee of potentialCoachees | async\">\n        <rb-meeting-item-rh [potentialCoachee]=\"potentialCoachee\"\n                            [coachee]=\"null\"\n                            (objectiveChanged)=\"onRefreshRequested()\">\n        </rb-meeting-item-rh>\n      </div>\n    </div>\n\n    <div *ngIf=\"!hasPotentialCollaborators\" class=\"collection-item text-center\">\n      <h5 class=\"no-meeting\">Vos collaborateurs en attente de validation apparaîtront ici</h5>\n    </div>\n\n  </div><!--end card-->\n</div><!--end row-->\n\n<!-- Modal RH add Coachee -->\n<div id=\"add_potential_coachee_modal\" class=\"modal\">\n  <div class=\"action-modal-content\">\n    <div class=\"action-modal-message\">\n      <label>Veuillez saisir l'adresse mail du collaborateur. Un mail lui sera envoyé pour finaliser son inscription.</label>\n      <input type=\"email\" placeholder=\"Email\" id=\"potential_mail\" [(ngModel)]=\"potentialCoacheeEmail\">\n      <select [(ngModel)]=\"selectedPlan\"\n              [ngModelOptions]=\"{standalone: true}\"\n              name=\"plan_selector\"\n              class=\"browser-default\">\n        <option value=\"{{selectedPlan}}\" disabled selected>Sélectionnez un plan</option>\n        <option *ngFor=\"let plan of plans | async\" [ngValue]=\"plan\">\n          {{ plan.sessions_count }} séances\n        </option>\n      </select>\n    </div>\n    <div class=\"action-modal-footer\">\n      <button class=\"btn-basic btn-plain btn-small\" (click)=\"cancelAddPotentialCoachee()\">Annuler</button>\n      <button class=\"btn-basic btn-blue btn-plain btn-small\" (click)=\"validateAddPotentialCoachee()\"\n              [disabled]=\"!potentialCoacheeEmail\">Ajouter\n      </button>\n    </div>\n  </div>\n</div>\n"
+module.exports = "<h4 class=\"text-right welcome-message\">Bonjour {{(user | async)?.display_name}},<br>\n  Le taux total d'utilisation de vos collaborateurs est de <span class=\"blue-text\">{{(rhUsageRate | async)?.usage_rate}}%</span>\n</h4>\n<p class=\"text-right\">\n  <span class=\"blue-text\">Cliquez</span> ici pour ajouter un collaborateur\n  <a class=\"btn-floating btn-large waves-effect waves-light add-meeting-btn\"\n     (click)=\"addPotentialCoacheeModalVisibility(true)\">\n    <i class=\"material-icons\">add</i>\n  </a>\n</p>\n\n\n<div class=\"row\">\n  <h4 class=\"col-lg-12 black-text\">Collaborateurs</h4>\n  <div class=\"card collection col-lg-12\">\n\n    <div *ngIf=\"hasCollaborators\">\n      <div class=\"collection-item\" *ngFor=\"let coachee of coachees | async\">\n        <rb-meeting-item-rh [coachee]=\"coachee\"\n                            [potentialCoachee]=\"null\"\n                            (onUpdateObjectiveBtnClick)=\"startAddNewObjectiveFlow($event)\">\n        </rb-meeting-item-rh>\n      </div>\n    </div>\n\n    <div *ngIf=\"!hasCollaborators\" class=\"collection-item text-center\">\n      <h5 class=\"no-meeting\">Vos collaborateurs apparaîtront ici</h5>\n    </div>\n\n  </div><!--end card-->\n</div><!--end row-->\n\n<div class=\"row\">\n  <h4 class=\"col-lg-12 black-text\">Collaborateurs invités en attente</h4>\n  <div class=\"card collection col-lg-12\">\n\n    <div *ngIf=\"hasPotentialCollaborators\">\n      <div class=\"collection-item\" *ngFor=\"let potentialCoachee of potentialCoachees | async\">\n        <rb-meeting-item-rh [potentialCoachee]=\"potentialCoachee\"\n                            [coachee]=\"null\">\n        </rb-meeting-item-rh>\n      </div>\n    </div>\n\n    <div *ngIf=\"!hasPotentialCollaborators\" class=\"collection-item text-center\">\n      <h5 class=\"no-meeting\">Vos collaborateurs en attente de validation apparaîtront ici</h5>\n    </div>\n\n  </div><!--end card-->\n</div><!--end row-->\n\n<!-- Modal RH add Coachee -->\n<div id=\"add_potential_coachee_modal\" class=\"modal\">\n  <div class=\"action-modal-content\">\n    <div class=\"action-modal-message\">\n      <label>Veuillez saisir l'adresse mail du collaborateur. Un mail lui sera envoyé pour finaliser son\n        inscription.</label>\n      <input type=\"email\" placeholder=\"Email\" id=\"potential_mail\" [(ngModel)]=\"potentialCoacheeEmail\">\n      <select [(ngModel)]=\"selectedPlan\"\n              [ngModelOptions]=\"{standalone: true}\"\n              name=\"plan_selector\"\n              class=\"browser-default\">\n        <option value=\"{{selectedPlan}}\" disabled selected>Sélectionnez un plan</option>\n        <option *ngFor=\"let plan of plans | async\" [ngValue]=\"plan\">\n          {{ plan.sessions_count }} séances\n        </option>\n      </select>\n    </div>\n    <div class=\"action-modal-footer\">\n      <button class=\"btn-basic btn-plain btn-small\" (click)=\"cancelAddPotentialCoachee()\">Annuler</button>\n      <button class=\"btn-basic btn-blue btn-plain btn-small\" (click)=\"validateAddPotentialCoachee()\"\n              [disabled]=\"!potentialCoacheeEmail\">Ajouter\n      </button>\n    </div>\n  </div>\n</div>\n\n<!-- Modal RH add new objective to Coachee -->\n<div id=\"add_new_objective_modal\" class=\"modal\">\n  <div class=\"action-modal-content\">\n    <div class=\"action-modal-message\">\n      <label>Définissez un objectif</label>\n      <input type=\"text\" placeholder=\"Objectif\" id=\"\" [(ngModel)]=\"coacheeNewObjective\">\n    </div>\n    <div class=\"action-modal-footer\">\n      <button class=\"btn-basic btn-plain btn-small\" (click)=\"cancelAddNewObjectiveModal()\">Annuler</button>\n      <button class=\"btn-basic btn-blue btn-plain btn-small\" (click)=\"validateAddNewObjectiveModal()\"\n              [disabled]=\"!coacheeNewObjective\">Ajouter\n      </button>\n    </div>\n  </div>\n</div>\n"
 
 /***/ }),
 
