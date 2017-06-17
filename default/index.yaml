@@ -10,17 +10,17 @@ indexes:
 # automatically uploaded to the admin console when you next deploy
 # your application using appcfg.py.
 
-- kind: Answer
+- kind: Coachee_objective
   ancestor: yes
   properties:
-  - name: Score
-    direction: desc
-  - name: CTime
-    direction: desc
+  - name: Date
 
-- kind: Question
+- kind: MeetingCoach
+  ancestor: yes
   properties:
-  - name: AnswersCount
-    direction: desc
-  - name: CTime
-    direction: desc
+  - name: CreatedDate
+
+- kind: MeetingCoachee
+  properties:
+  - name: MeetingCoachKey
+  - name: CreatedDate

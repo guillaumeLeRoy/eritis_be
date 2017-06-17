@@ -6,6 +6,7 @@ import (
 	"google.golang.org/appengine/log"
 	"eritis_be/pkg/model"
 	"eritis_be/pkg/response"
+	"strings"
 )
 
 func HandleCron(w http.ResponseWriter, r *http.Request) {
@@ -14,9 +15,20 @@ func HandleCron(w http.ResponseWriter, r *http.Request) {
 
 	switch r.Method {
 	case "GET":
-		//TODO now we only have one cron
-		handleRefreshAvailableSessionsCount(w, r)// GET /api/v1/cron/refresh_available_sessions
-		return
+
+		// refresh count of available sessions
+		if ok := strings.Contains(r.URL.Path, "refresh_available_sessions"); ok {
+			handleRefreshAvailableSessionsCount(w, r)// GET /api/v1/crons/refresh_available_sessions
+			return
+		}
+
+		// notify of an imminent session
+		if ok := strings.Contains(r.URL.Path, "notif_imminent_sessions"); ok {
+			handleNotifyImminentSessions(w, r)// GET /api/v1/crons/notif_imminent_sessions
+			return
+		}
+
+		http.NotFound(w, r)
 	default:
 		http.NotFound(w, r)
 	}
@@ -27,7 +39,6 @@ func handleRefreshAvailableSessionsCount(w http.ResponseWriter, r *http.Request)
 	ctx := appengine.NewContext(r)
 
 	log.Debugf(ctx, "handleRefreshAvailableSessionsCount")
-
 
 	//get all coachees
 	coachees, err := model.GetAllCoachees(ctx)
@@ -43,6 +54,35 @@ func handleRefreshAvailableSessionsCount(w http.ResponseWriter, r *http.Request)
 			response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
 			return
 		}
+	}
+
+	//no response but status OK
+	response.Respond(ctx, w, r, nil, http.StatusOK)
+}
+
+// send an email and notif when a meeting is about to happen
+func handleNotifyImminentSessions(w http.ResponseWriter, r *http.Request) {
+	ctx := appengine.NewContext(r)
+
+	log.Debugf(ctx, "handleNotifyImminentSessions")
+
+	meetings, err := model.GetAllOpenMeetingsAboutToHappen(ctx)
+	if err != nil {
+		response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
+		return
+	}
+
+	//send emails
+	for _, meeting := range meetings {
+		//load meeting
+		meetingAPI, err := meeting.ConvertToAPIMeeting(ctx)
+		if err != nil {
+			continue
+		}
+		//send email to coachee
+		SendImminentMeeting(ctx, meetingAPI.Coachee.Email)
+		// send email to coach
+		SendImminentMeeting(ctx, meetingAPI.Coach.Email)
 	}
 
 	//no response but status OK

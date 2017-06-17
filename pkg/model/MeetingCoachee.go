@@ -4,6 +4,7 @@ import (
 	"google.golang.org/appengine/datastore"
 	"golang.org/x/net/context"
 	"google.golang.org/appengine/log"
+	"time"
 )
 
 const MEETING_COACHEE_ENTITY string = "MeetingCoachee"
@@ -14,17 +15,32 @@ type MeetingCoachee struct {
 	MeetingCoachKey *datastore.Key `json:"-"`
 	AgreedTime      *datastore.Key `json:"agreed_date"`
 	IsOpen          bool `json:"isOpen"`
+	CreatedDate     time.Time `json:"created_date"`
 }
 
 /**
-Visual representation of a meeting
+    Visual representation of a meeting
  */
-type ApiMeeting struct {
-	Key        *datastore.Key `json:"id" datastore:"-"`
-	AgreedTime *MeetingTime `json:"agreed_date"`
-	Coach      *CoachAPI `json:"coach"`
-	Coachee    *APICoachee `json:"coachee"`
-	IsOpen     bool `json:"isOpen"`
+type ApiMeetingCoachee struct {
+	Key         *datastore.Key `json:"id" datastore:"-"`
+	AgreedTime  *MeetingTime `json:"agreed_date"`
+	Coach       *CoachAPI `json:"coach"`
+	Coachee     *APICoachee `json:"coachee"`
+	IsOpen      bool `json:"isOpen"`
+	CreatedDate time.Time `json:"created_date"`
+}
+
+func toAPIMeetingCoachee(meeting MeetingCoachee, agreedTime *MeetingTime, coach *CoachAPI, coachee *APICoachee) ApiMeetingCoachee {
+	var apiMeetingCoachee ApiMeetingCoachee
+	apiMeetingCoachee.Key = meeting.Key
+	apiMeetingCoachee.IsOpen = meeting.IsOpen
+	apiMeetingCoachee.CreatedDate = meeting.CreatedDate
+
+	apiMeetingCoachee.AgreedTime = agreedTime
+	apiMeetingCoachee.Coach = coach
+	apiMeetingCoachee.Coachee = coachee
+
+	return apiMeetingCoachee
 }
 
 func CreateMeetingCoachee(ctx context.Context, coacheeKey *datastore.Key) (*MeetingCoachee, error) {
@@ -35,6 +51,7 @@ func CreateMeetingCoachee(ctx context.Context, coacheeKey *datastore.Key) (*Meet
 
 	//meeting is open
 	meeting.IsOpen = true
+	meeting.CreatedDate = time.Now()
 
 	err := meeting.Update(ctx)
 	if err != nil {
@@ -55,7 +72,7 @@ func (m *MeetingCoachee) Update(ctx context.Context) error {
 }
 
 func GetMeeting(ctx context.Context, meetingCoacheeKey *datastore.Key) (*MeetingCoachee, error) {
-	log.Debugf(ctx, "GetAPIMeeting for key %s", meetingCoacheeKey)
+	log.Debugf(ctx, "GetMeeting for key %s", meetingCoacheeKey)
 
 	var meeting MeetingCoachee
 	err := datastore.Get(ctx, meetingCoacheeKey, &meeting)
@@ -80,12 +97,13 @@ func (m *MeetingCoachee) Delete(ctx context.Context) error {
 }
 
 //convert given MeetingCoachee into a APImeeting
-func (m *MeetingCoachee)ConvertToAPIMeeting(ctx context.Context) (*ApiMeeting, error) {
+func (m *MeetingCoachee) ConvertToAPIMeeting(ctx context.Context) (*ApiMeetingCoachee, error) {
 	log.Debugf(ctx, "convertToAPIMeeting", m)
 
-	var ApiMeeting ApiMeeting
-	ApiMeeting.Key = m.Key
-	ApiMeeting.IsOpen = m.IsOpen
+	var apiMeetingCoachee ApiMeetingCoachee
+	apiMeetingCoachee.Key = m.Key
+	apiMeetingCoachee.IsOpen = m.IsOpen
+	apiMeetingCoachee.CreatedDate = m.CreatedDate
 
 	//get agreed meeting time
 	if m.AgreedTime != nil {
@@ -93,7 +111,7 @@ func (m *MeetingCoachee)ConvertToAPIMeeting(ctx context.Context) (*ApiMeeting, e
 		if err != nil {
 			return nil, err
 		}
-		ApiMeeting.AgreedTime = time
+		apiMeetingCoachee.AgreedTime = time
 	}
 
 	//get coach if any
@@ -102,17 +120,17 @@ func (m *MeetingCoachee)ConvertToAPIMeeting(ctx context.Context) (*ApiMeeting, e
 		if err != nil {
 			return nil, err
 		}
-		ApiMeeting.Coach = coach.ToCoachAPI()
+		apiMeetingCoachee.Coach = coach.ToCoachAPI()
 	}
 
 	//get coachee
-	coachee, err := GetAPICoachee(ctx, ApiMeeting.Key.Parent())
+	coachee, err := GetAPICoachee(ctx, apiMeetingCoachee.Key.Parent())
 	if err != nil {
 		return nil, err
 	}
-	ApiMeeting.Coachee = coachee
+	apiMeetingCoachee.Coachee = coachee
 
-	return &ApiMeeting, nil
+	return &apiMeetingCoachee, nil
 }
 
 func (m *MeetingCoachee) SetMeetingTime(ctx context.Context, meetingTimeKey *datastore.Key) error {
@@ -169,7 +187,7 @@ func (m *MeetingCoachee) setMeetingCoach(ctx context.Context, meetingCoach *Meet
 	return nil
 }
 
-func (m *MeetingCoachee)removeMeetingCoach(ctx context.Context) error {
+func (m *MeetingCoachee) removeMeetingCoach(ctx context.Context) error {
 	log.Debugf(ctx, "removeMeetingCoach", m)
 
 	//remove key
@@ -183,7 +201,7 @@ func (m *MeetingCoachee)removeMeetingCoach(ctx context.Context) error {
 	return nil
 }
 
-func GetMeetingsForCoachee(ctx context.Context, coacheeKey *datastore.Key) ([]*ApiMeeting, error) {
+func GetMeetingsForCoachee(ctx context.Context, coacheeKey *datastore.Key) ([]*ApiMeetingCoachee, error) {
 	log.Debugf(ctx, "GetMeetingsForCoachee, coacheeKey %s", coacheeKey)
 
 	var meetings []*MeetingCoachee
@@ -194,7 +212,7 @@ func GetMeetingsForCoachee(ctx context.Context, coacheeKey *datastore.Key) ([]*A
 
 	log.Debugf(ctx, "GetMeetingsForCoachee, size %s", len(meetings))
 
-	var apiMeetings []*ApiMeeting = make([]*ApiMeeting, len(meetings))
+	var apiMeetings []*ApiMeetingCoachee = make([]*ApiMeetingCoachee, len(meetings))
 	for i, meeting := range meetings {
 		meeting.Key = keys[i]
 		apiMeetings[i], err = meeting.ConvertToAPIMeeting(ctx)
@@ -208,46 +226,79 @@ func GetMeetingsForCoachee(ctx context.Context, coacheeKey *datastore.Key) ([]*A
 	return apiMeetings, nil
 }
 
-func GetMeetingsWithNoCoach(ctx context.Context) ([]*MeetingCoachee, error) {
+// get meetings with No coach associated but correctly defined ( objective, context, and a potential date )
+// sort result by date
+func GetAvailableMeetings(ctx context.Context) ([]*MeetingCoachee, error) {
 	var meetings []*MeetingCoachee
-	keys, err := datastore.NewQuery(MEETING_COACHEE_ENTITY).Filter("MeetingCoachKey = ", nil).GetAll(ctx, &meetings)
+	keys, err := datastore.NewQuery(MEETING_COACHEE_ENTITY).Filter("MeetingCoachKey = ", nil).Order("CreatedDate").GetAll(ctx, &meetings)
 	if err != nil {
 		return nil, err
 	}
 
-	log.Debugf(ctx, "GetMeetingsWithNoCoach, size %s", len(meetings))
-
+	log.Debugf(ctx, "GetAvailableMeetings, size %s", len(meetings))
+	availableMeetings := make([]*MeetingCoachee, 0)
 	for i, meeting := range meetings {
 		meeting.Key = keys[i]
+
+		// only keep meetings where potential times are defined
+		times, err := GetMeetingPotentialTimes(ctx, meeting.Key)
+		if err != nil {
+			continue
+		}
+
+		if len(times) > 0 {
+			availableMeetings = append(availableMeetings, meeting)
+		}
 	}
 
-	//log.Debugf(ctx, "GetMeetingsWithNoCoach, res %s", meetings)
+	log.Debugf(ctx, "GetAvailableMeetings, res %s", meetings)
 
-	return meetings, nil
+	return availableMeetings, nil
 }
 
-//func associateCoachWithMeetings(ctx context.Context, coacheeKey *datastore.Key, coachKey *datastore.Key) error {
-//	log.Debugf(ctx, "associateCoachWithMeeting, coacheeKey %s, coach %s", coacheeKey, coachKey)
-//
-//	//get meetings for this coachee
-//	var meetings []*MeetingCoachee
-//	keys, err := datastore.NewQuery(MEETING_COACHEE_ENTITY).Ancestor(coacheeKey).GetAll(ctx, &meetings)
-//	if err != nil {
-//		return err
-//	}
-//
-//	//where NO coach is associated to a meeting, set a coach
-//	for i, meeting := range meetings {
-//		meeting.Key = keys[i]
-//
-//		if meeting.MeetingCoachKey == nil {
-//			log.Debugf(ctx, "create Meeting coach")
-//			err = Associate(ctx, coachKey, meeting)
-//			if err != nil {
-//				return err
-//			}
-//		}
-//	}
-//
-//	return nil
-//}
+func GetAllOpenMeetingsAboutToHappen(ctx context.Context) ([]*MeetingCoachee, error) {
+	log.Debugf(ctx, "GetAllOpenMeetingsAboutToHappen")
+
+	var meetings []*MeetingCoachee
+	keys, err := datastore.NewQuery(MEETING_COACHEE_ENTITY).Filter("IsOpen = ", true).GetAll(ctx, &meetings)
+	if err != nil {
+		return nil, err
+	}
+
+	log.Debugf(ctx, "GetAllOpenMeetingsAboutToHappen, size %s", len(meetings))
+
+	now := time.Now()
+
+	var happeningMeetings []*MeetingCoachee
+	for i, meeting := range meetings {
+		meeting.Key = keys[i]
+
+		// check is they are about to happen
+		t, err := GetMeetingTime(ctx, meeting.AgreedTime)
+		if err != nil {
+			log.Debugf(ctx, "GetAllOpenMeetingsAboutToHappen, couldn't get meeting time")
+			continue
+		}
+		//returns startDate - now
+		duration := t.StartDate.Sub(now)
+
+		//should be > 0 if meeting is in the future
+		if duration < 0 {
+			log.Debugf(ctx, "GetAllOpenMeetingsAboutToHappen, meeting already passed") //TODO report this
+			continue
+		}
+
+		// get minutes left
+		if duration.Hours() > 0 {
+			log.Debugf(ctx, "GetAllOpenMeetingsAboutToHappen, meeting in a few hours")
+			continue
+		}
+
+		if duration.Minutes() <= 10 {
+			//send an email
+			happeningMeetings[0] = meeting
+		}
+	}
+
+	return happeningMeetings, nil
+}

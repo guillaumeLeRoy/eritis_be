@@ -11,7 +11,6 @@ import (
 
 const COACHEE_ENTITY string = "Coachee"
 
-
 /* Internal struct */
 type Coachee struct {
 	Key                     *datastore.Key `json:"-" datastore:"-"`
@@ -19,6 +18,7 @@ type Coachee struct {
 	Email                   string `json:"email"`
 	DisplayName             string `json:"display_name"`
 	AvatarURL               string`json:"avatar_url"`
+	CoacheeObjective        *datastore.Key `json:"_"` // coachee's objective set by an HR
 	StartDate               time.Time `json:"start_date"`
 	AvailableSessionsCount  int `json:"available_sessions_count"`
 	UpdateSessionsCountDate time.Time `json:"update_sessions_count_date"`
@@ -37,9 +37,10 @@ type APICoachee struct {
 	UpdateSessionsCountDate time.Time `json:"update_sessions_count_date"`
 	AssociatedRh            *Rh `json:"associatedRh"`
 	Plan                    *Plan `json:"plan"`
+	CoacheeObjective        *CoacheeObjective `json:"last_objective"`
 }
 
-func (c *Coachee) ToCoacheeAPI(rh *Rh, plan *Plan) *APICoachee {
+func (c *Coachee) ToCoacheeAPI(rh *Rh, plan *Plan, coacheeObjective *CoacheeObjective) *APICoachee {
 	var res APICoachee
 	res.Id = c.Key.Encode()
 	res.Email = c.Email
@@ -50,23 +51,10 @@ func (c *Coachee) ToCoacheeAPI(rh *Rh, plan *Plan) *APICoachee {
 	res.UpdateSessionsCountDate = c.UpdateSessionsCountDate
 	res.AssociatedRh = rh
 	res.Plan = plan
+	res.CoacheeObjective = coacheeObjective
 
 	return &res
 }
-
-//func (c *Coachee) getSelectedCoach(ctx context.Context) (*Coach, error) {
-//	log.Debugf(ctx, "getSelectedCoach")
-//
-//	var coach *Coach
-//	if c.SelectedCoach != nil {
-//		var err error
-//		coach, err = GetCoach(ctx, c.SelectedCoach)
-//		if err != nil {
-//			return nil, err
-//		}
-//	}
-//	return coach, nil
-//}
 
 // get all coachees for this RH
 func GetCoacheesForRh(ctx context.Context, rhKey *datastore.Key) ([]*Coachee, error) {
@@ -118,13 +106,7 @@ func GetAPICoachee(ctx context.Context, key *datastore.Key) (*APICoachee, error)
 	return apiCoachee, nil
 }
 
-func (c *Coachee)GetAPICoachee(ctx context.Context) (*APICoachee, error) {
-
-	////now get selected Coach if any
-	//coach, err := c.getSelectedCoach(ctx)
-	//if err != nil {
-	//	return nil, err
-	//}
+func (c *Coachee) GetAPICoachee(ctx context.Context) (*APICoachee, error) {
 
 	//get the Rh
 	rh, err := GetRh(ctx, c.AssociatedRh)
@@ -135,14 +117,16 @@ func (c *Coachee)GetAPICoachee(ctx context.Context) (*APICoachee, error) {
 	//get the plan
 	plan := CreatePlanFromId(c.PlanId)
 
+	// get objective
+	objective, err := GetObjectiveForCoachee(ctx, c.Key)
+
 	//convert to API object
-	var apiCoachee = c.ToCoacheeAPI(rh, plan)
+	var apiCoachee = c.ToCoacheeAPI(rh, plan, objective)
 
 	log.Debugf(ctx, "GetAPICoachee, response %s", apiCoachee)
 
 	return apiCoachee, nil
 }
-
 
 //get all coachees
 func GetAllCoachees(ctx context.Context) ([]*Coachee, error) {
@@ -260,7 +244,7 @@ func GetCoacheeFromFirebaseId(ctx context.Context, fbId string) (*APICoachee, er
 	return apiCoachee, nil
 }
 
-func (c *Coachee)Update(ctx context.Context) (error) {
+func (c *Coachee) Update(ctx context.Context) (error) {
 	log.Debugf(ctx, "update coachee, email : %s, key : %s ", c.Email, c.Key)
 
 	key, err := datastore.Put(ctx, c.Key, c)
@@ -271,35 +255,12 @@ func (c *Coachee)Update(ctx context.Context) (error) {
 
 	return nil
 }
-//
-///**
-// Associate the given coach with this Coachee
-// Update coachee's meetings with the selected coach.
-// */
-//func (c *Coachee) UpdateSelectedCoach(ctx context.Context, coach *Coach) (error) {
-//	log.Debugf(ctx, "UpdateSelectedCoach : %s", coach)
-//
-//	//associate the coachee with the given coach
-//	c.SelectedCoach = coach.Key
-//	err := c.Update(ctx)
-//	if err != nil {
-//		return err
-//	}
-//
-//	//update meetings with selected coach
-//	err = associateCoachWithMeetings(ctx, c.Key, coach.Key)
-//	if err != nil {
-//		return err
-//	}
-//
-//	return nil
-//}
 
 func (c *Coachee) RefreshAvailableSessionsCount(ctx context.Context) (error) {
 	plan := CreatePlanFromId(c.PlanId)
 
 	//check if we can refresh
-	if (canResetAvailableSessionsCount(ctx, c)) {
+	if canResetAvailableSessionsCount(ctx, c) {
 		//set value
 		c.AvailableSessionsCount = plan.SessionsCount
 		//refresh date

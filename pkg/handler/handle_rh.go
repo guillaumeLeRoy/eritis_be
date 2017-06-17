@@ -17,24 +17,77 @@ func HandlerRH(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case "POST":
 
-		//try to detect a rh
+		/**
+		 * Add a new objective for this coachee
+		 */
+		if ok := strings.Contains(r.URL.Path, "objective"); ok {
+			// update coachee's objective set by an HR
+			params := response.PathParams(ctx, r, "/api/v1/rhs/:uidRH/coachees/:uidCoachee/objective")
+			//get uid param
+			uidRH, ok := params[":uidRH"]
+			uidCoachee, ok := params[":uidCoachee"]
+			if ok {
+				handleAddObjectiveToCoachee(w, r, uidRH, uidCoachee) // PUT /api/v1/rhs/:uidRH/coachees/:uidCoachee/objective
+				return
+			}
+		}
+
+		/**
+		 * Create a new Rh account
+		 */
 		if ok := strings.Contains(r.URL.Path, "rh"); ok {
 			handleCreateRh(w, r)
 			return
 		}
+
+		http.NotFound(w, r)
+
+	case "PUT":
+
+		//update "read" status for all Notifications
+		contains := strings.Contains(r.URL.Path, "notifications/read")
+		if contains {
+			params := response.PathParams(ctx, r, "/api/v1/rhs/:uid/notifications/read")
+			uid, ok := params[":uid"]
+			if ok {
+				updateAllNotificationToRead(w, r, uid)
+				return
+			}
+		}
+
 		http.NotFound(w, r)
 
 	case "GET":
+
+		/**
+		 GET all notification for a specific rh
+		 */
+		contains := strings.Contains(r.URL.Path, "notifications")
+		if contains {
+			log.Debugf(ctx, "handle rhs, notifications")
+
+			params := response.PathParams(ctx, r, "/api/v1/rhs/:uid/notifications")
+			//verify url contains coach
+			if _, ok := params[":uid"]; ok {
+				//get uid param
+				uid, ok := params[":uid"]
+				if ok {
+					getAllNotificationsForRhs(w, r, uid)// GET /api/v1/rhs/:uid/notifications
+					return
+				}
+			}
+		}
+
 		/**
 		 GET all coachee for a specific RH
 		 */
-		contains := strings.Contains(r.URL.Path, "coachees")
+		contains = strings.Contains(r.URL.Path, "coachees")
 		if contains {
 			params := response.PathParams(ctx, r, "/api/v1/rhs/:uid/coachees")
 			//get uid param
 			uid, ok := params[":uid"]
 			if ok {
-				handleGetAllCoacheesForRH(w, r, uid)// GET /api/v1/rhs/:uid/coachees
+				handleGetAllCoacheesForRH(w, r, uid) // GET /api/v1/rhs/:uid/coachees
 				return
 			}
 		}
@@ -48,7 +101,7 @@ func HandlerRH(w http.ResponseWriter, r *http.Request) {
 			//get uid param
 			uid, ok := params[":uid"]
 			if ok {
-				handleGetAllPotentialsForRH(w, r, uid)// GET /api/v1/rhs/:uid/potentials
+				handleGetAllPotentialsForRH(w, r, uid) // GET /api/v1/rhs/:uid/potentials
 				return
 			}
 		}
@@ -62,13 +115,12 @@ func HandlerRH(w http.ResponseWriter, r *http.Request) {
 			//get uid param
 			uid, ok := params[":uid"]
 			if ok {
-				handleGetRHusageRate(w, r, uid)// GET /api/v1/rhs/:uid/usage
+				handleGetRHusageRate(w, r, uid) // GET /api/v1/rhs/:uid/usage
 				return
 			}
 		}
 
 		http.NotFound(w, r)
-
 	}
 }
 
@@ -228,14 +280,50 @@ func handleCreateRh(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//send welcome email
-	sendWelcomeEmailToRh(ctx, rh)//TODO could be on a thread
+	sendWelcomeEmailToRh(ctx, rh) //TODO could be on a thread
 
 	//convert into API object
 	api := rh.ToRhAPI()
 
 	//construct response
-	var res = &model.Login{Rh:api}
+	var res = &model.Login{Rh: api}
 	response.Respond(ctx, w, r, res, http.StatusCreated)
 }
 
+func handleAddObjectiveToCoachee(w http.ResponseWriter, r *http.Request, uidRH string, uidCoachee string) {
+	ctx := appengine.NewContext(r)
+	log.Debugf(ctx, "handleAddObjectiveToCoachee")
 
+	var body struct {
+		Objective string `json:"objective"`
+	}
+
+	err := response.Decode(r, &body)
+	if err != nil {
+		response.RespondErr(ctx, w, r, err, http.StatusBadRequest)
+		return
+	}
+
+	log.Debugf(ctx, "handleAddObjectiveToCoachee, body %s", body)
+
+	rhKey, err := datastore.DecodeKey(uidRH)
+	if err != nil {
+		response.RespondErr(ctx, w, r, err, http.StatusBadRequest)
+		return
+	}
+
+	coacheeKey, err := datastore.DecodeKey(uidCoachee)
+	if err != nil {
+		response.RespondErr(ctx, w, r, err, http.StatusBadRequest)
+		return
+	}
+
+	objective, err := model.CreateCoacheeObjective(ctx, coacheeKey, rhKey, body.Objective)
+	if err != nil {
+		response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
+		return
+	}
+
+	response.Respond(ctx, w, r, objective, http.StatusCreated)
+
+}

@@ -60,10 +60,10 @@ func SendEmailToGivenEmail(ctx context.Context, emailAddress string, subject str
 	addrs := []string{emailAddress}
 
 	msg := &mail.Message{
-		Sender:  CONTACT_ERITIS,
-		To:      addrs,
-		Subject: subject,
-		HTMLBody:message,
+		Sender:   CONTACT_ERITIS,
+		To:       addrs,
+		Subject:  subject,
+		HTMLBody: message,
 	}
 
 	if err := mail.Send(ctx, msg); err != nil {
@@ -77,11 +77,31 @@ func SendEmailToGivenEmail(ctx context.Context, emailAddress string, subject str
 type InviteType int
 
 const (
-	INVITE_COACH InviteType = 1 + iota
+	INVITE_COACH   InviteType = 1 + iota
 	INVITE_COACHEE
 	INVITE_RH
 )
 
+func GetSiteUrl(ctx context.Context) (string, error) {
+
+	appId := appengine.AppID(ctx)
+	log.Debugf(ctx, "createInviteLink, appId %s", appId)
+
+	var baseUrl string
+	if appengine.IsDevAppServer() {
+		baseUrl = "http://localhost:4200"
+	} else if strings.EqualFold(LIVE_ENV_PROJECT_ID, appId) {
+		baseUrl = "https://eritis.com"
+	} else if strings.EqualFold(DEV_ENV_PROJECT_ID, appId) {
+		baseUrl = "https://eritis-be-dev.appspot.com"
+	} else if strings.EqualFold(GLR_ENV_PROJECT_ID, appId) {
+		baseUrl = "https://eritis-be-glr.appspot.com"
+	} else {
+		return "", errors.New("createInviteLink, AppId doesn't match any environment")
+	}
+
+	return baseUrl, nil
+}
 
 //create a link to invite a Coachee. it generates a token to hide coachee's email in the link
 func CreateInviteLink(ctx context.Context, emailAddress string, invType InviteType) (string, error) {
@@ -104,20 +124,9 @@ func CreateInviteLink(ctx context.Context, emailAddress string, invType InviteTy
 
 	log.Debugf(ctx, "createInviteLink, final baseToken %s", baseToken)
 
-	appId := appengine.AppID(ctx)
-	log.Debugf(ctx, "createInviteLink, appId %s", appId)
-
-	var baseUrl string
-	if appengine.IsDevAppServer() {
-		baseUrl = "http://localhost:4200"
-	} else if strings.EqualFold(LIVE_ENV_PROJECT_ID, appId) {
-		baseUrl = "https://eritis.com"
-	} else if strings.EqualFold(DEV_ENV_PROJECT_ID, appId) {
-		baseUrl = "https://eritis-be-dev.appspot.com"
-	} else if strings.EqualFold(GLR_ENV_PROJECT_ID, appId) {
-		baseUrl = "https://eritis-be-glr.appspot.com"
-	} else {
-		return "", errors.New("createInviteLink, AppId doesn't match any environment")
+	baseUrl, err := GetSiteUrl(ctx)
+	if err != nil {
+		return "", err
 	}
 
 	var redirect string
@@ -173,7 +182,7 @@ func encrypt(key, text []byte) ([]byte, error) {
 		return nil, err
 	}
 	b := base64.StdEncoding.EncodeToString(text)
-	ciphertext := make([]byte, aes.BlockSize + len(b))
+	ciphertext := make([]byte, aes.BlockSize+len(b))
 	iv := ciphertext[:aes.BlockSize]
 	if _, err := io.ReadFull(rand.Reader, iv); err != nil {
 		return nil, err
