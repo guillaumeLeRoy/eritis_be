@@ -20,7 +20,19 @@ indexes:
   properties:
   - name: CreatedDate
 
+- kind: MeetingCoach
+  ancestor: yes
+  properties:
+  - name: CreatedDate
+    direction: desc
+
 - kind: MeetingCoachee
   properties:
   - name: MeetingCoachKey
   - name: CreatedDate
+
+- kind: MeetingCoachee
+  ancestor: yes
+  properties:
+  - name: CreatedDate
+    direction: desc

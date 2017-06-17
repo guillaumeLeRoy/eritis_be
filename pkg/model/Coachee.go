@@ -27,7 +27,7 @@ type Coachee struct {
 }
 
 /* API struct */
-type APICoachee struct {
+type CoacheeAPI struct {
 	Id                      string `json:"id"`
 	Email                   string `json:"email"`
 	DisplayName             string `json:"display_name"`
@@ -40,8 +40,8 @@ type APICoachee struct {
 	CoacheeObjective        *CoacheeObjective `json:"last_objective"`
 }
 
-func (c *Coachee) ToCoacheeAPI(rh *Rh, plan *Plan, coacheeObjective *CoacheeObjective) *APICoachee {
-	var res APICoachee
+func (c *Coachee) ToCoacheeAPI(rh *Rh, plan *Plan, coacheeObjective *CoacheeObjective) *CoacheeAPI {
+	var res CoacheeAPI
 	res.Id = c.Key.Encode()
 	res.Email = c.Email
 	res.DisplayName = c.DisplayName
@@ -86,7 +86,7 @@ func GetCoachee(ctx context.Context, key *datastore.Key) (*Coachee, error) {
 }
 
 //get Coachee for the given user id
-func GetAPICoachee(ctx context.Context, key *datastore.Key) (*APICoachee, error) {
+func GetAPICoachee(ctx context.Context, key *datastore.Key) (*CoacheeAPI, error) {
 	log.Debugf(ctx, "getCoachee")
 
 	//get from Datastore
@@ -106,7 +106,7 @@ func GetAPICoachee(ctx context.Context, key *datastore.Key) (*APICoachee, error)
 	return apiCoachee, nil
 }
 
-func (c *Coachee) GetAPICoachee(ctx context.Context) (*APICoachee, error) {
+func (c *Coachee) GetAPICoachee(ctx context.Context) (*CoacheeAPI, error) {
 
 	//get the Rh
 	rh, err := GetRh(ctx, c.AssociatedRh)
@@ -147,7 +147,7 @@ func GetAllCoachees(ctx context.Context) ([]*Coachee, error) {
 }
 
 //get all API coachees
-func GetAllAPICoachees(ctx context.Context) ([]*APICoachee, error) {
+func GetAllAPICoachees(ctx context.Context) ([]*CoacheeAPI, error) {
 	log.Debugf(ctx, "GetAllAPICoachees")
 
 	coachees, err := GetAllCoachees(ctx)
@@ -155,7 +155,7 @@ func GetAllAPICoachees(ctx context.Context) ([]*APICoachee, error) {
 		return nil, err
 	}
 
-	var response []*APICoachee = make([]*APICoachee, len(coachees))
+	var response []*CoacheeAPI = make([]*CoacheeAPI, len(coachees))
 	for i, coachee := range coachees {
 		log.Debugf(ctx, "GetAllAPICoachees, coachee %s, index %s", coachee, i)
 
@@ -216,7 +216,7 @@ func createCoacheeFromFirebaseUser(ctx context.Context, fbUser *FirebaseUser, pl
 	return &coachee, nil
 }
 
-func GetCoacheeFromFirebaseId(ctx context.Context, fbId string) (*APICoachee, error) {
+func GetCoacheeFromFirebaseId(ctx context.Context, fbId string) (*CoacheeAPI, error) {
 	log.Debugf(ctx, "getCoacheeFromFirebaseId id : %s", fbId)
 
 	var coachees []*Coachee

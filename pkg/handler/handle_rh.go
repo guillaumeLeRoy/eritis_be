@@ -161,7 +161,7 @@ func handleGetAllCoacheesForRH(w http.ResponseWriter, r *http.Request, rhId stri
 	log.Debugf(ctx, "handleGetAllCoacheesForRH, convert to API objects")
 
 	//convert to API objects
-	var apiCoachees []*model.APICoachee = make([]*model.APICoachee, len(coachees))
+	var apiCoachees []*model.CoacheeAPI = make([]*model.CoacheeAPI, len(coachees))
 	for i, coachee := range coachees {
 		apiCoachees[i], err = coachee.GetAPICoachee(ctx)
 		if err != nil {

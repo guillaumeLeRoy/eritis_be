@@ -34,16 +34,6 @@ func HandleMeeting(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 
-		/// create new meeting review
-		if ok := strings.Contains(r.URL.Path, "review"); ok {
-			params := response.PathParams(ctx, r, "/api/meeting/:uid/review")
-			uid, ok := params[":uid"]
-			if ok {
-				createReviewForAMeeting(w, r, uid) // POST /api/meeting/:uid/review
-				return
-			}
-		}
-
 		/// create new meeting
 
 		handleCreateMeeting(w, r)
@@ -92,6 +82,16 @@ func HandleMeeting(w http.ResponseWriter, r *http.Request) {
 			uid, ok := params[":uid"]
 			if ok {
 				closeMeeting(w, r, uid) // PUT /api/v1/meetings/:uid/close
+				return
+			}
+		}
+
+		/// update meeting review
+		if ok := strings.Contains(r.URL.Path, "reviews"); ok {
+			params := response.PathParams(ctx, r, "/api/v1/meetings/:uid/reviews")
+			uid, ok := params[":uid"]
+			if ok {
+				createReviewForAMeeting(w, r, uid) // PUT /api/v1/meetings/:uid/reviews
 				return
 			}
 		}
@@ -342,7 +342,7 @@ func getAllMeetingsForCoachee(w http.ResponseWriter, r *http.Request, uid string
 	response.Respond(ctx, w, r, &meetings, http.StatusCreated)
 }
 
-/* Add a review for the given meeting. Only one review can exist for a given type.
+/* Add a review for this meeting. Only one review can exist for a given type.
 */
 func createReviewForAMeeting(w http.ResponseWriter, r *http.Request, meetingId string) {
 	ctx := appengine.NewContext(r)
@@ -355,14 +355,16 @@ func createReviewForAMeeting(w http.ResponseWriter, r *http.Request, meetingId s
 	}
 
 	var review struct {
-		Type    string `json:"type"`
-		Comment string `json:"comment"`
+		Type  string `json:"type"`
+		Value string `json:"value"`
 	}
 	err = response.Decode(r, &review)
 	if err != nil {
 		response.RespondErr(ctx, w, r, err, http.StatusBadRequest)
 		return
 	}
+	log.Debugf(ctx, "createReviewForAMeeting, review : ", review)
+
 
 	//convert
 	reviewType, err := model.ConvertToReviewType(review.Type)
@@ -381,7 +383,7 @@ func createReviewForAMeeting(w http.ResponseWriter, r *http.Request, meetingId s
 	var meetingRev *model.MeetingReview
 	if len(reviews) == 0 {
 		//create review
-		meetingRev, err = model.CreateReview(ctx, meetingKey, review.Comment, reviewType)
+		meetingRev, err = model.CreateReview(ctx, meetingKey, review.Value, reviewType)
 		if err != nil {
 			response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
 			return
@@ -389,11 +391,31 @@ func createReviewForAMeeting(w http.ResponseWriter, r *http.Request, meetingId s
 	} else {
 		//update review
 		//reviews[0] should be safe to access to
-		meetingRev, err = reviews[0].UpdateReview(ctx, reviews[0].Key, review.Comment)
+		meetingRev, err = reviews[0].UpdateReview(ctx, reviews[0].Key, review.Value)
 		if err != nil {
 			response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
 			return
 		}
+	}
+
+	// if review is of type SESSION_RATE then also create a CoachRate
+	if reviewType == model.SESSION_RATE {
+		// get meeting
+		meetingCoachee, err := model.GetMeeting(ctx, meetingKey)
+		if err != nil {
+			response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
+			return
+		}
+		rate, err := strconv.Atoi(review.Value)
+		if err != nil {
+			response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
+			return
+		}
+
+		coachKey := meetingCoachee.MeetingCoachKey.Parent()
+		raterKey := meetingCoachee.Key.Parent()
+
+		model.CreateCoachRate(ctx, coachKey, raterKey, rate)
 	}
 
 	response.Respond(ctx, w, r, meetingRev, http.StatusCreated)
@@ -436,7 +458,8 @@ func closeMeeting(w http.ResponseWriter, r *http.Request, meetingId string) {
 	}
 
 	var review struct {
-		Comment string `json:"comment"`
+		Result  string `json:"result"`
+		Utility string `json:"utility"`
 	}
 	err = response.Decode(r, &review)
 	if err != nil {
@@ -463,13 +486,19 @@ func closeMeeting(w http.ResponseWriter, r *http.Request, meetingId string) {
 		//return err
 		//}
 
-		//create review
-		meetingRev, err := model.CreateReview(ctx, meeting.Key, review.Comment, model.SESSION_REPORT)
+		//create review for result
+		meetingRev, err := model.CreateReview(ctx, meeting.Key, review.Result, model.SESSION_RESULT)
 		if err != nil {
 			return err
 		}
+		log.Debugf(ctx, "closeMeeting, review result created : ", meetingRev)
 
-		log.Debugf(ctx, "closeMeeting, review created : ", meetingRev)
+		//create review
+		meetingRevUtility, err := model.CreateReview(ctx, meeting.Key, review.Utility, model.SESSION_UTILITY)
+		if err != nil {
+			return err
+		}
+		log.Debugf(ctx, "closeMeeting, review utility created : ", meetingRevUtility)
 
 		err = meeting.Close(ctx)
 		if err != nil {

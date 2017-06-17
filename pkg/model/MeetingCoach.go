@@ -84,7 +84,7 @@ func GetMeetingsForCoach(ctx context.Context, coachKey *datastore.Key) ([]*ApiMe
 	log.Debugf(ctx, "GetMeetingsForCoach, key %s", coachKey)
 
 	var meetings []*MeetingCoach
-	keys, err := datastore.NewQuery(MEETING_COACH_ENTITY).Ancestor(coachKey).Order("CreatedDate").GetAll(ctx, &meetings)
+	keys, err := datastore.NewQuery(MEETING_COACH_ENTITY).Ancestor(coachKey).Order("-CreatedDate").GetAll(ctx, &meetings)
 	if err != nil {
 		return nil, err
 	}
