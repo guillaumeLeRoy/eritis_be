@@ -72,7 +72,7 @@ func HandlerRH(w http.ResponseWriter, r *http.Request) {
 				//get uid param
 				uid, ok := params[":uid"]
 				if ok {
-					getAllNotificationsForRhs(w, r, uid)// GET /api/v1/rhs/:uid/notifications
+					getAllNotificationsForRhs(w, r, uid) // GET /api/v1/rhs/:uid/notifications
 					return
 				}
 			}
@@ -120,8 +120,36 @@ func HandlerRH(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 
+		/**
+		* Get HR for uid
+		 */
+		params := response.PathParams(ctx, r, "/api/v1/rhs/:id")
+		userId, ok := params[":id"]
+		if ok {
+			handleGetHrForId(w, r, userId) // GET /api/v1/rhs/ID
+			return
+		}
+
 		http.NotFound(w, r)
 	}
+}
+
+func handleGetHrForId(w http.ResponseWriter, r *http.Request, id string) {
+	ctx := appengine.NewContext(r)
+	log.Debugf(ctx, "handleGetHrForId %s", id)
+
+	key, err := datastore.DecodeKey(id)
+	if err != nil {
+		response.RespondErr(ctx, w, r, err, http.StatusBadRequest)
+		return
+	}
+
+	hr, err := model.GetRh(ctx, key)
+	if err != nil {
+		response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
+		return
+	}
+	response.Respond(ctx, w, r, hr, http.StatusOK)
 }
 
 func handleGetAllRHs(w http.ResponseWriter, r *http.Request) {

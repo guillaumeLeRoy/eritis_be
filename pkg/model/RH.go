@@ -10,27 +10,30 @@ import (
 const RH_ENTITY string = "Rh"
 
 type Rh struct {
-	Key         *datastore.Key `json:"id" datastore:"-"`
-	Email       string `json:"email"`
-	FirebaseId  string `json:"firebase_id"`
-	DisplayName string `json:"display_name"`
-	StartDate   time.Time `json:"start_date"`
-	AvatarURL   string`json:"avatar_url"`
+	Key        *datastore.Key `json:"id" datastore:"-"`
+	Email      string `json:"email"`
+	FirebaseId string `json:"firebase_id"`
+	FirstName  string `json:"firstName"`
+	LastName   string `json:"lastName"`
+	StartDate  time.Time `json:"start_date"`
+	AvatarURL  string`json:"avatar_url"`
 }
 
 type RhAPI struct {
-	Id          string `json:"id"`
-	Email       string `json:"email"`
-	DisplayName string `json:"display_name"`
-	StartDate   time.Time `json:"start_date"`
-	AvatarURL   string`json:"avatar_url"`
+	Id        string `json:"id"`
+	Email     string `json:"email"`
+	FirstName string `json:"firstName"`
+	LastName  string `json:"lastName"`
+	StartDate time.Time `json:"start_date"`
+	AvatarURL string`json:"avatar_url"`
 }
 
 func (rh *Rh) ToRhAPI() *RhAPI {
 	var res RhAPI
 	res.Id = rh.Key.Encode()
 	res.Email = rh.Email
-	res.DisplayName = rh.DisplayName
+	res.FirstName = rh.FirstName
+	res.LastName = rh.LastName
 	res.StartDate = rh.StartDate
 	res.AvatarURL = rh.AvatarURL
 	return &res
@@ -45,7 +48,8 @@ func CreateRhFromFirebaseUser(ctx context.Context, fbUser *FirebaseUser) (*Rh, e
 	//create new user
 	rh.FirebaseId = fbUser.UID
 	rh.Email = fbUser.Email
-	rh.DisplayName = fbUser.Email
+	rh.FirstName = ""
+	rh.LastName = ""
 	rh.StartDate = time.Now()
 	rh.AvatarURL = gravatarURL(fbUser.Email)
 

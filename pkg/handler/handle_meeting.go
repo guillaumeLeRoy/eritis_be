@@ -365,7 +365,6 @@ func createReviewForAMeeting(w http.ResponseWriter, r *http.Request, meetingId s
 	}
 	log.Debugf(ctx, "createReviewForAMeeting, review : ", review)
 
-
 	//convert
 	reviewType, err := model.ConvertToReviewType(review.Type)
 	if err != nil {
@@ -480,12 +479,6 @@ func closeMeeting(w http.ResponseWriter, r *http.Request, meetingId string) {
 
 		log.Debugf(ctx, "closeMeeting, get meeting", meeting)
 
-		//convert
-		// reviewType, err := model.ConvertToReviewType(review.Type)
-		//if err != nil {
-		//return err
-		//}
-
 		//create review for result
 		meetingRev, err := model.CreateReview(ctx, meeting.Key, review.Result, model.SESSION_RESULT)
 		if err != nil {
@@ -513,16 +506,22 @@ func closeMeeting(w http.ResponseWriter, r *http.Request, meetingId string) {
 			return err
 		}
 
+		coachKey := meeting.MeetingCoachKey.Parent()
+
+		// increase coach sessions count
+		coach, err := model.GetCoach(ctx, coachKey)
+		coach.IncreaseSessionsCount(ctx)
+
 		//TODO send email
 
 		//add notification to coachee
 		model.CreateNotification(ctx, model.TO_COACHEE_MEETING_CLOSED_BY_COACH, meeting.Key.Parent())
 
 		//add notification to HR
-		model.CreateNotification(ctx, fmt.Sprintf(model.TO_HR_MEETING_CLOSED, ApiMeeting.Coachee.DisplayName), meeting.Key.Parent())
+		model.CreateNotification(ctx, fmt.Sprintf(model.TO_HR_MEETING_CLOSED, ApiMeeting.Coachee.GetDisplayName()), ApiMeeting.Coachee.AssociatedRh.Key)
 
 		//add notification to coach
-		model.CreateNotification(ctx, fmt.Sprintf(model.TO_COACH_MEETING_CLOSED, ApiMeeting.Coachee.DisplayName), meeting.Key.Parent())
+		model.CreateNotification(ctx, fmt.Sprintf(model.TO_COACH_MEETING_CLOSED, ApiMeeting.Coachee.GetDisplayName()), coachKey)
 
 		return nil
 	}, &datastore.TransactionOptions{XG: true})
@@ -640,7 +639,7 @@ func setTimeForMeeting(w http.ResponseWriter, r *http.Request, meetingId string,
 	}
 	// TODO convert date
 	err = utils.SendEmailToGivenEmail(ctx, meetingApi.Coachee.Email,
-		MEETING_TIME_SELECTED_FOR_SESSION_TITLE, fmt.Sprintf(MEETING_TIME_SELECTED_FOR_SESSION_MSG, meetingApi.Coach.DisplayName, meetingApi.AgreedTime.StartDate, baseUrl, baseUrl))
+		MEETING_TIME_SELECTED_FOR_SESSION_TITLE, fmt.Sprintf(MEETING_TIME_SELECTED_FOR_SESSION_MSG, meetingApi.Coach.GetDisplayName(), meetingApi.AgreedTime.StartDate, baseUrl, baseUrl))
 	// send email to coach
 
 	//add notification to coachee
@@ -686,10 +685,10 @@ func setCoachForMeeting(w http.ResponseWriter, r *http.Request, meetingId string
 		response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
 	}
 	err = utils.SendEmailToGivenEmail(ctx, meetingApi.Coachee.Email,
-		COACH_SELECTED_FOR_SESSION_TITLE, fmt.Sprintf(COACH_SELECTED_FOR_SESSION_MSG, meetingApi.Coach.DisplayName, baseUrl, baseUrl))
+		COACH_SELECTED_FOR_SESSION_TITLE, fmt.Sprintf(COACH_SELECTED_FOR_SESSION_MSG, meetingApi.Coach.GetDisplayName(), baseUrl, baseUrl))
 
 	//send notification
-	content := fmt.Sprintf(model.TO_COACHEE_COACH_SELECTED_FOR_SESSION, meetingApi.Coach.DisplayName)
+	content := fmt.Sprintf(model.TO_COACHEE_COACH_SELECTED_FOR_SESSION, meetingApi.Coach.GetDisplayName())
 	model.CreateNotification(ctx, content, meetingCoachee.Key.Parent())
 
 	// send response

@@ -39,19 +39,19 @@ func HandleCoachs(w http.ResponseWriter, r *http.Request) {
 				//get uid param
 				uid, ok := params[":uid"]
 				if ok {
-					getAllNotificationsForCoach(w, r, uid)// GET /api/v1/coachs/:uid/notifications
+					getAllNotificationsForCoach(w, r, uid) // GET /api/v1/coachs/:uid/notifications
 					return
 				}
 			}
 		}
 
-		params := response.PathParams(ctx, r, "/api/coachs/:id")
+		params := response.PathParams(ctx, r, "/api/v1/coachs/:id")
 		userId, ok := params[":id"]
 		if ok {
-			handleGetCoachForId(w, r, userId)// GET /api/coachs/ID
+			handleGetCoachForId(w, r, userId) // GET /api/v1/coachs/ID
 			return
 		}
-		handleGetAllCoachs(w, r)// GET /api/coachs/
+		handleGetAllCoachs(w, r) // GET /api/v1/coachs/
 		return
 
 	case "PUT":
@@ -67,7 +67,7 @@ func HandleCoachs(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 
-		params := response.PathParams(ctx, r, "/api/coachs/:id")
+		params := response.PathParams(ctx, r, "/api/v1/coachs/:id")
 		userId, ok := params[":id"]
 		if ok {
 			handleUpdateCoachForId(w, r, userId)
@@ -128,7 +128,8 @@ func handleUpdateCoachForId(w http.ResponseWriter, r *http.Request, id string) {
 	}
 
 	var updateCoach struct {
-		DisplayName string `json:"display_name"`
+		FirstName   string `json:"first_name"`
+		LastName    string `json:"last_name"`
 		Description string `json:"description"`
 		AvatarUrl   string `json:"avatar_url"`
 	}
@@ -138,7 +139,7 @@ func handleUpdateCoachForId(w http.ResponseWriter, r *http.Request, id string) {
 		return
 	}
 
-	coach.Update(ctx, updateCoach.DisplayName, updateCoach.Description, updateCoach.AvatarUrl)
+	coach.Update(ctx, updateCoach.FirstName, updateCoach.LastName, updateCoach.Description, updateCoach.AvatarUrl)
 
 	//to api
 	api := coach.ToCoachAPI()
@@ -178,13 +179,12 @@ func handleCreateCoach(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//send welcome email
-	sendWelcomeEmailToCoach(ctx, coach)//TODO could be on a thread
+	sendWelcomeEmailToCoach(ctx, coach) //TODO could be on a thread
 
 	//construct response
 	//convert to API obj
 	api := coach.ToCoachAPI()
-	var res = &model.Login{Coach:api}
+	var res = &model.Login{Coach: api}
 
 	response.Respond(ctx, w, r, res, http.StatusCreated)
 }
-

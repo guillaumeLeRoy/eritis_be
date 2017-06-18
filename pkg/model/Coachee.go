@@ -7,6 +7,7 @@ import (
 	"google.golang.org/appengine/log"
 	"eritis_be/pkg/utils"
 	"google.golang.org/appengine"
+	"fmt"
 )
 
 const COACHEE_ENTITY string = "Coachee"
@@ -16,7 +17,8 @@ type Coachee struct {
 	Key                     *datastore.Key `json:"-" datastore:"-"`
 	FirebaseId              string `json:"-"`
 	Email                   string `json:"email"`
-	DisplayName             string `json:"display_name"`
+	FirstName               string `json:"firstName"`
+	LastName                string `json:"lastName"`
 	AvatarURL               string`json:"avatar_url"`
 	CoacheeObjective        *datastore.Key `json:"_"` // coachee's objective set by an HR
 	StartDate               time.Time `json:"start_date"`
@@ -30,7 +32,8 @@ type Coachee struct {
 type CoacheeAPI struct {
 	Id                      string `json:"id"`
 	Email                   string `json:"email"`
-	DisplayName             string `json:"display_name"`
+	FirstName               string `json:"firstName"`
+	LastName                string `json:"lastName"`
 	AvatarURL               string`json:"avatar_url"`
 	StartDate               time.Time `json:"start_date"`
 	AvailableSessionsCount  int `json:"available_sessions_count"`
@@ -44,7 +47,8 @@ func (c *Coachee) ToCoacheeAPI(rh *Rh, plan *Plan, coacheeObjective *CoacheeObje
 	var res CoacheeAPI
 	res.Id = c.Key.Encode()
 	res.Email = c.Email
-	res.DisplayName = c.DisplayName
+	res.FirstName = c.FirstName
+	res.LastName = c.LastName
 	res.AvatarURL = c.AvatarURL
 	res.StartDate = c.StartDate
 	res.AvailableSessionsCount = c.AvailableSessionsCount
@@ -194,7 +198,8 @@ func createCoacheeFromFirebaseUser(ctx context.Context, fbUser *FirebaseUser, pl
 	//create new user
 	coachee.FirebaseId = fbUser.UID
 	coachee.Email = fbUser.Email
-	coachee.DisplayName = fbUser.Email
+	coachee.FirstName = ""
+	coachee.LastName = ""
 	coachee.AvatarURL = gravatarURL(fbUser.Email)
 	coachee.StartDate = time.Now()
 	coachee.PlanId = planId
@@ -324,4 +329,12 @@ func (c *Coachee) IncreaseAvailableSessionsCount(ctx context.Context) error {
 	}
 
 	return nil
+}
+
+func (c *CoacheeAPI) GetDisplayName() string {
+	if c.FirstName != "" && c.LastName != "" {
+		return fmt.Sprintf("%s %s", c.FirstName, c.LastName)
+	} else {
+		return c.Email
+	}
 }

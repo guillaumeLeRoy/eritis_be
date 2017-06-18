@@ -15,38 +15,44 @@ const COACH_ENTITY string = "Coach"
 const ROOM_APPEAR_IN_BASE_URL string = "https://appear.in/eritis"
 
 type Coach struct {
-	Key         *datastore.Key `json:"id" datastore:"-"`
-	Email       string `json:"email"`
-	FirebaseId  string `json:"firebase_id"`
-	DisplayName string `json:"display_name"`
-	AvatarURL   string`json:"avatar_url"`
-	ChatRoomURL string`json:"chat_room_url"`
-	Score       string `json:"score"`
-	StartDate   time.Time `json:"start_date"`
-	Description string `json:"description"`
+	Key           *datastore.Key `json:"id" datastore:"-"`
+	Email         string `json:"email"`
+	FirebaseId    string `json:"firebase_id"`
+	FirstName     string `json:"firstName"`
+	LastName      string `json:"lastName"`
+	AvatarURL     string`json:"avatar_url"`
+	ChatRoomURL   string`json:"chat_room_url"`
+	Score         string `json:"score"`
+	SessionsCount int
+	StartDate     time.Time `json:"start_date"`
+	Description   string `json:"description"`
 }
 
 type CoachAPI struct {
-	Id          string`json:"id"`
-	Email       string `json:"email"`
-	DisplayName string `json:"display_name"`
-	AvatarURL   string`json:"avatar_url"`
-	ChatRoomURL string`json:"chat_room_url"`
-	Score       string `json:"score"`
-	StartDate   time.Time `json:"start_date"`
-	Description string `json:"description"`
+	Id            string`json:"id"`
+	Email         string `json:"email"`
+	FirstName     string `json:"firstName"`
+	LastName      string `json:"lastName"`
+	AvatarURL     string`json:"avatar_url"`
+	ChatRoomURL   string`json:"chat_room_url"`
+	Score         string `json:"score"`
+	StartDate     time.Time `json:"start_date"`
+	Description   string `json:"description"`
+	SessionsCount int `json:"sessions_count"`
 }
 
 func (c *Coach) ToCoachAPI() *CoachAPI {
 	var res CoachAPI
 	res.Id = c.Key.Encode()
 	res.Email = c.Email
-	res.DisplayName = c.DisplayName
+	res.FirstName = c.FirstName
+	res.LastName = c.LastName
 	res.AvatarURL = c.AvatarURL
 	res.ChatRoomURL = c.ChatRoomURL
 	res.Score = c.Score
 	res.StartDate = c.StartDate
 	res.Description = c.Description
+	res.SessionsCount = c.SessionsCount
 
 	return &res
 }
@@ -117,7 +123,8 @@ func CreateCoachFromFirebaseUser(ctx context.Context, fbUser *FirebaseUser) (*Co
 	//create new user
 	coach.FirebaseId = fbUser.UID
 	coach.Email = fbUser.Email
-	coach.DisplayName = fbUser.Email
+	coach.FirstName = ""
+	coach.LastName = ""
 	coach.AvatarURL = gravatarURL(fbUser.Email)
 	coach.ChatRoomURL = appearInUrl(fbUser.Email)
 	coach.StartDate = time.Now()
@@ -159,10 +166,11 @@ func getCoachFromFirebaseId(ctx context.Context, fbId string) (*Coach, error) {
 	return &coach, nil
 }
 
-func (c *Coach)Update(ctx context.Context, displayName string, description string, avatarUrl string) (error) {
-	log.Debugf(ctx, "update coach displayName : %s", displayName)
+func (c *Coach) Update(ctx context.Context, firstName string, lastName string, description string, avatarUrl string) (error) {
+	log.Debugf(ctx, "update coach firstName : %s, lastName : %s", firstName, lastName)
 
-	c.DisplayName = displayName
+	c.FirstName = firstName
+	c.LastName = lastName
 	c.Description = description
 	c.AvatarURL = avatarUrl
 
@@ -174,7 +182,7 @@ func (c *Coach)Update(ctx context.Context, displayName string, description strin
 	return nil
 }
 
-func (c *Coach)update(ctx context.Context) (error) {
+func (c *Coach) update(ctx context.Context) (error) {
 	log.Debugf(ctx, "update coach : %s", c)
 
 	key, err := datastore.Put(ctx, c.Key, c)
@@ -203,3 +211,18 @@ func GetCoachForEmail(ctx context.Context, email string) ([]*Coach, error) {
 	return coachs, nil
 }
 
+func (c *CoachAPI) GetDisplayName() string {
+	if c.FirstName != "" && c.LastName != "" {
+		return fmt.Sprintf("%s %s", c.FirstName, c.LastName)
+	} else {
+		return c.Email
+	}
+}
+
+func (c *Coach) IncreaseSessionsCount(ctx context.Context) error {
+
+	c.SessionsCount += c.SessionsCount + 1
+	c.update(ctx)
+
+	return nil
+}
