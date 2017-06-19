@@ -11,10 +11,11 @@ const COACH_RATE_ENTITY string = "CoachRate"
 
 // ancestor is a Coach
 type CoachRate struct {
-	Key   *datastore.Key `json:"id" datastore:"-"`
-	Rater *datastore.Key `json:"-"`
-	Rate  int `json:"rate"`
-	Date  time.Time `json:"date"`
+	Key        *datastore.Key `json:"id" datastore:"-"`
+	RaterKey   *datastore.Key `json:"-"`
+	MeetingKey *datastore.Key `json:"-"`
+	Rate       int `json:"rate"`
+	Date       time.Time `json:"date"`
 }
 
 type CoachRateAPI struct {
@@ -24,11 +25,12 @@ type CoachRateAPI struct {
 	Date  time.Time `json:"date"`
 }
 
-func CreateCoachRate(ctx context.Context, coachKey *datastore.Key, rater *datastore.Key, rate int) (*CoachRate, error) {
+func CreateCoachRate(ctx context.Context, coachKey *datastore.Key, raterKey *datastore.Key, meetingKey *datastore.Key, rate int) (*CoachRate, error) {
 	log.Debugf(ctx, "CreateCoachRate")
 
 	var coachRate CoachRate
-	coachRate.Rater = rater
+	coachRate.RaterKey = raterKey
+	coachRate.MeetingKey = meetingKey
 	coachRate.Rate = rate
 	coachRate.Date = time.Now()
 	coachRate.Key = datastore.NewIncompleteKey(ctx, COACH_RATE_ENTITY, coachKey)

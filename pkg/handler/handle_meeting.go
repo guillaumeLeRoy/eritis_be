@@ -414,7 +414,21 @@ func createReviewForAMeeting(w http.ResponseWriter, r *http.Request, meetingId s
 		coachKey := meetingCoachee.MeetingCoachKey.Parent()
 		raterKey := meetingCoachee.Key.Parent()
 
-		model.CreateCoachRate(ctx, coachKey, raterKey, rate)
+		// TODO maybe replace any existing rate for a couple meetingKeyKey/raterKey
+		coachRate, err := model.CreateCoachRate(ctx, coachKey, raterKey, meetingCoachee.Key, rate)
+		if err != nil {
+			response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
+			return
+		}
+		//update coach rate TODO : should be sync
+		coach, err := model.GetCoach(ctx, coachKey)
+		if err != nil {
+			response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
+			return
+		}
+
+		// TODO : should be sync
+		coach.AddRate(ctx, coachRate)
 	}
 
 	response.Respond(ctx, w, r, meetingRev, http.StatusCreated)

@@ -22,7 +22,7 @@ type Coach struct {
 	LastName      string `json:"lastName"`
 	AvatarURL     string`json:"avatar_url"`
 	ChatRoomURL   string`json:"chat_room_url"`
-	Score         string `json:"score"`
+	Score         int `json:"score"`
 	SessionsCount int
 	StartDate     time.Time `json:"start_date"`
 	Description   string `json:"description"`
@@ -35,7 +35,7 @@ type CoachAPI struct {
 	LastName      string `json:"lastName"`
 	AvatarURL     string`json:"avatar_url"`
 	ChatRoomURL   string`json:"chat_room_url"`
-	Score         string `json:"score"`
+	Score         int `json:"score"`
 	StartDate     time.Time `json:"start_date"`
 	Description   string `json:"description"`
 	SessionsCount int `json:"sessions_count"`
@@ -220,9 +220,17 @@ func (c *CoachAPI) GetDisplayName() string {
 }
 
 func (c *Coach) IncreaseSessionsCount(ctx context.Context) error {
-
 	c.SessionsCount += c.SessionsCount + 1
 	c.update(ctx)
+	return nil
+}
 
+func (c *Coach) AddRate(ctx context.Context, coachRate *CoachRate) error {
+	if c.Score == 0 {
+		c.Score = coachRate.Rate
+	} else {
+		c.Score = (coachRate.Rate + c.Score ) / 2
+	}
+	c.update(ctx)
 	return nil
 }
