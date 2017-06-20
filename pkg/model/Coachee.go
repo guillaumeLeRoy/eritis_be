@@ -7,6 +7,7 @@ import (
 	"google.golang.org/appengine/log"
 	"eritis_be/pkg/utils"
 	"google.golang.org/appengine"
+	"fmt"
 )
 
 const COACHEE_ENTITY string = "Coachee"
@@ -16,7 +17,8 @@ type Coachee struct {
 	Key                     *datastore.Key `json:"-" datastore:"-"`
 	FirebaseId              string `json:"-"`
 	Email                   string `json:"email"`
-	DisplayName             string `json:"display_name"`
+	FirstName               string `json:"firstName"`
+	LastName                string `json:"lastName"`
 	AvatarURL               string`json:"avatar_url"`
 	CoacheeObjective        *datastore.Key `json:"_"` // coachee's objective set by an HR
 	StartDate               time.Time `json:"start_date"`
@@ -27,10 +29,11 @@ type Coachee struct {
 }
 
 /* API struct */
-type APICoachee struct {
+type CoacheeAPI struct {
 	Id                      string `json:"id"`
 	Email                   string `json:"email"`
-	DisplayName             string `json:"display_name"`
+	FirstName               string `json:"firstName"`
+	LastName                string `json:"lastName"`
 	AvatarURL               string`json:"avatar_url"`
 	StartDate               time.Time `json:"start_date"`
 	AvailableSessionsCount  int `json:"available_sessions_count"`
@@ -40,11 +43,12 @@ type APICoachee struct {
 	CoacheeObjective        *CoacheeObjective `json:"last_objective"`
 }
 
-func (c *Coachee) ToCoacheeAPI(rh *Rh, plan *Plan, coacheeObjective *CoacheeObjective) *APICoachee {
-	var res APICoachee
+func (c *Coachee) ToCoacheeAPI(rh *Rh, plan *Plan, coacheeObjective *CoacheeObjective) *CoacheeAPI {
+	var res CoacheeAPI
 	res.Id = c.Key.Encode()
 	res.Email = c.Email
-	res.DisplayName = c.DisplayName
+	res.FirstName = c.FirstName
+	res.LastName = c.LastName
 	res.AvatarURL = c.AvatarURL
 	res.StartDate = c.StartDate
 	res.AvailableSessionsCount = c.AvailableSessionsCount
@@ -86,7 +90,7 @@ func GetCoachee(ctx context.Context, key *datastore.Key) (*Coachee, error) {
 }
 
 //get Coachee for the given user id
-func GetAPICoachee(ctx context.Context, key *datastore.Key) (*APICoachee, error) {
+func GetAPICoachee(ctx context.Context, key *datastore.Key) (*CoacheeAPI, error) {
 	log.Debugf(ctx, "getCoachee")
 
 	//get from Datastore
@@ -106,7 +110,7 @@ func GetAPICoachee(ctx context.Context, key *datastore.Key) (*APICoachee, error)
 	return apiCoachee, nil
 }
 
-func (c *Coachee) GetAPICoachee(ctx context.Context) (*APICoachee, error) {
+func (c *Coachee) GetAPICoachee(ctx context.Context) (*CoacheeAPI, error) {
 
 	//get the Rh
 	rh, err := GetRh(ctx, c.AssociatedRh)
@@ -147,7 +151,7 @@ func GetAllCoachees(ctx context.Context) ([]*Coachee, error) {
 }
 
 //get all API coachees
-func GetAllAPICoachees(ctx context.Context) ([]*APICoachee, error) {
+func GetAllAPICoachees(ctx context.Context) ([]*CoacheeAPI, error) {
 	log.Debugf(ctx, "GetAllAPICoachees")
 
 	coachees, err := GetAllCoachees(ctx)
@@ -155,7 +159,7 @@ func GetAllAPICoachees(ctx context.Context) ([]*APICoachee, error) {
 		return nil, err
 	}
 
-	var response []*APICoachee = make([]*APICoachee, len(coachees))
+	var response []*CoacheeAPI = make([]*CoacheeAPI, len(coachees))
 	for i, coachee := range coachees {
 		log.Debugf(ctx, "GetAllAPICoachees, coachee %s, index %s", coachee, i)
 
@@ -194,7 +198,8 @@ func createCoacheeFromFirebaseUser(ctx context.Context, fbUser *FirebaseUser, pl
 	//create new user
 	coachee.FirebaseId = fbUser.UID
 	coachee.Email = fbUser.Email
-	coachee.DisplayName = fbUser.Email
+	coachee.FirstName = ""
+	coachee.LastName = ""
 	coachee.AvatarURL = gravatarURL(fbUser.Email)
 	coachee.StartDate = time.Now()
 	coachee.PlanId = planId
@@ -216,7 +221,7 @@ func createCoacheeFromFirebaseUser(ctx context.Context, fbUser *FirebaseUser, pl
 	return &coachee, nil
 }
 
-func GetCoacheeFromFirebaseId(ctx context.Context, fbId string) (*APICoachee, error) {
+func GetCoacheeFromFirebaseId(ctx context.Context, fbId string) (*CoacheeAPI, error) {
 	log.Debugf(ctx, "getCoacheeFromFirebaseId id : %s", fbId)
 
 	var coachees []*Coachee
@@ -324,4 +329,12 @@ func (c *Coachee) IncreaseAvailableSessionsCount(ctx context.Context) error {
 	}
 
 	return nil
+}
+
+func (c *CoacheeAPI) GetDisplayName() string {
+	if c.FirstName != "" && c.LastName != "" {
+		return fmt.Sprintf("%s %s", c.FirstName, c.LastName)
+	} else {
+		return c.Email
+	}
 }

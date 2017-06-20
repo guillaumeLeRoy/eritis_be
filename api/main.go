@@ -15,6 +15,9 @@ import (
 	"google.golang.org/appengine/user"
 	"html/template"
 	"eritis_be/pkg/utils"
+	"google.golang.org/appengine/taskqueue"
+	"eritis_be/pkg/model"
+	"google.golang.org/appengine/datastore"
 )
 
 /* ######## HOW TO SERVE DIFFERENT ENVIRONMENTS #######
@@ -106,7 +109,6 @@ func init() {
 	//potentials
 	http.HandleFunc("/api/v1/potentials/", nonAuthHandler(handler.HandlePotential))
 
-
 	//test email
 	http.HandleFunc("/api/email/", handler.HandlerTestEmail)
 
@@ -114,6 +116,63 @@ func init() {
 	http.Handle("/api/upload_service_account/", &templateHandler{filename: "upload.html"})
 	http.HandleFunc("/api/upload_service_account/uploader", handler.ServiceAccountUploaderHandler)
 	http.HandleFunc("/api/read_service_account/", handler.ServiceAccountGetHandler)
+
+	// worker
+	http.HandleFunc("/api/queue_tasks", defaultHandler)
+	http.HandleFunc("/api/worker", worker)
+}
+
+func defaultHandler(w http.ResponseWriter, r *http.Request) {
+	ctx := appengine.NewContext(r)
+	log.Debugf(ctx, "defaultHandler start")
+
+	t := taskqueue.NewPOSTTask("/api/worker", nil)
+	if _, err := taskqueue.Add(ctx, t, ""); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	} else {
+		log.Debugf(ctx, "defaultHandler, worker added")
+	}
+
+	log.Debugf(ctx, "defaultHandler DONE")
+
+	// OK
+}
+
+func worker(w http.ResponseWriter, r *http.Request) {
+	ctx := appengine.NewContext(r)
+	log.Debugf(ctx, "worker start")
+
+	var coachees []*model.Coachee
+	keys, _ := datastore.NewQuery(model.COACHEE_ENTITY).GetAll(ctx, &coachees)
+
+	for i, coachee := range coachees {
+		coachee.Key = keys[i]
+		log.Debugf(ctx, "worker, coachee update %s", coachee)
+		coachee.Update(ctx)
+	}
+
+	//update coachs
+
+	var coachs []*model.Coach
+	keysCoach, _ := datastore.NewQuery(model.COACH_ENTITY).GetAll(ctx, &coachs)
+
+	for i, coach := range coachs {
+		coach.Key = keysCoach[i]
+		log.Debugf(ctx, "worker, coach update %s", coach)
+		datastore.Put(ctx, coach.Key, coach)
+	}
+
+	//update rhs
+	var hrs []*model.Rh
+	keysHrs, _ := datastore.NewQuery(model.RH_ENTITY).GetAll(ctx, &hrs)
+
+	for i, hr := range hrs {
+		hr.Key = keysHrs[i]
+		log.Debugf(ctx, "worker, hr update %s", hr)
+		datastore.Put(ctx, hr.Key, hr)
+	}
+	log.Debugf(ctx, "worker DONE")
 
 }
 
@@ -136,7 +195,6 @@ func nonAuthHandler(handler func(w http.ResponseWriter, r *http.Request)) http.H
 		}
 	}
 }
-
 
 //returns a firebase admin json
 func getFirebaseJsonReader(ctx context.Context) (*storage.Reader, error) {
@@ -359,7 +417,3 @@ func adminHandler(handler func(w http.ResponseWriter, r *http.Request)) http.Han
 //	})
 //
 //}
-
-
-
-

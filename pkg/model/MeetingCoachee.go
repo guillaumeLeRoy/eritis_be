@@ -25,12 +25,12 @@ type ApiMeetingCoachee struct {
 	Key         *datastore.Key `json:"id" datastore:"-"`
 	AgreedTime  *MeetingTime `json:"agreed_date"`
 	Coach       *CoachAPI `json:"coach"`
-	Coachee     *APICoachee `json:"coachee"`
+	Coachee     *CoacheeAPI `json:"coachee"`
 	IsOpen      bool `json:"isOpen"`
 	CreatedDate time.Time `json:"created_date"`
 }
 
-func toAPIMeetingCoachee(meeting MeetingCoachee, agreedTime *MeetingTime, coach *CoachAPI, coachee *APICoachee) ApiMeetingCoachee {
+func toAPIMeetingCoachee(meeting MeetingCoachee, agreedTime *MeetingTime, coach *CoachAPI, coachee *CoacheeAPI) ApiMeetingCoachee {
 	var apiMeetingCoachee ApiMeetingCoachee
 	apiMeetingCoachee.Key = meeting.Key
 	apiMeetingCoachee.IsOpen = meeting.IsOpen
@@ -205,7 +205,7 @@ func GetMeetingsForCoachee(ctx context.Context, coacheeKey *datastore.Key) ([]*A
 	log.Debugf(ctx, "GetMeetingsForCoachee, coacheeKey %s", coacheeKey)
 
 	var meetings []*MeetingCoachee
-	keys, err := datastore.NewQuery(MEETING_COACHEE_ENTITY).Ancestor(coacheeKey).GetAll(ctx, &meetings)
+	keys, err := datastore.NewQuery(MEETING_COACHEE_ENTITY).Ancestor(coacheeKey).Order("-CreatedDate").GetAll(ctx, &meetings)
 	if err != nil {
 		return nil, err
 	}
@@ -230,7 +230,7 @@ func GetMeetingsForCoachee(ctx context.Context, coacheeKey *datastore.Key) ([]*A
 // sort result by date
 func GetAvailableMeetings(ctx context.Context) ([]*MeetingCoachee, error) {
 	var meetings []*MeetingCoachee
-	keys, err := datastore.NewQuery(MEETING_COACHEE_ENTITY).Filter("MeetingCoachKey = ", nil).Order("CreatedDate").GetAll(ctx, &meetings)
+	keys, err := datastore.NewQuery(MEETING_COACHEE_ENTITY).Filter("MeetingCoachKey = ", nil).Order("-CreatedDate").GetAll(ctx, &meetings)
 	if err != nil {
 		return nil, err
 	}

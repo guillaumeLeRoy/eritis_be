@@ -81,11 +81,11 @@ func HandleCoachees(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 
-		//update selected coach
-		params := response.PathParams(ctx, r, "/api/coachees/:coacheeId")
+		//update selected coachee
+		params := response.PathParams(ctx, r, "/api/v1/coachees/:coacheeId")
 		coacheeId, ok := params[":coacheeId"]
 		if ok {
-			handleUpdateCoacheeForId(w, r, coacheeId) // PUT /api/coachees/ID
+			handleUpdateCoacheeForId(w, r, coacheeId) // PUT /api/v1/coachees/ID
 			return
 		}
 
@@ -143,8 +143,9 @@ func handleUpdateCoacheeForId(w http.ResponseWriter, r *http.Request, id string)
 	}
 
 	var updateCoachee struct {
-		DisplayName string `json:"display_name"`
-		AvatarUrl   string `json:"avatar_url"`
+		FistName  string `json:"first_name"`
+		LastName  string `json:"last_name"`
+		AvatarUrl string `json:"avatar_url"`
 	}
 	err = response.Decode(r, &updateCoachee)
 	if err != nil {
@@ -153,7 +154,8 @@ func handleUpdateCoacheeForId(w http.ResponseWriter, r *http.Request, id string)
 	}
 
 	//update
-	coachee.DisplayName = updateCoachee.DisplayName
+	coachee.FirstName = updateCoachee.FistName
+	coachee.LastName = updateCoachee.LastName
 	coachee.AvatarURL = updateCoachee.AvatarUrl
 	coachee.Update(ctx)
 	if err != nil {

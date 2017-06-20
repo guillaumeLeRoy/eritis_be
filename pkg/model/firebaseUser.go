@@ -14,7 +14,7 @@ type FirebaseUser struct {
 
 type Login struct {
 	Coach   *CoachAPI `json:"coach"`
-	Coachee *APICoachee `json:"coachee"`
+	Coachee *CoacheeAPI `json:"coachee"`
 	Rh      *RhAPI `json:"rh"`
 }
 
