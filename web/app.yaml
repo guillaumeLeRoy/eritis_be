@@ -13,6 +13,16 @@ handlers:
     mime_type: text/plain
     upload: acme_A36z5.txt
 
+  - url: /.well-known/acme-challenge/wAHaICOS3LHPADer0qqLbcMJNS_4cHndxHdLJ6-4R4E
+    static_files: acme_eritis_fr.txt
+    mime_type: text/plain
+    upload: acme_eritis_fr.txt
+
+  - url: /.well-known/acme-challenge/KDlYuPN8NZrVWECZSMaLBGCg1qurw9lYgZWSCGLaJMA
+    static_files: acme_www_eritis_fr.txt
+    mime_type: text/plain
+    upload: acme_www_eritis_fr.txt
+
   - url: /admin(.*)
     script: _go_app
 
@@ -20,10 +30,11 @@ handlers:
     static_files: dist/\1
     upload: dist/(.*)(|\.map)
     application_readable: true
+    secure: always
 
   - url: /(.*)
     static_files: dist/index.html
     upload: dist/index.html
     application_readable: true
-
+    secure: always
 
