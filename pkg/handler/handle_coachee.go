@@ -9,6 +9,9 @@ import (
 	"eritis_be/pkg/response"
 	"strings"
 	"fmt"
+	"google.golang.org/appengine/file"
+	"io/ioutil"
+	"cloud.google.com/go/storage"
 )
 
 func HandleCoachees(w http.ResponseWriter, r *http.Request) {
@@ -77,6 +80,17 @@ func HandleCoachees(w http.ResponseWriter, r *http.Request) {
 			uid, ok := params[":uid"]
 			if ok {
 				updateAllNotificationToRead(w, r, uid)
+				return
+			}
+		}
+
+		// upload picture
+		contains = strings.Contains(r.URL.Path, "profile_picture")
+		if contains {
+			params := response.PathParams(ctx, r, "/api/v1/coachees/:uid/profile_picture")
+			uid, ok := params[":uid"]
+			if ok {
+				uploadProfilePicture(w, r, uid)
 				return
 			}
 		}
@@ -225,4 +239,84 @@ func handleCreateCoachee(w http.ResponseWriter, r *http.Request) {
 
 	var res = &model.Login{Coachee: apiCoachee}
 	response.Respond(ctx, w, r, res, http.StatusCreated)
+}
+
+func uploadProfilePicture(w http.ResponseWriter, r *http.Request, uid string) {
+	ctx := appengine.NewContext(r)
+	log.Debugf(ctx, "uploadProfilePicture")
+
+	key, err := datastore.DecodeKey(uid)
+	if err != nil {
+		response.RespondErr(ctx, w, r, err, http.StatusBadRequest)
+		return
+	}
+
+	coachee, err := model.GetCoachee(ctx, key)
+	if err != nil {
+		response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
+		return
+	}
+
+	log.Debugf(ctx, "uploadProfilePicture, coachee ok")
+
+	fileToUpload, header, err := r.FormFile("uploadFile")
+	if err != nil {
+		response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
+		return
+	}
+	log.Debugf(ctx, "handle file upload, got file")
+
+	data, err := ioutil.ReadAll(fileToUpload)
+	if err != nil {
+		response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
+		return
+	}
+
+	log.Debugf(ctx, "handle file upload, read ok")
+
+	bucketName, err := file.DefaultBucketName(ctx)
+	if err != nil {
+		response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
+		return
+	}
+
+	log.Debugf(ctx, "handle file upload, bucket name %s", bucketName)
+
+	client, err := storage.NewClient(ctx)
+	if err != nil {
+		response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
+		return
+	}
+
+	log.Debugf(ctx, "handle file upload, storage client created")
+
+	bucketHandler := client.Bucket(bucketName)
+	//ACL().Set(ctx, storage.AllUsers, storage.RoleReader)
+	var fileName = header.Filename
+	//var fileName = key.StringID()
+	writer := bucketHandler.Object(fileName).NewWriter(ctx)
+	writer.ACL = []storage.ACLRule{{storage.AllUsers, storage.RoleReader}}
+	size, err := writer.Write(data)
+	if err != nil {
+		response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
+		return
+	}
+
+	log.Debugf(ctx, "handle file upload, size %s", size)
+	log.Debugf(ctx, "handle file upload, fileName %s", fileName)
+
+	// Close, just like writing a file.
+	if err := writer.Close(); err != nil {
+		response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
+		return
+	}
+
+	// save new picture url
+	coachee.AvatarURL = "https://storage.googleapis.com/eritis-be-glr.appspot.com/" + header.Filename
+	coachee.Update(ctx)
+
+	log.Debugf(ctx, "handle file upload, DONE")
+
+	//client.NewWriter(d.ctx, bucket, fileName)
+	response.Respond(ctx, w, r, nil, http.StatusOK)
 }

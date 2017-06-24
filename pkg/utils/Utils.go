@@ -13,6 +13,8 @@ import (
 	"crypto/cipher"
 	"crypto/rand"
 	"fmt"
+	"google.golang.org/appengine/file"
+	"cloud.google.com/go/storage"
 )
 
 const LIVE_ENV_PROJECT_ID string = "eritis-150320"
@@ -209,4 +211,40 @@ func decrypt(key, text []byte) ([]byte, error) {
 		return nil, err
 	}
 	return data, nil
+}
+
+func GetReaderFromBucket(ctx context.Context, fileName string) (*storage.Reader, error) {
+	bucketName, err := file.DefaultBucketName(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	log.Debugf(ctx, "handle read, bucket name %s", bucketName)
+
+	client, err := storage.NewClient(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	log.Debugf(ctx, "handle read, storage client created")
+
+	bucketHandler := client.Bucket(bucketName)
+
+	obj := bucketHandler.Object(fileName)
+
+	log.Debugf(ctx, "handle read, obj created")
+
+	reader, err := obj.NewReader(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	log.Debugf(ctx, "handle read, reader created")
+
+	//defer reader.Close()
+	//if _, err := io.Copy(os.Stdout, reader); err != nil {
+	//	return
+	//}
+
+	return reader, nil
 }
