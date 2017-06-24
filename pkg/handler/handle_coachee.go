@@ -90,7 +90,7 @@ func HandleCoachees(w http.ResponseWriter, r *http.Request) {
 			params := response.PathParams(ctx, r, "/api/v1/coachees/:uid/profile_picture")
 			uid, ok := params[":uid"]
 			if ok {
-				uploadProfilePicture(w, r, uid)
+				uploadCoacheeProfilePicture(w, r, uid)
 				return
 			}
 		}
@@ -241,7 +241,7 @@ func handleCreateCoachee(w http.ResponseWriter, r *http.Request) {
 	response.Respond(ctx, w, r, res, http.StatusCreated)
 }
 
-func uploadProfilePicture(w http.ResponseWriter, r *http.Request, uid string) {
+func uploadCoacheeProfilePicture(w http.ResponseWriter, r *http.Request, uid string) {
 	ctx := appengine.NewContext(r)
 	log.Debugf(ctx, "uploadProfilePicture")
 
