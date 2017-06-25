@@ -205,7 +205,7 @@ func (c *CoachAPI) GetDisplayName() string {
 
 func (c *Coach) IncreaseSessionsCount(ctx context.Context) error {
 	c.SessionsCount += c.SessionsCount + 1
-	c.update(ctx)
+	c.Update(ctx)
 	return nil
 }
 
@@ -215,6 +215,6 @@ func (c *Coach) AddRate(ctx context.Context, coachRate *CoachRate) error {
 	} else {
 		c.Score = (coachRate.Rate + c.Score ) / 2
 	}
-	c.update(ctx)
+	c.Update(ctx)
 	return nil
 }
