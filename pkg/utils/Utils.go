@@ -15,6 +15,8 @@ import (
 	"fmt"
 	"google.golang.org/appengine/file"
 	"cloud.google.com/go/storage"
+	"io/ioutil"
+	"net/http"
 )
 
 const LIVE_ENV_PROJECT_ID string = "eritis-150320"
@@ -247,4 +249,58 @@ func GetReaderFromBucket(ctx context.Context, fileName string) (*storage.Reader,
 	//}
 
 	return reader, nil
+}
+
+func ReadPictureProfile(r *http.Request) (string, error) {
+	ctx := appengine.NewContext(r)
+	log.Debugf(ctx, "uploadProfilePicture")
+
+	fileToUpload, header, err := r.FormFile("uploadFile")
+	if err != nil {
+		return "", err
+	}
+	log.Debugf(ctx, "handle file upload, got file")
+
+	data, err := ioutil.ReadAll(fileToUpload)
+	if err != nil {
+		return "", err
+	}
+
+	log.Debugf(ctx, "handle file upload, read ok")
+
+	bucketName, err := file.DefaultBucketName(ctx)
+	if err != nil {
+		return "", err
+	}
+
+	log.Debugf(ctx, "handle file upload, bucket name %s", bucketName)
+
+	client, err := storage.NewClient(ctx)
+	if err != nil {
+		return "", err
+	}
+
+	log.Debugf(ctx, "handle file upload, storage client created")
+
+	bucketHandler := client.Bucket(bucketName)
+	//ACL().Set(ctx, storage.AllUsers, storage.RoleReader)
+	var fileName = header.Filename
+	//var fileName = key.StringID()
+	writer := bucketHandler.Object(fileName).NewWriter(ctx)
+	writer.ACL = []storage.ACLRule{{storage.AllUsers, storage.RoleReader}}
+	size, err := writer.Write(data)
+	if err != nil {
+		return "", err
+	}
+
+	log.Debugf(ctx, "handle file upload, size %s", size)
+	log.Debugf(ctx, "handle file upload, fileName %s", fileName)
+
+	// Close, just like writing a file.
+	if err := writer.Close(); err != nil {
+		return "", err
+	}
+
+	return fileName, nil
+
 }

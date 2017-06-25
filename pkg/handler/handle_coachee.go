@@ -9,9 +9,7 @@ import (
 	"eritis_be/pkg/response"
 	"strings"
 	"fmt"
-	"google.golang.org/appengine/file"
-	"io/ioutil"
-	"cloud.google.com/go/storage"
+	"eritis_be/pkg/utils"
 )
 
 func HandleCoachees(w http.ResponseWriter, r *http.Request) {
@@ -259,60 +257,14 @@ func uploadCoacheeProfilePicture(w http.ResponseWriter, r *http.Request, uid str
 
 	log.Debugf(ctx, "uploadProfilePicture, coachee ok")
 
-	fileToUpload, header, err := r.FormFile("uploadFile")
+	fileName, err := utils.ReadPictureProfile(r)
 	if err != nil {
-		response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
-		return
-	}
-	log.Debugf(ctx, "handle file upload, got file")
-
-	data, err := ioutil.ReadAll(fileToUpload)
-	if err != nil {
-		response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
-		return
-	}
-
-	log.Debugf(ctx, "handle file upload, read ok")
-
-	bucketName, err := file.DefaultBucketName(ctx)
-	if err != nil {
-		response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
-		return
-	}
-
-	log.Debugf(ctx, "handle file upload, bucket name %s", bucketName)
-
-	client, err := storage.NewClient(ctx)
-	if err != nil {
-		response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
-		return
-	}
-
-	log.Debugf(ctx, "handle file upload, storage client created")
-
-	bucketHandler := client.Bucket(bucketName)
-	//ACL().Set(ctx, storage.AllUsers, storage.RoleReader)
-	var fileName = header.Filename
-	//var fileName = key.StringID()
-	writer := bucketHandler.Object(fileName).NewWriter(ctx)
-	writer.ACL = []storage.ACLRule{{storage.AllUsers, storage.RoleReader}}
-	size, err := writer.Write(data)
-	if err != nil {
-		response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
-		return
-	}
-
-	log.Debugf(ctx, "handle file upload, size %s", size)
-	log.Debugf(ctx, "handle file upload, fileName %s", fileName)
-
-	// Close, just like writing a file.
-	if err := writer.Close(); err != nil {
 		response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
 		return
 	}
 
 	// save new picture url
-	coachee.AvatarURL = "https://storage.googleapis.com/eritis-be-glr.appspot.com/" + header.Filename
+	coachee.AvatarURL = "https://storage.googleapis.com/eritis-be-glr.appspot.com/" + fileName
 	coachee.Update(ctx)
 
 	log.Debugf(ctx, "handle file upload, DONE")
