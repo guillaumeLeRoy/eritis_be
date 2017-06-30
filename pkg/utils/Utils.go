@@ -17,6 +17,9 @@ import (
 	"cloud.google.com/go/storage"
 	"io/ioutil"
 	"net/http"
+	"google.golang.org/api/iterator"
+	"time"
+	"strconv"
 )
 
 const LIVE_ENV_PROJECT_ID string = "eritis-150320"
@@ -251,7 +254,7 @@ func GetReaderFromBucket(ctx context.Context, fileName string) (*storage.Reader,
 	return reader, nil
 }
 
-func ReadPictureProfile(r *http.Request) (string, error) {
+func ReadPictureProfile(r *http.Request, uid string) (string, error) {
 	ctx := appengine.NewContext(r)
 	log.Debugf(ctx, "uploadProfilePicture")
 
@@ -283,9 +286,42 @@ func ReadPictureProfile(r *http.Request) (string, error) {
 	log.Debugf(ctx, "handle file upload, storage client created")
 
 	bucketHandler := client.Bucket(bucketName)
-	//ACL().Set(ctx, storage.AllUsers, storage.RoleReader)
 	var fileName = header.Filename
-	//var fileName = key.StringID()
+
+	// rename file
+	split := strings.Split(fileName, ".")
+	//split should have 2 values
+	if len(split) != 2 {
+		if err != nil {
+			return "", errors.New("Incorrect filename")
+		}
+	}
+	var newFileName = fmt.Sprintf("%s_%s_%s", uid, strconv.Itoa(time.Now().Minute()), strconv.Itoa(time.Now().Second()))
+	fileName = strings.Replace(fileName, split[0], newFileName, -1)
+
+	// search for existing image using UID
+	q := &storage.Query{Prefix: uid}
+	it := bucketHandler.Objects(ctx, q)
+	for {
+		objAttrs, err := it.Next()
+		if err == iterator.Done {
+			break
+		}
+		if err != nil {
+			return "", err
+		}
+		log.Debugf(ctx, "handle file upload, iterator, name %s", objAttrs.Name)
+
+		// delete already existing image
+		if err := bucketHandler.Object(objAttrs.Name).Delete(ctx); err != nil {
+			return "", err
+		}
+		log.Debugf(ctx, "handle file upload, previous image deleted")
+	}
+
+	log.Debugf(ctx, "handle file upload, iterator DONE")
+
+	// save new image
 	writer := bucketHandler.Object(fileName).NewWriter(ctx)
 	writer.ACL = []storage.ACLRule{{storage.AllUsers, storage.RoleReader}}
 	size, err := writer.Write(data)
@@ -293,7 +329,7 @@ func ReadPictureProfile(r *http.Request) (string, error) {
 		return "", err
 	}
 
-	log.Debugf(ctx, "handle file upload, size %s", size)
+	log.Debugf(ctx, "handle file upload, size %s", size) // TODO limit file size
 	log.Debugf(ctx, "handle file upload, fileName %s", fileName)
 
 	// Close, just like writing a file.

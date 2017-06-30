@@ -25,25 +25,28 @@ func HandleMeeting(w http.ResponseWriter, r *http.Request) {
 	case "POST":
 
 		//create potential meeting time
-		if ok := strings.Contains(r.URL.Path, "potential"); ok {
-			params := response.PathParams(ctx, r, "/api/meeting/:uid/potential")
+		if ok := strings.Contains(r.URL.Path, "potentials"); ok {
+			params := response.PathParams(ctx, r, "/api/v1/meetings/:uid/potentials")
 			uid, ok := params[":uid"]
 			if ok {
-				createMeetingPotentialTime(w, r, uid) // POST /api/meeting/:uid/potential
+				createMeetingPotentialTime(w, r, uid) // POST /api/v1/meeting/:uid/potential
 				return
 			}
 		}
 
 		/// create new meeting
+		if ok := strings.Contains(r.URL.Path, "meetings"); ok {
+			handleCreateMeeting(w, r) // POST /api/v1/meetings
+			return
+		}
 
-		handleCreateMeeting(w, r)
-
+		http.NotFound(w, r)
 	case "PUT":
 
 		//add coach to meeting
-		contains := strings.Contains(r.URL.Path, "coach")
+		contains := strings.Contains(r.URL.Path, "coachs")
 		if contains {
-			params := response.PathParams(ctx, r, "/api/v1/meeting/:meetingId/coach/:coachId")
+			params := response.PathParams(ctx, r, "/api/v1/meetings/:meetingId/coachs/:coachId")
 			meetingId, ok := params[":meetingId"]
 			coachId, ok := params[":coachId"]
 			if ok {
@@ -53,9 +56,9 @@ func HandleMeeting(w http.ResponseWriter, r *http.Request) {
 		}
 
 		//update potential date
-		contains = strings.Contains(r.URL.Path, "potential")
+		contains = strings.Contains(r.URL.Path, "potentials")
 		if contains {
-			params := response.PathParams(ctx, r, "/api/meeting/potential/:potId")
+			params := response.PathParams(ctx, r, "/api/v1/meetings/potentials/:potId")
 			potId, ok := params[":potId"]
 			if ok {
 				updateMeetingPotentialTime(w, r, potId)
@@ -64,9 +67,9 @@ func HandleMeeting(w http.ResponseWriter, r *http.Request) {
 		}
 
 		//set meeting hour
-		contains = strings.Contains(r.URL.Path, "date")
+		contains = strings.Contains(r.URL.Path, "dates")
 		if contains {
-			params := response.PathParams(ctx, r, "/api/meeting/:meetingId/date/:potId")
+			params := response.PathParams(ctx, r, "/api/v1/meetings/:meetingId/dates/:potId")
 			meetingId, ok := params[":meetingId"]
 			potId, ok := params[":potId"]
 			if ok {
@@ -102,15 +105,15 @@ func HandleMeeting(w http.ResponseWriter, r *http.Request) {
 		/**
 		 GET all meetings for a specific coachee
 		 */
-		contains := strings.Contains(r.URL.Path, "/api/meetings/coachee")
+		contains := strings.Contains(r.URL.Path, "meetings/coachees")
 		if contains {
-			params := response.PathParams(ctx, r, "/api/meetings/coachee/:uid")
+			params := response.PathParams(ctx, r, "/api/v1/meetings/coachees/:uid")
 			//verify url contains coachee
 			if _, ok := params["coachee"]; ok {
 				//get uid param
 				uid, ok := params[":uid"]
 				if ok {
-					getAllMeetingsForCoachee(w, r, uid) // GET /api/meeting/coachee/:uid
+					getAllMeetingsForCoachee(w, r, uid) // GET /api/v1/meetings/coachees/:uid
 					return
 				}
 			}
@@ -119,15 +122,15 @@ func HandleMeeting(w http.ResponseWriter, r *http.Request) {
 		/**
 		 GET all meetings for a specific coach
 		 */
-		contains = strings.Contains(r.URL.Path, "/api/meetings/coach")
+		contains = strings.Contains(r.URL.Path, "meetings/coachs")
 		if contains {
-			params := response.PathParams(ctx, r, "/api/meetings/coach/:uid")
+			params := response.PathParams(ctx, r, "/api/v1/meetings/coachs/:uid")
 			//verify url contains coach
 			if _, ok := params["coach"]; ok {
 				//get uid param
 				uid, ok := params[":uid"]
 				if ok {
-					getAllMeetingsForCoach(w, r, uid) // GET /api/meeting/coach/:uid
+					getAllMeetingsForCoach(w, r, uid) // GET /api/v1/meetings/coachs/:uid
 					return
 				}
 			}
@@ -138,7 +141,7 @@ func HandleMeeting(w http.ResponseWriter, r *http.Request) {
 		*/
 		contains = strings.Contains(r.URL.Path, "potentials")
 		if contains {
-			params := response.PathParams(ctx, r, "/api/meeting/:meetingId/potentials")
+			params := response.PathParams(ctx, r, "/api/v1/meetings/:meetingId/potentials")
 			//verify url contains meeting
 			if _, ok := params["meeting"]; ok {
 				//get uid param
@@ -168,7 +171,7 @@ func HandleMeeting(w http.ResponseWriter, r *http.Request) {
 		//get all reviews for a meeting
 		contains = strings.Contains(r.URL.Path, "reviews")
 		if contains {
-			params := response.PathParams(ctx, r, "/api/meeting/:meetingId/reviews")
+			params := response.PathParams(ctx, r, "/api/v1/meetings/:meetingId/reviews")
 			//verify url contains meeting
 			if _, ok := params["meeting"]; ok {
 				//get uid param
@@ -196,7 +199,7 @@ func HandleMeeting(w http.ResponseWriter, r *http.Request) {
 		// or when a coach want to delete a potential date
 		contains := strings.Contains(r.URL.Path, "potentials")
 		if contains {
-			params := response.PathParams(ctx, r, "/api/meeting/potentials/:potId")
+			params := response.PathParams(ctx, r, "/api/v1/meetings/potentials/:potId")
 			potId, ok := params[":potId"]
 			if ok {
 				deletePotentialDate(w, r, potId)
@@ -207,7 +210,7 @@ func HandleMeeting(w http.ResponseWriter, r *http.Request) {
 		//delete review for a meeting
 		contains = strings.Contains(r.URL.Path, "reviews")
 		if contains {
-			params := response.PathParams(ctx, r, "/api/meeting/reviews/:reviewId")
+			params := response.PathParams(ctx, r, "/api/v1/meetings/reviews/:reviewId")
 			potId, ok := params[":reviewId"]
 			if ok {
 				handleDeleteMeetingReview(w, r, potId)
@@ -216,7 +219,7 @@ func HandleMeeting(w http.ResponseWriter, r *http.Request) {
 		}
 
 		//when a coachee wants to delete meeting
-		params := response.PathParams(ctx, r, "/api/meeting/:meetingId")
+		params := response.PathParams(ctx, r, "/api/v1/meetings/:meetingId")
 		meetingId, ok := params[":meetingId"]
 		if ok {
 			handleCoacheeCancelMeeting(w, r, meetingId)

@@ -257,7 +257,7 @@ func uploadCoacheeProfilePicture(w http.ResponseWriter, r *http.Request, uid str
 
 	log.Debugf(ctx, "uploadProfilePicture, coachee ok")
 
-	fileName, err := utils.ReadPictureProfile(r)
+	fileName, err := utils.ReadPictureProfile(r, uid)
 	if err != nil {
 		response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
 		return
