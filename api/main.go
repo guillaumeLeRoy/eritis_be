@@ -81,9 +81,6 @@ func init() {
 	http.HandleFunc("/api/v1/admins/", nonAuthHandler(handler.HandleAdmin))
 
 	//meetings
-	http.HandleFunc("/api/meeting/", authHandler(handler.HandleMeeting))
-	http.HandleFunc("/api/v1/meeting/", authHandler(handler.HandleMeeting))
-	http.HandleFunc("/api/meetings/", authHandler(handler.HandleMeeting))
 	http.HandleFunc("/api/v1/meetings/", authHandler(handler.HandleMeeting))
 
 	//coach
@@ -205,7 +202,7 @@ func getFirebaseJsonReader(ctx context.Context) (*storage.Reader, error) {
 	if err != nil {
 		return nil, err
 	}
-	rdr, err := handler.GetReaderFromBucket(ctx, pathToJson)
+	rdr, err := utils.GetReaderFromBucket(ctx, pathToJson)
 	if err != nil {
 		return nil, err
 	}
@@ -221,7 +218,7 @@ func authHandler(handler func(w http.ResponseWriter, r *http.Request)) http.Hand
 		//handle preflight in here
 		w.Header().Add("Access-Control-Allow-Origin", "*")
 		w.Header().Add("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS")
-		w.Header().Add("Access-Control-Allow-Headers", "Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With")
+		w.Header().Add("Access-Control-Allow-Headers", "Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With, Origin, Accept, Authorization")
 
 		//check token validity
 

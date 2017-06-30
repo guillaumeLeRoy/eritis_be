@@ -166,23 +166,7 @@ func getCoachFromFirebaseId(ctx context.Context, fbId string) (*Coach, error) {
 	return &coach, nil
 }
 
-func (c *Coach) Update(ctx context.Context, firstName string, lastName string, description string, avatarUrl string) (error) {
-	log.Debugf(ctx, "update coach firstName : %s, lastName : %s", firstName, lastName)
-
-	c.FirstName = firstName
-	c.LastName = lastName
-	c.Description = description
-	c.AvatarURL = avatarUrl
-
-	err := c.update(ctx)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (c *Coach) update(ctx context.Context) (error) {
+func (c *Coach) Update(ctx context.Context) (error) {
 	log.Debugf(ctx, "update coach : %s", c)
 
 	key, err := datastore.Put(ctx, c.Key, c)
@@ -221,7 +205,7 @@ func (c *CoachAPI) GetDisplayName() string {
 
 func (c *Coach) IncreaseSessionsCount(ctx context.Context) error {
 	c.SessionsCount += c.SessionsCount + 1
-	c.update(ctx)
+	c.Update(ctx)
 	return nil
 }
 
@@ -231,6 +215,6 @@ func (c *Coach) AddRate(ctx context.Context, coachRate *CoachRate) error {
 	} else {
 		c.Score = (coachRate.Rate + c.Score ) / 2
 	}
-	c.update(ctx)
+	c.Update(ctx)
 	return nil
 }

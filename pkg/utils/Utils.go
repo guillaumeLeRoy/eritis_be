@@ -13,6 +13,13 @@ import (
 	"crypto/cipher"
 	"crypto/rand"
 	"fmt"
+	"google.golang.org/appengine/file"
+	"cloud.google.com/go/storage"
+	"io/ioutil"
+	"net/http"
+	"google.golang.org/api/iterator"
+	"time"
+	"strconv"
 )
 
 const LIVE_ENV_PROJECT_ID string = "eritis-150320"
@@ -209,4 +216,127 @@ func decrypt(key, text []byte) ([]byte, error) {
 		return nil, err
 	}
 	return data, nil
+}
+
+func GetReaderFromBucket(ctx context.Context, fileName string) (*storage.Reader, error) {
+	bucketName, err := file.DefaultBucketName(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	log.Debugf(ctx, "handle read, bucket name %s", bucketName)
+
+	client, err := storage.NewClient(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	log.Debugf(ctx, "handle read, storage client created")
+
+	bucketHandler := client.Bucket(bucketName)
+
+	obj := bucketHandler.Object(fileName)
+
+	log.Debugf(ctx, "handle read, obj created")
+
+	reader, err := obj.NewReader(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	log.Debugf(ctx, "handle read, reader created")
+
+	//defer reader.Close()
+	//if _, err := io.Copy(os.Stdout, reader); err != nil {
+	//	return
+	//}
+
+	return reader, nil
+}
+
+func ReadPictureProfile(r *http.Request, uid string) (string, error) {
+	ctx := appengine.NewContext(r)
+	log.Debugf(ctx, "uploadProfilePicture")
+
+	fileToUpload, header, err := r.FormFile("uploadFile")
+	if err != nil {
+		return "", err
+	}
+	log.Debugf(ctx, "handle file upload, got file")
+
+	data, err := ioutil.ReadAll(fileToUpload)
+	if err != nil {
+		return "", err
+	}
+
+	log.Debugf(ctx, "handle file upload, read ok")
+
+	bucketName, err := file.DefaultBucketName(ctx)
+	if err != nil {
+		return "", err
+	}
+
+	log.Debugf(ctx, "handle file upload, bucket name %s", bucketName)
+
+	client, err := storage.NewClient(ctx)
+	if err != nil {
+		return "", err
+	}
+
+	log.Debugf(ctx, "handle file upload, storage client created")
+
+	bucketHandler := client.Bucket(bucketName)
+	var fileName = header.Filename
+
+	// rename file
+	split := strings.Split(fileName, ".")
+	//split should have 2 values
+	if len(split) != 2 {
+		if err != nil {
+			return "", errors.New("Incorrect filename")
+		}
+	}
+	var newFileName = fmt.Sprintf("%s_%s_%s", uid, strconv.Itoa(time.Now().Minute()), strconv.Itoa(time.Now().Second()))
+	fileName = strings.Replace(fileName, split[0], newFileName, -1)
+
+	// search for existing image using UID
+	q := &storage.Query{Prefix: uid}
+	it := bucketHandler.Objects(ctx, q)
+	for {
+		objAttrs, err := it.Next()
+		if err == iterator.Done {
+			break
+		}
+		if err != nil {
+			return "", err
+		}
+		log.Debugf(ctx, "handle file upload, iterator, name %s", objAttrs.Name)
+
+		// delete already existing image
+		if err := bucketHandler.Object(objAttrs.Name).Delete(ctx); err != nil {
+			return "", err
+		}
+		log.Debugf(ctx, "handle file upload, previous image deleted")
+	}
+
+	log.Debugf(ctx, "handle file upload, iterator DONE")
+
+	// save new image
+	writer := bucketHandler.Object(fileName).NewWriter(ctx)
+	writer.ACL = []storage.ACLRule{{storage.AllUsers, storage.RoleReader}}
+	size, err := writer.Write(data)
+	if err != nil {
+		return "", err
+	}
+
+	log.Debugf(ctx, "handle file upload, size %s", size) // TODO limit file size
+	log.Debugf(ctx, "handle file upload, fileName %s", fileName)
+
+	// Close, just like writing a file.
+	if err := writer.Close(); err != nil {
+		return "", err
+	}
+
+	return fileName, nil
+
 }

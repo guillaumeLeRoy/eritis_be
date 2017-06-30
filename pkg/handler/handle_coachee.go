@@ -9,6 +9,7 @@ import (
 	"eritis_be/pkg/response"
 	"strings"
 	"fmt"
+	"eritis_be/pkg/utils"
 )
 
 func HandleCoachees(w http.ResponseWriter, r *http.Request) {
@@ -77,6 +78,17 @@ func HandleCoachees(w http.ResponseWriter, r *http.Request) {
 			uid, ok := params[":uid"]
 			if ok {
 				updateAllNotificationToRead(w, r, uid)
+				return
+			}
+		}
+
+		// upload picture
+		contains = strings.Contains(r.URL.Path, "profile_picture")
+		if contains {
+			params := response.PathParams(ctx, r, "/api/v1/coachees/:uid/profile_picture")
+			uid, ok := params[":uid"]
+			if ok {
+				uploadCoacheeProfilePicture(w, r, uid)
 				return
 			}
 		}
@@ -225,4 +237,38 @@ func handleCreateCoachee(w http.ResponseWriter, r *http.Request) {
 
 	var res = &model.Login{Coachee: apiCoachee}
 	response.Respond(ctx, w, r, res, http.StatusCreated)
+}
+
+func uploadCoacheeProfilePicture(w http.ResponseWriter, r *http.Request, uid string) {
+	ctx := appengine.NewContext(r)
+	log.Debugf(ctx, "uploadProfilePicture")
+
+	key, err := datastore.DecodeKey(uid)
+	if err != nil {
+		response.RespondErr(ctx, w, r, err, http.StatusBadRequest)
+		return
+	}
+
+	coachee, err := model.GetCoachee(ctx, key)
+	if err != nil {
+		response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
+		return
+	}
+
+	log.Debugf(ctx, "uploadProfilePicture, coachee ok")
+
+	fileName, err := utils.ReadPictureProfile(r, uid)
+	if err != nil {
+		response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
+		return
+	}
+
+	// save new picture url
+	coachee.AvatarURL = "https://storage.googleapis.com/eritis-be-glr.appspot.com/" + fileName
+	coachee.Update(ctx)
+
+	log.Debugf(ctx, "handle file upload, DONE")
+
+	//client.NewWriter(d.ctx, bucket, fileName)
+	response.Respond(ctx, w, r, nil, http.StatusOK)
 }
