@@ -52,6 +52,8 @@ import { MeetingListCoacheeComponent } from './meeting/meeting-list/coachee/meet
 import { MeetingListRhComponent } from './meeting/meeting-list/rh/meeting-list-rh/meeting-list-rh.component';
 import { CoacheeItemComponent } from './user/coachee-item/coachee-item.component';
 import { RhItemComponent } from './user/rh-item/rh-item.component';
+import { RegisterCoachComponent } from './login/register/register-coach/register-coach.component';
+import { CodeDeontologieComponent } from './login/register/register-coach/code-deontologie/code-deontologie.component';
 var AppModule = (function () {
     function AppModule() {
     }
@@ -89,7 +91,9 @@ AppModule = __decorate([
             MeetingListCoacheeComponent,
             MeetingListRhComponent,
             CoacheeItemComponent,
-            RhItemComponent
+            RhItemComponent,
+            RegisterCoachComponent,
+            CodeDeontologieComponent
         ],
         imports: [
             BrowserAnimationsModule,

@@ -108,15 +108,13 @@ func HandleMeeting(w http.ResponseWriter, r *http.Request) {
 		contains := strings.Contains(r.URL.Path, "meetings/coachees")
 		if contains {
 			params := response.PathParams(ctx, r, "/api/v1/meetings/coachees/:uid")
-			//verify url contains coachee
-			if _, ok := params["coachee"]; ok {
-				//get uid param
-				uid, ok := params[":uid"]
-				if ok {
-					getAllMeetingsForCoachee(w, r, uid) // GET /api/v1/meetings/coachees/:uid
-					return
-				}
+			//get uid param
+			uid, ok := params[":uid"]
+			if ok {
+				getAllMeetingsForCoachee(w, r, uid) // GET /api/v1/meetings/coachees/:uid
+				return
 			}
+
 		}
 
 		/**
@@ -125,14 +123,11 @@ func HandleMeeting(w http.ResponseWriter, r *http.Request) {
 		contains = strings.Contains(r.URL.Path, "meetings/coachs")
 		if contains {
 			params := response.PathParams(ctx, r, "/api/v1/meetings/coachs/:uid")
-			//verify url contains coach
-			if _, ok := params["coach"]; ok {
-				//get uid param
-				uid, ok := params[":uid"]
-				if ok {
-					getAllMeetingsForCoach(w, r, uid) // GET /api/v1/meetings/coachs/:uid
-					return
-				}
+			//get uid param
+			uid, ok := params[":uid"]
+			if ok {
+				getAllMeetingsForCoach(w, r, uid) // GET /api/v1/meetings/coachs/:uid
+				return
 			}
 		}
 
@@ -142,15 +137,13 @@ func HandleMeeting(w http.ResponseWriter, r *http.Request) {
 		contains = strings.Contains(r.URL.Path, "potentials")
 		if contains {
 			params := response.PathParams(ctx, r, "/api/v1/meetings/:meetingId/potentials")
-			//verify url contains meeting
-			if _, ok := params["meeting"]; ok {
-				//get uid param
-				meetingId, ok := params[":meetingId"]
-				if ok {
-					getPotentialsTimeForAMeeting(w, r, meetingId) // GET /api/meeting/:meetingId/reviews
-					return
-				}
+			//get uid param
+			meetingId, ok := params[":meetingId"]
+			if ok {
+				getPotentialsTimeForAMeeting(w, r, meetingId) // GET /api/meeting/:meetingId/reviews
+				return
 			}
+
 		}
 
 		////get all reviews for meeting and type
@@ -172,14 +165,11 @@ func HandleMeeting(w http.ResponseWriter, r *http.Request) {
 		contains = strings.Contains(r.URL.Path, "reviews")
 		if contains {
 			params := response.PathParams(ctx, r, "/api/v1/meetings/:meetingId/reviews")
-			//verify url contains meeting
-			if _, ok := params["meeting"]; ok {
-				//get uid param
-				meetingId, ok := params[":meetingId"]
-				if ok {
-					getAllReviewsForAMeeting(w, r, meetingId, r.URL.Query().Get("type")) // GET /api/meeting/:meetingId/reviews
-					return
-				}
+			//get uid param
+			meetingId, ok := params[":meetingId"]
+			if ok {
+				getAllReviewsForAMeeting(w, r, meetingId, r.URL.Query().Get("type")) // GET /api/meeting/:meetingId/reviews
+				return
 			}
 		}
 

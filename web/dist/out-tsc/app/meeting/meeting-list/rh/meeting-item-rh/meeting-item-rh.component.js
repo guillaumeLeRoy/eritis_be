@@ -30,12 +30,14 @@ var MeetingItemRhComponent = (function () {
         this.goals = {};
     }
     MeetingItemRhComponent.prototype.ngOnInit = function () {
-        console.log('ngOnInit');
-        this.getUsageRate(this.coachee.id);
-        this.getAllMeetingsForCoachee(this.coachee.id);
+        console.log('ngOnInit, coachee : ', this.coachee);
+        if (this.coachee != null) {
+            this.getUsageRate(this.coachee.id);
+            this.getAllMeetingsForCoachee(this.coachee.id);
+        }
     };
     MeetingItemRhComponent.prototype.ngAfterViewInit = function () {
-        console.log('ngAfterViewInit');
+        console.log('ngAfterViewInit, coachee : ', this.coachee);
         // this.fetchConnectedUser();
     };
     MeetingItemRhComponent.prototype.printDateString = function (date) {

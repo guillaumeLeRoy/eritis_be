@@ -105,11 +105,13 @@ var AuthService = AuthService_1 = (function () {
         var _this = this;
         var method = this.getConnectedApiUser().flatMap(function (firebaseUser) {
             return _this.getHeader(firebaseUser).flatMap(function (headers) {
-                for (var _i = 0, _a = options.headers.keys(); _i < _a.length; _i++) {
-                    var headerKey = _a[_i];
-                    console.log('post, options headerKey : ', headerKey);
-                    console.log('post, options value : ', options.headers.get(headerKey));
-                    headers.append(headerKey, options.headers.get(headerKey));
+                if (options != undefined) {
+                    for (var _i = 0, _a = options.headers.keys(); _i < _a.length; _i++) {
+                        var headerKey = _a[_i];
+                        console.log('post, options headerKey : ', headerKey);
+                        console.log('post, options value : ', options.headers.get(headerKey));
+                        headers.append(headerKey, options.headers.get(headerKey));
+                    }
                 }
                 return _this.httpService.post(_this.generatePath(path, params), body, { headers: headers });
             });

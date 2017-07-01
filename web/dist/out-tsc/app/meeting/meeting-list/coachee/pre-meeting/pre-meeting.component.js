@@ -26,8 +26,9 @@ var PreMeetingComponent = (function () {
         var _this = this;
         this.meetingService.getMeetingGoal(this.meetingId).subscribe(function (reviews) {
             console.log("getMeetingGoal, got goal : ", reviews);
-            if (reviews != null)
+            if (reviews != undefined && reviews.length > 0) {
                 _this.updateGoalValue(reviews[0].value);
+            }
         }, function (error) {
             console.log('getMeetingGoal error', error);
             //this.displayErrorPostingReview = true;
@@ -38,8 +39,9 @@ var PreMeetingComponent = (function () {
         var _this = this;
         this.meetingService.getMeetingContext(this.meetingId).subscribe(function (reviews) {
             console.log("getMeetingContext, got context : ", reviews);
-            if (reviews != null)
+            if (reviews != undefined && reviews.length > 0) {
                 _this.updateContextValue(reviews[0].value);
+            }
         }, function (error) {
             console.log('getMeetingContext error', error);
             //this.displayErrorPostingReview = true;

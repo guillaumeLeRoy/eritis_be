@@ -151,10 +151,15 @@ var HeaderComponent = (function () {
         return this.mUser instanceof HR;
     };
     HeaderComponent.prototype.isAdmin = function () {
-        return this.router.url === '/admin' || this.router.url === '/admin/signup' || this.router.url === '/admin/coachees-list' || this.router.url === '/admin/coachs-list' || this.router.url === '/admin/rhs-list';
+        var admin = new RegExp('/admin');
+        return admin.test(this.router.url);
     };
     HeaderComponent.prototype.isSigningUp = function () {
-        return this.router.url === '/signup_coachee' || this.router.url === '/signup_coach' || this.router.url === '/signup_rh';
+        var signupCoach = new RegExp('/signup_coach');
+        var signupCoachee = new RegExp('/signup_coachee');
+        var signupRh = new RegExp('/signup_rh');
+        var registerCoach = new RegExp('/register_coach');
+        return signupCoach.test(this.router.url) || signupCoachee.test(this.router.url) || signupRh.test(this.router.url) || registerCoach.test(this.router.url);
     };
     HeaderComponent.prototype.goToCoachs = function () {
         window.scrollTo(0, 0);
