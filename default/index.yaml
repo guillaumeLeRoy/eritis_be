@@ -42,3 +42,8 @@ indexes:
   properties:
   - name: CreatedDate
     direction: desc
+
+- kind: PossibleCoach
+  ancestor: no
+  properties:
+  - name: Email

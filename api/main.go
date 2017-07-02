@@ -87,6 +87,9 @@ func init() {
 	http.HandleFunc("/api/coachs/", authHandler(handler.HandleCoachs))
 	http.HandleFunc("/api/v1/coachs/", authHandler(handler.HandleCoachs))
 
+	// possible coach
+	http.HandleFunc("/api/v1/possible_coachs/", nonAuthHandler(handler.HandlePossibleCoach))
+
 	//coachee
 	http.HandleFunc("/api/coachees/", authHandler(handler.HandleCoachees))
 	http.HandleFunc("/api/v1/coachees/", authHandler(handler.HandleCoachees))
