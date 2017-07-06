@@ -9,6 +9,7 @@ import (
 	"eritis_be/pkg/response"
 	"strings"
 	"eritis_be/pkg/utils"
+	"fmt"
 )
 
 func HandleCoachs(w http.ResponseWriter, r *http.Request) {
@@ -223,14 +224,21 @@ func uploadCoachProfilePicture(w http.ResponseWriter, r *http.Request, uid strin
 
 	log.Debugf(ctx, "uploadProfilePicture, coach ok")
 
-	fileName, err := utils.ReadPictureProfile(r, uid)
+	fileName, err := utils.UploadPictureProfile(r, uid, "profile")
 	if err != nil {
 		response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
 		return
 	}
 
 	// save new picture url
-	coach.AvatarURL = "https://storage.googleapis.com/eritis-be-glr.appspot.com/" + fileName
+	storage, err := utils.GetStorageUrl(ctx)
+	if err != nil {
+		response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
+		return
+	}
+
+	avatarUrl := fmt.Sprintf("%s/%s", storage, fileName)
+	coach.AvatarURL = avatarUrl
 	coach.Update(ctx)
 
 	log.Debugf(ctx, "handle file upload, DONE")

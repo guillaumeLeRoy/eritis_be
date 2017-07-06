@@ -29,6 +29,7 @@ const GLR_ENV_PROJECT_ID string = "eritis-be-glr"
 const CONTACT_ERITIS = "diana@eritis.co.uk";
 
 const INVITE_KEY = "a very very very very secret key"
+const POSSIBLE_COACH_KEY = "possible_coach_secret_key1234567"
 
 func IsLiveEnvironment(ctx context.Context) bool {
 	appId := appengine.AppID(ctx)
@@ -92,19 +93,40 @@ const (
 func GetSiteUrl(ctx context.Context) (string, error) {
 
 	appId := appengine.AppID(ctx)
-	log.Debugf(ctx, "createInviteLink, appId %s", appId)
+	log.Debugf(ctx, "GetSiteUrl, appId %s", appId)
 
 	var baseUrl string
 	if appengine.IsDevAppServer() {
 		baseUrl = "http://localhost:4200"
 	} else if strings.EqualFold(LIVE_ENV_PROJECT_ID, appId) {
-		baseUrl = "https://eritis.com"
+		baseUrl = "https://eritis.fr"
 	} else if strings.EqualFold(DEV_ENV_PROJECT_ID, appId) {
 		baseUrl = "https://eritis-be-dev.appspot.com"
 	} else if strings.EqualFold(GLR_ENV_PROJECT_ID, appId) {
 		baseUrl = "https://eritis-be-glr.appspot.com"
 	} else {
-		return "", errors.New("createInviteLink, AppId doesn't match any environment")
+		return "", errors.New("GetSiteUrl, AppId doesn't match any environment")
+	}
+
+	return baseUrl, nil
+}
+
+func GetStorageUrl(ctx context.Context) (string, error) {
+
+	appId := appengine.AppID(ctx)
+	log.Debugf(ctx, "GetStorageUrl, appId %s", appId)
+
+	var baseUrl string
+	if appengine.IsDevAppServer() {
+		baseUrl = "https://storage.googleapis.com/eritis-be-glr.appspot.com"
+	} else if strings.EqualFold(LIVE_ENV_PROJECT_ID, appId) {
+		baseUrl = "https://storage.googleapis.com/eritis-150320.appspot.com"
+	} else if strings.EqualFold(DEV_ENV_PROJECT_ID, appId) {
+		baseUrl = "https://storage.googleapis.com/eritis-be-dev.appspot.com"
+	} else if strings.EqualFold(GLR_ENV_PROJECT_ID, appId) {
+		baseUrl = "https://storage.googleapis.com/eritis-be-glr.appspot.com"
+	} else {
+		return "", errors.New("GetStorageUrl, AppId doesn't match any environment")
 	}
 
 	return baseUrl, nil
@@ -115,21 +137,13 @@ func CreateInviteLink(ctx context.Context, emailAddress string, invType InviteTy
 	key := []byte(INVITE_KEY) // 32 bytes
 	plaintext := []byte(emailAddress)
 
-	var baseToken string
-	for {
-		//generate token
-		ciphertext, err := encrypt(key, plaintext)
-		if err != nil {
-			return "", err
-		}
-		baseToken = base64.StdEncoding.EncodeToString(ciphertext)
-		log.Debugf(ctx, "createInviteLink, baseToken %s", baseToken)
-		if !strings.Contains(baseToken, "/") {
-			break;
-		}
+	//generate token
+	ciphertext, err := encrypt(key, plaintext)
+	if err != nil {
+		return "", err
 	}
-
-	log.Debugf(ctx, "createInviteLink, final baseToken %s", baseToken)
+	baseToken := base64.URLEncoding.EncodeToString(ciphertext)
+	log.Debugf(ctx, "createInviteLink, baseToken %s", baseToken)
 
 	baseUrl, err := GetSiteUrl(ctx)
 	if err != nil {
@@ -169,19 +183,15 @@ func GetEmailFromInviteToken(ctx context.Context, token string) (string, error) 
 	return string(plaintext), nil
 }
 
-//func main() {
-//	fmt.Printf("%s\n", plaintext)
-//	ciphertext, err := encrypt(key, plaintext)
-//	if err != nil {
-//		log.Fatal(err)
-//	}
-//	fmt.Printf("%0x\n", ciphertext)
-//	result, err := decrypt(key, ciphertext)
-//	if err != nil {
-//		log.Fatal(err)
-//	}
-//	fmt.Printf("%s\n", result)
-//}
+func GetEmailHash(ctx context.Context, email string) (string, error) {
+	log.Debugf(ctx, "GetEmailHash, email %s", email)
+
+	plaintext := []byte(email)
+	ciphertext := base64.URLEncoding.EncodeToString(plaintext)
+	log.Debugf(ctx, "GetEmailHash, hash %s", ciphertext)
+
+	return ciphertext, nil
+}
 
 func encrypt(key, text []byte) ([]byte, error) {
 	block, err := aes.NewCipher(key)
@@ -189,6 +199,7 @@ func encrypt(key, text []byte) ([]byte, error) {
 		return nil, err
 	}
 	b := base64.StdEncoding.EncodeToString(text)
+
 	ciphertext := make([]byte, aes.BlockSize+len(b))
 	iv := ciphertext[:aes.BlockSize]
 	if _, err := io.ReadFull(rand.Reader, iv); err != nil {
@@ -254,20 +265,7 @@ func GetReaderFromBucket(ctx context.Context, fileName string) (*storage.Reader,
 	return reader, nil
 }
 
-func ReadPictureProfile(r *http.Request, uid string) (string, error) {
-	ctx := appengine.NewContext(r)
-	log.Debugf(ctx, "uploadProfilePicture")
-
-	fileToUpload, header, err := r.FormFile("uploadFile")
-	if err != nil {
-		return "", err
-	}
-	log.Debugf(ctx, "handle file upload, got file")
-
-	data, err := ioutil.ReadAll(fileToUpload)
-	if err != nil {
-		return "", err
-	}
+func uploadFile(ctx context.Context, fileName string, fileId string, suffix string, data []byte) (string, error) {
 
 	log.Debugf(ctx, "handle file upload, read ok")
 
@@ -286,21 +284,9 @@ func ReadPictureProfile(r *http.Request, uid string) (string, error) {
 	log.Debugf(ctx, "handle file upload, storage client created")
 
 	bucketHandler := client.Bucket(bucketName)
-	var fileName = header.Filename
-
-	// rename file
-	split := strings.Split(fileName, ".")
-	//split should have 2 values
-	if len(split) != 2 {
-		if err != nil {
-			return "", errors.New("Incorrect filename")
-		}
-	}
-	var newFileName = fmt.Sprintf("%s_%s_%s", uid, strconv.Itoa(time.Now().Minute()), strconv.Itoa(time.Now().Second()))
-	fileName = strings.Replace(fileName, split[0], newFileName, -1)
 
 	// search for existing image using UID
-	q := &storage.Query{Prefix: uid}
+	q := &storage.Query{Prefix: fileId}
 	it := bucketHandler.Objects(ctx, q)
 	for {
 		objAttrs, err := it.Next()
@@ -321,6 +307,17 @@ func ReadPictureProfile(r *http.Request, uid string) (string, error) {
 
 	log.Debugf(ctx, "handle file upload, iterator DONE")
 
+	// rename file, just keep file format
+	split := strings.Split(fileName, ".")
+	// split should have 2 values ( xxx.jpg )
+	if len(split) != 2 {
+		if err != nil {
+			return "", errors.New("Incorrect filename")
+		}
+	}
+	var newFileName = fmt.Sprintf("%s_%s_%s_%s", fileId, suffix, strconv.Itoa(time.Now().Minute()), strconv.Itoa(time.Now().Second()))
+	fileName = strings.Replace(fileName, split[0], newFileName, -1)
+
 	// save new image
 	writer := bucketHandler.Object(fileName).NewWriter(ctx)
 	writer.ACL = []storage.ACLRule{{storage.AllUsers, storage.RoleReader}}
@@ -338,5 +335,54 @@ func ReadPictureProfile(r *http.Request, uid string) (string, error) {
 	}
 
 	return fileName, nil
+}
 
+func UploadPictureProfile(r *http.Request, uid string, suffix string) (string, error) {
+	ctx := appengine.NewContext(r)
+	log.Debugf(ctx, "UploadPictureProfile for uid %s", uid)
+
+	// get file to upload
+	fileToUpload, header, err := r.FormFile("uploadFile")
+	if err != nil {
+		return "", err
+	}
+	log.Debugf(ctx, "handle file upload, got file")
+
+	// read data
+	data, err := ioutil.ReadAll(fileToUpload)
+	if err != nil {
+		return "", err
+	}
+
+	fileName, err := uploadFile(ctx, header.Filename, uid, suffix, data)
+	if err != nil {
+		return "", err
+	}
+
+	return fileName, nil
+}
+
+func UploadPossibleCoachAssurance(r *http.Request, uid string, suffix string) (string, error) {
+	ctx := appengine.NewContext(r)
+	log.Debugf(ctx, "UploadPossibleCoachAssurance, uid %s", uid)
+
+	// get file to upload
+	fileToUpload, header, err := r.FormFile("uploadFile")
+	if err != nil {
+		return "", err
+	}
+	log.Debugf(ctx, "handle file upload, got file")
+
+	// read data
+	data, err := ioutil.ReadAll(fileToUpload)
+	if err != nil {
+		return "", err
+	}
+
+	fileName, err := uploadFile(ctx, header.Filename, uid, suffix, data)
+	if err != nil {
+		return "", err
+	}
+
+	return fileName, nil
 }
