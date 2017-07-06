@@ -17,12 +17,18 @@ import { AvailableMeetingsComponent } from "./meeting/meeting-list/coach/availab
 import { CoacheesListComponent } from "./admin/coachees-list/coachees-list.component";
 import { RhsListComponent } from "./admin/rhs-list/rhs-list.component";
 import { RegisterCoachComponent } from "./login/register/register-coach/register-coach.component";
+import { RegisterCoachFormComponent } from "./login/register/register-coach/register-coach-form/register-coach-form.component";
+import { RegisterCoachMessageComponent } from "./login/register/register-coach/register-coach-message/register-coach-message.component";
+import { CodeDeontologieComponent } from "./login/register/register-coach/code-deontologie/code-deontologie.component";
 var APP_ROUTES = [
     { path: '', redirectTo: '/welcome', pathMatch: 'full' },
     { path: 'welcome', component: WelcomeComponent },
     { path: 'chat', component: ChatComponent },
     { path: 'signin', component: SigninComponent },
-    { path: 'register_coach', component: RegisterCoachComponent },
+    { path: 'register_coach/step1', component: RegisterCoachComponent },
+    { path: 'register_coach/code_deontologie', component: CodeDeontologieComponent },
+    { path: 'register_coach/step2', component: RegisterCoachFormComponent },
+    { path: 'register_coach/step3', component: RegisterCoachMessageComponent },
     { path: 'signup_coachee', component: SignupCoacheeComponent },
     { path: 'signup_coach', component: SignupCoachComponent },
     { path: 'signup_rh', component: SignupRhComponent },

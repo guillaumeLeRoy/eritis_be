@@ -8,7 +8,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 import { ChangeDetectorRef, Component } from "@angular/core";
-import { Router } from "@angular/router";
+import { NavigationEnd, Router } from "@angular/router";
 import { AuthService } from "../service/auth.service";
 import { Observable } from "rxjs";
 import { Coach } from "../model/Coach";
@@ -45,6 +45,13 @@ var HeaderComponent = (function () {
         this.subscription = this.authService.getConnectedUserObservable().subscribe(function (user) {
             console.log('getConnectedUser : ' + user);
             _this.onUserObtained(user);
+        });
+        this.router.events.subscribe(function (evt) {
+            if (!(evt instanceof NavigationEnd)) {
+                return;
+            }
+            console.log('Header navigation');
+            window.scrollTo(0, 0);
         });
     };
     HeaderComponent.prototype.onUserObtained = function (user) {
@@ -86,10 +93,19 @@ var HeaderComponent = (function () {
         this.router.navigate(['/signup']);
     };
     HeaderComponent.prototype.goToHome = function () {
-        if (this.isAuthenticated)
+        console.log('goToHome');
+        if (this.isAuthenticated) {
+            console.log('goToHomeUser');
             this.goToMeetings();
-        if (this.isAdmin())
+        }
+        if (this.isAdmin()) {
+            console.log('goToHomeAdmin');
             this.goToAdmin();
+        }
+        if (this.isSigningUp()) {
+            console.log('goToWelcomePage');
+            this.router.navigate(['/welcome']);
+        }
     };
     HeaderComponent.prototype.goToAdmin = function () {
         window.scrollTo(0, 0);

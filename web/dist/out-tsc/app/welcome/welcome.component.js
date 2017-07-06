@@ -63,6 +63,9 @@ var WelcomeComponent = (function () {
             Materialize.toast('Une erreur est survenue', 4000);
         });
     };
+    WelcomeComponent.prototype.goToCoachRegister = function () {
+        this.router.navigate(['/register_coach/step1']);
+    };
     return WelcomeComponent;
 }());
 WelcomeComponent = __decorate([
