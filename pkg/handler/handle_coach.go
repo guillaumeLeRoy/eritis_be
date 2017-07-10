@@ -175,7 +175,7 @@ func handleCreateCoach(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	//get potential Rh : email must mach
+	//get potential Coach : email must mach
 	potential, err := model.GetPotentialCoachForEmail(ctx, body.Email)
 	if err != nil {
 		response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
@@ -186,6 +186,41 @@ func handleCreateCoach(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
 		return
+	}
+
+	// get PossibleCoach if any
+	possibleCoach, err := model.FindPossibleCoachByEmail(ctx, body.Email)
+	if err != nil && err != model.ErrNoPossibleCoach {
+		response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
+		return
+	}
+
+	if err == nil {
+		// add extra data
+		coach.FirstName = possibleCoach.FirstName
+		coach.LastName = possibleCoach.LastName
+		coach.Description = possibleCoach.Description
+		coach.AvatarURL = possibleCoach.AvatarURL
+		coach.LinkedinUrl = possibleCoach.LinkedinUrl
+		coach.Training = possibleCoach.Training
+		coach.Degree = possibleCoach.Degree
+		coach.ExtraActivities = possibleCoach.ExtraActivities
+		coach.CoachForYears = possibleCoach.CoachForYears
+		coach.CoachingExperience = possibleCoach.CoachingExperience
+		coach.CoachingHours = possibleCoach.CoachingHours
+		coach.Supervisor = possibleCoach.Supervisor
+		coach.FavoriteCoachingSituation = possibleCoach.FavoriteCoachingSituation
+		coach.Status = possibleCoach.Status
+		coach.Revenue = possibleCoach.Revenue
+
+		err = coach.Update(ctx)
+		if err != nil {
+			response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
+			return
+		}
+
+		// delete possible coach
+		possibleCoach.Delete(ctx)
 	}
 
 	//remove potential

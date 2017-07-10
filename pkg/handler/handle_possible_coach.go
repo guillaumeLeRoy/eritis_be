@@ -33,7 +33,7 @@ func HandlePossibleCoach(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		//try to detect a coach
+		// try to detect a possible_coachs key work
 		if ok := strings.Contains(r.URL.Path, "possible_coachs"); ok {
 			handleCreatePossibleCoach(w, r)
 			return
@@ -41,6 +41,20 @@ func HandlePossibleCoach(w http.ResponseWriter, r *http.Request) {
 
 		http.NotFound(w, r)
 
+	case "GET":
+
+		// try to detect a possible_coachs key work
+		if ok := strings.Contains(r.URL.Path, "possible_coachs"); ok {
+			params := response.PathParams(ctx, r, "/api/v1/possible_coachs/:id")
+			userId, ok := params[":id"]
+			if ok {
+				getPossibleCoach(w, r, userId) // GET /api/v1/possible_coachs/:id
+				return
+			}
+			getAllPossibleCoachs(w, r)
+			return
+		}
+		http.NotFound(w, r)
 	default:
 		http.NotFound(w, r)
 	}
@@ -55,17 +69,18 @@ func handleCreatePossibleCoach(w http.ResponseWriter, r *http.Request) {
 		FirstName                 string `json:"firstName"`
 		LastName                  string `json:"lastName"`
 		LinkedinUrl               string `json:"linkedin_url"`
+		AssuranceUrl              string `json:"assurance_url"`
 		Description               string `json:"description"`
-		Training                  string
-		Degree                    string
-		ExtraActivities           string //ActivitiesOutOfCoaching
-		CoachForYears             string // been a coach xx years
-		CoachingExperience        string // coaching experience
-		CoachingHours             string // number of coaching hours
-		Supervisor                string
-		FavoriteCoachingSituation string
-		Status                    string
-		Revenue                   string //revenues for last 3 years
+		Training                  string `json:"training"`
+		Degree                    string `json:"degree"`
+		ExtraActivities           string `json:"extraActivities"`    // ActivitiesOutOfCoaching
+		CoachForYears             string `json:"coachForYears"`      // been a coach xx years
+		CoachingExperience        string `json:"coachingExperience"` // coaching experience
+		CoachingHours             string `json:"coachingHours"`      // number of coaching hours
+		Supervisor                string `json:"supervisor"`
+		FavoriteCoachingSituation string `json:"favoriteCoachingSituation"`
+		Status                    string `json:"status"`
+		Revenue                   string `json:"revenue"` //revenues for last 3 years
 	}
 
 	err := response.Decode(r, &possibleCoach)
@@ -83,7 +98,6 @@ func handleCreatePossibleCoach(w http.ResponseWriter, r *http.Request) {
 		possibleCoachToUpdate, err = model.FindPossibleCoachByEmail(ctx, possibleCoach.Email)
 
 		if err != nil && err != model.ErrNoPossibleCoach {
-			// response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
 			return err
 		}
 
@@ -95,7 +109,6 @@ func handleCreatePossibleCoach(w http.ResponseWriter, r *http.Request) {
 			// create new possible coach
 			newPossibleCoach, err := model.CreatePossibleCoach(ctx, possibleCoach.Email)
 			if err != nil {
-				// response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
 				return err
 			}
 			possibleCoachToUpdate = newPossibleCoach
@@ -116,6 +129,7 @@ func handleCreatePossibleCoach(w http.ResponseWriter, r *http.Request) {
 	possibleCoachToUpdate.LastName = possibleCoach.LastName
 	possibleCoachToUpdate.Description = possibleCoach.Description
 	possibleCoachToUpdate.LinkedinUrl = possibleCoach.LinkedinUrl
+	possibleCoachToUpdate.AssuranceUrl = possibleCoach.AssuranceUrl
 	possibleCoachToUpdate.Training = possibleCoach.Training
 	possibleCoachToUpdate.Degree = possibleCoach.Degree
 	possibleCoachToUpdate.ExtraActivities = possibleCoach.ExtraActivities
@@ -128,6 +142,13 @@ func handleCreatePossibleCoach(w http.ResponseWriter, r *http.Request) {
 	possibleCoachToUpdate.Revenue = possibleCoach.Revenue
 
 	err = possibleCoachToUpdate.Update(ctx)
+	if err != nil {
+		response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
+		return
+	}
+
+	// send email to notify coach we received his data
+	err = utils.SendEmailToGivenEmail(ctx, possibleCoach.Email, THANKS_CANDIDATE_POSSIBLE_COACH_TITLE, THANKS_CANDIDATE_POSSIBLE_COACH_MSG)
 	if err != nil {
 		response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
 		return
@@ -258,4 +279,38 @@ func uploadPossibleCoachAssurance(w http.ResponseWriter, r *http.Request) {
 	log.Debugf(ctx, "uploadPossibleCoachAssurance, url updated")
 
 	response.Respond(ctx, w, r, nil, http.StatusOK)
+}
+
+func getPossibleCoach(w http.ResponseWriter, r *http.Request, uid string) {
+	ctx := appengine.NewContext(r)
+
+	log.Debugf(ctx, "getPossibleCoach")
+
+	key, err := datastore.DecodeKey(uid)
+	if err != nil {
+		response.RespondErr(ctx, w, r, err, http.StatusBadRequest)
+		return
+	}
+
+	possibleCoach, err := model.GetPossibleCoach(ctx, key)
+	if err != nil {
+		response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
+		return
+	}
+
+	response.Respond(ctx, w, r, possibleCoach, http.StatusOK)
+}
+
+func getAllPossibleCoachs(w http.ResponseWriter, r *http.Request) {
+	ctx := appengine.NewContext(r)
+
+	log.Debugf(ctx, "getAllPossibleCoachs")
+
+	coachs, err := model.GetAllPossibleCoachs(ctx)
+	if err != nil {
+		response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
+		return
+	}
+
+	response.Respond(ctx, w, r, coachs, http.StatusOK)
 }

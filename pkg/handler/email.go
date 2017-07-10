@@ -152,6 +152,26 @@ const INVITE_COACH_MSG = `
 	</body>
 </html>`
 
+const THANKS_CANDIDATE_POSSIBLE_COACH_TITLE = `Devenez Coach Eritis !`
+const THANKS_CANDIDATE_POSSIBLE_COACH_MSG = `
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html style="color:black;">
+
+	</head>
+
+	<body>
+		<p>Bonjour,</p>
+		<p>Nous avons bien reçu votre candidature pour faire partie de l'équipe de coaches Eritis.</p>
+		<p>Votre condidature est désormais en cours d'examen par nos équipes.</p>
+		<p>Nous vous contacterons bientôt par email.</p>
+		<p>A très bientôt sur notre plateforme,</p>
+		<p>
+		L'équipe Eritis
+		</p>
+	</body>
+</html>`
+
 const IMMINENT_MEETING_TITLE = `Vous avez bientôt une séance`
 const IMMINENT_MEETING_MSG = `
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"

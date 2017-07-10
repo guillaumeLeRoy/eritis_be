@@ -6,110 +6,38 @@ import (
 	"errors"
 	"golang.org/x/net/context"
 	"eritis_be/pkg/utils"
+	"time"
 )
 
 const POSSIBLE_COACH_ENTITY string = "PossibleCoach"
-const POSSIBLE_COACH_SEARCH_ENTITY string = "PossibleCoachSearch"
 
 var ErrNoPossibleCoach = errors.New("Possible coach : No Possible coach found")
 
 type PossibleCoach struct {
-	Key                       *datastore.Key `datastore:"-"`
-	Email                     string
-	FirstName                 string
-	LastName                  string
-	LinkedinUrl               string
-	Description               string
-	Training                  string
-	Degree                    string
-	ExtraActivities           string //ActivitiesOutOfCoaching
-	CoachForYears             string // been a coach xx years
-	CoachingExperience        string // coaching experience
-	CoachingHours             string // number of coaching hours
-	Supervisor                string
-	FavoriteCoachingSituation string
-	Status                    string
-	Revenue                   string //revenues for last 3 years
-	AvatarURL                 string
-	AssuranceUrl              string
-}
-
-type PossibleCoachAPI struct {
-	Id                        string `json:"id"`
+	Key                       *datastore.Key `datastore:"-" json:"id"`
+	InscriptionDate           time.Time `json:"inscription_date"`
 	Email                     string `json:"email"`
 	FirstName                 string `json:"firstName"`
 	LastName                  string `json:"lastName"`
 	LinkedinUrl               string `json:"linkedin_url"`
 	Description               string `json:"description"`
-	Training                  string
-	Degree                    string
-	ExtraActivities           string //ActivitiesOutOfCoaching
-	CoachForYears             string // been a coach xx years
-	CoachingExperience        string // coaching experience
-	CoachingHours             string // number of coaching hours
-	Supervisor                string
-	FavoriteCoachingSituation string
-	Status                    string
-	Revenue                   string //revenues for last 3 years
-	AvatarURL                 string
-	AssuranceUrl              string
+	Training                  string `json:"training"`
+	Degree                    string `json:"degree"`
+	ExtraActivities           string `json:"extraActivities"`    //ActivitiesOutOfCoaching
+	CoachForYears             string `json:"coachForYears"`      // been a coach xx years
+	CoachingExperience        string `json:"coachingExperience"` // coaching experience
+	CoachingHours             string `json:"coachingHours"`      // number of coaching hours
+	Supervisor                string `json:"supervisor"`
+	FavoriteCoachingSituation string `json:"favoriteCoachingSituation"`
+	Status                    string `json:"status"`
+	Revenue                   string `json:"revenues"` //revenues for last 3 years
+	AvatarURL                 string `json:"avatar_url"`
+	AssuranceUrl              string `json:"assurance_url"`
+	InviteSent                bool   `json:"invite_sent"`
 }
-
-/*
-func CreateCoachSearch(ctx context.Context, email string) (*PossibleCoachSearch, error) {
-	log.Debugf(ctx, "Create possible coach search for email %s", email)
-
-	possibleCoachSearch := new(PossibleCoachSearch)
-	possibleCoachSearch.Email = email
-	//err := datastore.RunInTransaction(ctx, func(ctx context.Context) error {
-	log.Debugf(ctx, "Create possible coach search, RunInTransaction")
-	key := datastore.NewKey(ctx, POSSIBLE_COACH_SEARCH_ENTITY, email, 0, nil)
-	key, err := datastore.Put(ctx, key, possibleCoachSearch) //TODO
-	if err != nil {
-		log.Debugf(ctx, "Create possible coach search, fail")
-		return nil, err
-	}
-	possibleCoachSearch.Key = key
-	//return nil
-	//}, &datastore.TransactionOptions{XG: true})
-
-	return possibleCoachSearch, err
-}*/
-
-/*
-func SearchForPossibleCoach(ctx context.Context, email string) (*PossibleCoachSearch, error) {
-
-	var possibleCoachSearch PossibleCoachSearch
-
-	err := datastore.RunInTransaction(ctx, func(ctx context.Context) error {
-		log.Debugf(ctx, "SearchForPossibleCoach, RunInTransaction")
-
-		key, err := datastore.DecodeKey(email)
-		if err != nil {
-			return err
-		}
-
-		err = datastore.Get(ctx, key, &possibleCoachSearch)
-		if err != nil {
-			return err
-		}
-
-		return nil
-	}, &datastore.TransactionOptions{XG: true})
-
-	if err != nil {
-		return nil, err
-	}
-
-	return &possibleCoachSearch, nil
-
-}*/
 
 func CreatePossibleCoach(ctx context.Context, email string) (*PossibleCoach, error) {
 	log.Debugf(ctx, "Create possible coach for %s", email)
-
-	// transaction
-	//CreateCoachSearch(ctx, email)
 
 	hash, err := utils.GetEmailHash(ctx, email)
 	if err != nil {
@@ -120,11 +48,15 @@ func CreatePossibleCoach(ctx context.Context, email string) (*PossibleCoach, err
 
 	possibleCoach := new(PossibleCoach)
 	possibleCoach.Key = datastore.NewKey(ctx, POSSIBLE_COACH_ENTITY, hash, 0, nil)
+
+	possibleCoach.Email = email
+	possibleCoach.InscriptionDate = time.Now()
+	possibleCoach.InviteSent = false
+
 	err = possibleCoach.Update(ctx)
 	if err != nil {
 		return nil, err
 	}
-	possibleCoach.Email = email
 
 	return possibleCoach, nil
 }
@@ -141,33 +73,56 @@ func (m *PossibleCoach) Update(ctx context.Context) error {
 	return nil
 }
 
+func (m *PossibleCoach) Delete(ctx context.Context) error {
+	log.Debugf(ctx, "PossibleCoach, Delete %s", m)
+
+	err := datastore.Delete(ctx, m.Key)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func GetPossibleCoach(ctx context.Context, key *datastore.Key) (*PossibleCoach, error) {
+	log.Debugf(ctx, "GetPossibleCoach")
+
+	var possibleCoach PossibleCoach
+	err := datastore.Get(ctx, key, &possibleCoach)
+	if err != nil {
+		return nil, err
+	}
+
+	possibleCoach.Key = key
+
+	return &possibleCoach, nil
+}
+
+func GetAllPossibleCoachs(ctx context.Context) ([]*PossibleCoach, error) {
+	log.Debugf(ctx, "GetAllPossibleCoachs")
+
+	var possibleCoachs []*PossibleCoach
+	keys, err := datastore.NewQuery(POSSIBLE_COACH_ENTITY).GetAll(ctx, &possibleCoachs)
+	if err != nil {
+		return nil, err
+	}
+
+	for i, coach := range possibleCoachs {
+		coach.Key = keys[i]
+	}
+
+	return possibleCoachs, nil
+}
+
 func FindPossibleCoachByEmail(ctx context.Context, email string) (*PossibleCoach, error) {
 	log.Debugf(ctx, "FindPossibleCoachByEmail, email %s", email)
-
-	// transaction
-	//possibleCoachSearch, err := SearchForPossibleCoach(ctx, email)
-	//if err != nil {
-	//	return nil, ErrNoPossibleCoach
-	//}
-
-	//log.Debugf(ctx, "FindPossibleCoachByEmail, got coach search %s", possibleCoachSearch)
 
 	hash, err := utils.GetEmailHash(ctx, email)
 	if err != nil {
 		return nil, err
 	}
 
-	log.Debugf(ctx, "FindPossibleCoachByEmail, hash %s", hash)
-
-	/**
-	key, err := datastore.DecodeKey(hash)
-	if err != nil {
-		return nil, err
-	}*/
 	key := datastore.NewKey(ctx, POSSIBLE_COACH_ENTITY, hash, 0, nil)
-	log.Debugf(ctx, "FindPossibleCoachByEmail, key 1 %s", key)
-	key2 := datastore.NewKey(ctx, POSSIBLE_COACH_ENTITY, hash, 0, nil)
-	log.Debugf(ctx, "FindPossibleCoachByEmail, key 2 %s", key2)
+	log.Debugf(ctx, "FindPossibleCoachByEmail, key %s", key)
 
 	var possibleCoach PossibleCoach
 	err = datastore.Get(ctx, key, &possibleCoach)
@@ -181,33 +136,4 @@ func FindPossibleCoachByEmail(ctx context.Context, email string) (*PossibleCoach
 	possibleCoach.Key = key
 
 	return &possibleCoach, nil
-	/*
-var potentials []*PossibleCoach
-// keys, err := datastore.NewQuery(POSSIBLE_COACH_ENTITY).Filter("Email =", email).GetAll(ctx, &potentials)
-
-
-
-keys, err := datastore.NewQuery(POSSIBLE_COACH_ENTITY).GetAll(ctx, &potentials)
-if err != nil {
-	return nil, err
-}
-
-log.Debugf(ctx, "FindPossibleCoachByEmail, query done")
-
-if len(potentials) == 0 {
-	return nil, ErrNoPossibleCoach
-}
-
-//get Keys
-for i, pot := range potentials {
-	pot.Key = keys[i]
-	if pot.Email == email {
-		log.Debugf(ctx, "FindPossibleCoachByEmail, found one")
-		return pot, nil
-	}
-}
-
-return nil, ErrNoPossibleCoach
-
-*/
 }

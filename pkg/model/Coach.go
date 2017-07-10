@@ -15,30 +15,52 @@ const COACH_ENTITY string = "Coach"
 const ROOM_APPEAR_IN_BASE_URL string = "https://appear.in/eritis"
 
 type Coach struct {
-	Key           *datastore.Key `json:"id" datastore:"-"`
-	Email         string `json:"email"`
-	FirebaseId    string `json:"firebase_id"`
-	FirstName     string `json:"firstName"`
-	LastName      string `json:"lastName"`
-	AvatarURL     string`json:"avatar_url"`
-	ChatRoomURL   string`json:"chat_room_url"`
-	Score         int `json:"score"`
-	SessionsCount int
-	StartDate     time.Time `json:"start_date"`
-	Description   string `json:"description"`
+	Key                       *datastore.Key `datastore:"-"`
+	Email                     string
+	FirebaseId                string
+	FirstName                 string
+	LastName                  string
+	AvatarURL                 string
+	ChatRoomURL               string
+	Score                     int
+	SessionsCount             int
+	StartDate                 time.Time
+	Description               string
+	LinkedinUrl               string
+	Training                  string
+	Degree                    string
+	ExtraActivities           string
+	CoachForYears             string
+	CoachingExperience        string
+	CoachingHours             string
+	Supervisor                string
+	FavoriteCoachingSituation string
+	Status                    string
+	Revenue                   string
 }
 
 type CoachAPI struct {
-	Id            string`json:"id"`
-	Email         string `json:"email"`
-	FirstName     string `json:"firstName"`
-	LastName      string `json:"lastName"`
-	AvatarURL     string`json:"avatar_url"`
-	ChatRoomURL   string`json:"chat_room_url"`
-	Score         int `json:"score"`
-	StartDate     time.Time `json:"start_date"`
-	Description   string `json:"description"`
-	SessionsCount int `json:"sessions_count"`
+	Id                        string `json:"id"`
+	Email                     string `json:"email"`
+	FirstName                 string `json:"firstName"`
+	LastName                  string `json:"lastName"`
+	AvatarURL                 string `json:"avatar_url"`
+	ChatRoomURL               string `json:"chat_room_url"`
+	Score                     int    `json:"score"`
+	StartDate                 time.Time `json:"start_date"`
+	Description               string `json:"description"`
+	SessionsCount             int    `json:"sessions_count"`
+	LinkedinUrl               string `json:"linkedin_url"`
+	Training                  string `json:"training"`
+	Degree                    string `json:"degree"`
+	ExtraActivities           string `json:"extraActivities"`    //ActivitiesOutOfCoaching
+	CoachForYears             string `json:"coachForYears"`      // been a coach xx years
+	CoachingExperience        string `json:"coachingExperience"` // coaching experience
+	CoachingHours             string `json:"coachingHours"`      // number of coaching hours
+	Supervisor                string `json:"supervisor"`
+	FavoriteCoachingSituation string `json:"favoriteCoachingSituation"`
+	Status                    string `json:"status"`
+	Revenue                   string `json:"revenue"` //revenues for last 3 years
 }
 
 func (c *Coach) ToCoachAPI() *CoachAPI {
@@ -53,6 +75,18 @@ func (c *Coach) ToCoachAPI() *CoachAPI {
 	res.StartDate = c.StartDate
 	res.Description = c.Description
 	res.SessionsCount = c.SessionsCount
+
+	res.LinkedinUrl = c.LinkedinUrl
+	res.Training = c.Training
+	res.Degree = c.Degree
+	res.ExtraActivities = c.ExtraActivities
+	res.CoachForYears = c.CoachForYears
+	res.CoachingExperience = c.CoachingExperience
+	res.CoachingHours = c.CoachingHours
+	res.Supervisor = c.Supervisor
+	res.FavoriteCoachingSituation = c.FavoriteCoachingSituation
+	res.Status = c.Status
+	res.Revenue = c.Revenue
 
 	return &res
 }

@@ -10,6 +10,7 @@ import (
 	"strings"
 	"google.golang.org/appengine/datastore"
 	"errors"
+	"golang.org/x/net/context"
 )
 
 func HandlePotential(w http.ResponseWriter, r *http.Request) {
@@ -39,7 +40,7 @@ func HandlePotential(w http.ResponseWriter, r *http.Request) {
 			params := response.PathParams(ctx, r, "/api/v1/potentials/coachees/:token")
 			token, ok := params[":token"]
 			if ok {
-				handleGetPotentialCoacheeForToken(w, r, token)// GET /api/v1/potentials/coachees/:token
+				handleGetPotentialCoacheeForToken(w, r, token) // GET /api/v1/potentials/coachees/:token
 				return
 			}
 		}
@@ -49,7 +50,7 @@ func HandlePotential(w http.ResponseWriter, r *http.Request) {
 			params := response.PathParams(ctx, r, "/api/v1/potentials/rhs/:token")
 			token, ok := params[":token"]
 			if ok {
-				handleGetPotentialRhForToken(w, r, token)// GET /api/v1/potentials/rhs/:token
+				handleGetPotentialRhForToken(w, r, token) // GET /api/v1/potentials/rhs/:token
 				return
 			}
 		}
@@ -59,7 +60,7 @@ func HandlePotential(w http.ResponseWriter, r *http.Request) {
 			params := response.PathParams(ctx, r, "/api/v1/potentials/coachs/:token")
 			token, ok := params[":token"]
 			if ok {
-				handleGetPotentialCoachForToken(w, r, token)// GET /api/v1/potentials/coachs/:token
+				handleGetPotentialCoachForToken(w, r, token) // GET /api/v1/potentials/coachs/:token
 				return
 			}
 		}
@@ -220,44 +221,66 @@ func handleCreatePotentialCoach(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	//check if there is already a PotentialCoach for this email
-	_, err = model.GetPotentialCoachForEmail(ctx, body.Email)
-	if err == nil || err != model.ErrNoPotentialCoach {
-		//it means there is already a Potential
-		response.RespondErr(ctx, w, r, errors.New("There is already a Potential Coach for this email"), http.StatusInternalServerError)
-		return
-	}
-
-	log.Debugf(ctx, "handleCreatePotentialCoach, no potential with this email")
-
-	//check this email is not used by a Coach
-	coachs, err := model.GetCoachForEmail(ctx, body.Email)
-	if err != nil || len(coachs) > 0 {
-		//it means there is already a Coach with this email
-		response.RespondErr(ctx, w, r, errors.New("There is already a Coachee for this email"), http.StatusInternalServerError)
-		return
-	}
-
-	log.Debugf(ctx, "handleCreatePotentialCoachee, no Coachee with this email")
-
-	//create potential
-	pot, err := model.CreatePotentialCoach(ctx, body.Email)
+	potentialCoach, err := createPotentialCoachFromEmail(ctx, body.Email)
 	if err != nil {
 		response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
 		return
+	}
+	response.Respond(ctx, w, r, potentialCoach, http.StatusCreated)
+}
+
+func createPotentialCoachFromEmail(ctx context.Context, email string) (*model.PotentialCoachAPI, error) {
+
+	//check if there is already a PotentialCoach for this email
+	_, err := model.GetPotentialCoachForEmail(ctx, email)
+	if err == nil || err != model.ErrNoPotentialCoach {
+		//it means there is already a Potential
+		return nil, errors.New("There is already a Potential Coach for this email")
+	}
+
+	log.Debugf(ctx, "createPotentialCoachFromEmail, no potential with this email")
+
+	//check this email is not used by a Coach
+	coachs, err := model.GetCoachForEmail(ctx, email)
+	if err != nil || len(coachs) > 0 {
+		//it means there is already a Coach with this email
+		return nil, errors.New("There is already a Coach for this email")
+	}
+
+	log.Debugf(ctx, "createPotentialCoachFromEmail, no coach with this email")
+
+	//create potential
+	pot, err := model.CreatePotentialCoach(ctx, email)
+	if err != nil {
+		return nil, err
+	}
+
+	//TODO find PossibleCoach if any and change flag
+	// get PossibleCoach if any
+	possibleCoach, err := model.FindPossibleCoachByEmail(ctx, email)
+	if err != nil && err != model.ErrNoPossibleCoach {
+		return nil, err
+	}
+
+	if err == nil {
+		// add extra data
+		possibleCoach.InviteSent = true
+		err = possibleCoach.Update(ctx)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	//send email
 	err = SendInviteEmailToNewCoach(ctx, pot.Email)
 	if err != nil {
-		response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
-		return
+		return nil, err
 	}
 
 	//create API response
 	res := pot.ToPotentialCoachAPI()
 
-	response.Respond(ctx, w, r, &res, http.StatusCreated)
+	return res, nil
 }
 
 func handleCreatePotentialRh(w http.ResponseWriter, r *http.Request) {
@@ -314,4 +337,3 @@ func handleCreatePotentialRh(w http.ResponseWriter, r *http.Request) {
 
 	response.Respond(ctx, w, r, &res, http.StatusCreated)
 }
-

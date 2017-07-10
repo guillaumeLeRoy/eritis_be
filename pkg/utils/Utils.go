@@ -26,10 +26,9 @@ const LIVE_ENV_PROJECT_ID string = "eritis-150320"
 const DEV_ENV_PROJECT_ID string = "eritis-be-dev"
 const GLR_ENV_PROJECT_ID string = "eritis-be-glr"
 
-const CONTACT_ERITIS = "diana@eritis.co.uk";
+const CONTACT_ERITIS = "diana@eritis.co.uk"
 
 const INVITE_KEY = "a very very very very secret key"
-const POSSIBLE_COACH_KEY = "possible_coach_secret_key1234567"
 
 func IsLiveEnvironment(ctx context.Context) bool {
 	appId := appengine.AppID(ctx)
@@ -167,12 +166,10 @@ func CreateInviteLink(ctx context.Context, emailAddress string, invType InviteTy
 func GetEmailFromInviteToken(ctx context.Context, token string) (string, error) {
 	key := []byte(INVITE_KEY) // 32 bytes
 
-	decodedToken, err := base64.StdEncoding.DecodeString(token)
+	decodedToken, err := base64.URLEncoding.DecodeString(token)
 	if err != nil {
 		return "", err
 	}
-
-	log.Debugf(ctx, "GetEmailFromInviteToken, decodedToken %s", decodedToken)
 
 	plaintext, err := decrypt(key, decodedToken)
 	if err != nil {
@@ -198,7 +195,7 @@ func encrypt(key, text []byte) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	b := base64.StdEncoding.EncodeToString(text)
+	b := base64.URLEncoding.EncodeToString(text)
 
 	ciphertext := make([]byte, aes.BlockSize+len(b))
 	iv := ciphertext[:aes.BlockSize]
@@ -286,7 +283,8 @@ func uploadFile(ctx context.Context, fileName string, fileId string, suffix stri
 	bucketHandler := client.Bucket(bucketName)
 
 	// search for existing image using UID
-	q := &storage.Query{Prefix: fileId}
+	var searchQuery = fmt.Sprintf("%s_%s", fileId, suffix)
+	q := &storage.Query{Prefix: searchQuery}
 	it := bucketHandler.Objects(ctx, q)
 	for {
 		objAttrs, err := it.Next()
