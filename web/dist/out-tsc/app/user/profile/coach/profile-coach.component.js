@@ -24,7 +24,6 @@ var ProfileCoachComponent = (function () {
         this.coachService = coachService;
         this.route = route;
         this.isOwner = false;
-        this.isAdmin = false;
         this.updateUserLoading = false;
     }
     ProfileCoachComponent.prototype.ngOnInit = function () {
@@ -47,7 +46,6 @@ var ProfileCoachComponent = (function () {
         console.log("getCoach");
         this.subscriptionGetCoach = this.route.params.subscribe(function (params) {
             var coachId = params['id'];
-            _this.isAdmin = params['admin'];
             _this.coachService.getCoachForId(coachId).subscribe(function (coach) {
                 console.log("gotCoach", coach);
                 _this.setFormValues(coach);
@@ -136,9 +134,6 @@ var ProfileCoachComponent = (function () {
     };
     ProfileCoachComponent.prototype.goToMeetings = function () {
         this.router.navigate(['/meetings']);
-    };
-    ProfileCoachComponent.prototype.goToCoachsAdmin = function () {
-        this.router.navigate(['admin/coachs-list']);
     };
     ProfileCoachComponent.prototype.ngOnDestroy = function () {
         if (this.subscriptionGetCoach) {

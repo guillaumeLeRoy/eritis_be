@@ -8,48 +8,48 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 import { Component, Input } from '@angular/core';
-import { Coach } from "../../model/Coach";
+import { Coachee } from "../../../model/Coachee";
 import { Router } from "@angular/router";
-var CoachItemComponent = (function () {
-    function CoachItemComponent(router) {
+var CoacheeItemComponent = (function () {
+    function CoacheeItemComponent(router) {
         this.router = router;
         this.months = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
     }
-    CoachItemComponent.prototype.ngOnInit = function () {
-        console.log("CoachItemComponent, ngOnInit : ", this.coach);
+    CoacheeItemComponent.prototype.ngOnInit = function () {
     };
-    CoachItemComponent.prototype.goToCoachProfile = function (coachId) {
+    CoacheeItemComponent.prototype.goToCoacheeProfile = function (coacheeId) {
         window.scrollTo(0, 0);
-        this.router.navigate(['/profile_coach', '1', coachId]);
+        console.log("goToCoacheeProfileAdmin, %s", coacheeId);
+        this.router.navigate(['admin/profile/coachee', coacheeId]);
     };
-    CoachItemComponent.prototype.printDateString = function (date) {
+    CoacheeItemComponent.prototype.printDateString = function (date) {
         return this.getDate(date);
     };
-    CoachItemComponent.prototype.getHours = function (date) {
+    CoacheeItemComponent.prototype.getHours = function (date) {
         return (new Date(date)).getHours();
     };
-    CoachItemComponent.prototype.getMinutes = function (date) {
+    CoacheeItemComponent.prototype.getMinutes = function (date) {
         var m = (new Date(date)).getMinutes();
         if (m === 0)
             return '00';
         return m;
     };
-    CoachItemComponent.prototype.getDate = function (date) {
+    CoacheeItemComponent.prototype.getDate = function (date) {
         return (new Date(date)).getDate() + ' ' + this.months[(new Date(date)).getMonth()] + ' ' + (new Date(date)).getFullYear();
     };
-    return CoachItemComponent;
+    return CoacheeItemComponent;
 }());
 __decorate([
     Input(),
-    __metadata("design:type", Coach)
-], CoachItemComponent.prototype, "coach", void 0);
-CoachItemComponent = __decorate([
+    __metadata("design:type", Coachee)
+], CoacheeItemComponent.prototype, "coachee", void 0);
+CoacheeItemComponent = __decorate([
     Component({
-        selector: 'rb-coach-item',
-        templateUrl: './coach-item.component.html',
-        styleUrls: ['./coach-item.component.scss']
+        selector: 'rb-coachee-item',
+        templateUrl: './coachee-item.component.html',
+        styleUrls: ['./coachee-item.component.scss']
     }),
     __metadata("design:paramtypes", [Router])
-], CoachItemComponent);
-export { CoachItemComponent };
-//# sourceMappingURL=/Users/guillaume/angular/eritis_fe/src/app/user/coach-item/coach-item.component.js.map
+], CoacheeItemComponent);
+export { CoacheeItemComponent };
+//# sourceMappingURL=/Users/guillaume/angular/eritis_fe/src/app/admin/coachees-list/coachee-item/coachee-item.component.js.map

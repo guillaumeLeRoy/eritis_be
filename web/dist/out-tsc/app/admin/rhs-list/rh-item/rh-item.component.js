@@ -8,47 +8,43 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 import { Component, Input } from '@angular/core';
-import { Coachee } from "../../model/Coachee";
 import { Router } from "@angular/router";
-var CoacheeItemComponent = (function () {
-    function CoacheeItemComponent(router) {
+import { HR } from "../../../model/HR";
+var RhItemComponent = (function () {
+    function RhItemComponent(router) {
         this.router = router;
         this.months = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
     }
-    CoacheeItemComponent.prototype.ngOnInit = function () {
+    RhItemComponent.prototype.ngOnInit = function () {
     };
-    CoacheeItemComponent.prototype.goToCoacheeProfile = function (coacheeId) {
-        window.scrollTo(0, 0);
-        this.router.navigate(['/profile_coachee', '1', coacheeId]);
-    };
-    CoacheeItemComponent.prototype.printDateString = function (date) {
+    RhItemComponent.prototype.printDateString = function (date) {
         return this.getDate(date);
     };
-    CoacheeItemComponent.prototype.getHours = function (date) {
+    RhItemComponent.prototype.getHours = function (date) {
         return (new Date(date)).getHours();
     };
-    CoacheeItemComponent.prototype.getMinutes = function (date) {
+    RhItemComponent.prototype.getMinutes = function (date) {
         var m = (new Date(date)).getMinutes();
         if (m === 0)
             return '00';
         return m;
     };
-    CoacheeItemComponent.prototype.getDate = function (date) {
+    RhItemComponent.prototype.getDate = function (date) {
         return (new Date(date)).getDate() + ' ' + this.months[(new Date(date)).getMonth()] + ' ' + (new Date(date)).getFullYear();
     };
-    return CoacheeItemComponent;
+    return RhItemComponent;
 }());
 __decorate([
     Input(),
-    __metadata("design:type", Coachee)
-], CoacheeItemComponent.prototype, "coachee", void 0);
-CoacheeItemComponent = __decorate([
+    __metadata("design:type", HR)
+], RhItemComponent.prototype, "rh", void 0);
+RhItemComponent = __decorate([
     Component({
-        selector: 'rb-coachee-item',
-        templateUrl: './coachee-item.component.html',
-        styleUrls: ['./coachee-item.component.scss']
+        selector: 'rb-rh-item',
+        templateUrl: './rh-item.component.html',
+        styleUrls: ['./rh-item.component.scss']
     }),
     __metadata("design:paramtypes", [Router])
-], CoacheeItemComponent);
-export { CoacheeItemComponent };
-//# sourceMappingURL=/Users/guillaume/angular/eritis_fe/src/app/user/coachee-item/coachee-item.component.js.map
+], RhItemComponent);
+export { RhItemComponent };
+//# sourceMappingURL=/Users/guillaume/angular/eritis_fe/src/app/admin/rhs-list/rh-item/rh-item.component.js.map

@@ -7,74 +7,43 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
-import { Component } from '@angular/core';
-import { FormBuilder, Validators } from "@angular/forms";
+import { Component } from "@angular/core";
+import { Router } from "@angular/router";
+import { CookieService } from "ngx-cookie";
 var RegisterCoachComponent = (function () {
-    function RegisterCoachComponent(formBuilder) {
-        this.formBuilder = formBuilder;
-        this.introductionHidden = false;
-        this.deontologieHidden = true;
-        this.formHidden = true;
-        this.conditionsChecked = false;
+    function RegisterCoachComponent(router, cookieService) {
+        this.router = router;
+        this.cookieService = cookieService;
     }
     RegisterCoachComponent.prototype.ngOnInit = function () {
-        this.registerForm = this.formBuilder.group({
-            email: ['', [Validators.required, Validators.pattern('[a-z0-9!#$%&\'*+/=?^_`{|}~-]+(?:.[a-z0-9!#$%&\'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?')]],
-            name: ['', Validators.required],
-            surname: ['', Validators.required],
-            avatar: ['', Validators.required],
-            linkedin: ['', Validators.required],
-            description: ['', Validators.required],
-            formation: ['', Validators.required],
-            diplomas: ['', Validators.required],
-            otherActivities: ['', Validators.required],
-            experienceTime: ['', Validators.required],
-            experienceVisio: ['', Validators.required],
-            coachingHours: ['', Validators.required],
-            supervision: ['', Validators.required],
-            preferedCoaching: ['', Validators.required],
-            status: ['', Validators.required],
-            ca1: ['', Validators.required],
-            ca2: ['', Validators.required],
-            ca3: ['', Validators.required],
-            insurance: ['', Validators.required]
-        });
-    };
-    RegisterCoachComponent.prototype.showIntroduction = function () {
         window.scrollTo(0, 0);
-        this.introductionHidden = false;
-        this.deontologieHidden = true;
-        this.formHidden = true;
     };
-    RegisterCoachComponent.prototype.showDeontologie = function () {
-        window.scrollTo(0, 0);
-        this.introductionHidden = true;
-        this.deontologieHidden = false;
-        this.formHidden = true;
+    RegisterCoachComponent.prototype.goToDeontologie = function () {
+        this.router.navigate(['/register_coach/code_deontologie']);
     };
-    RegisterCoachComponent.prototype.showForm = function () {
-        window.scrollTo(0, 0);
-        this.introductionHidden = true;
-        this.deontologieHidden = true;
-        this.formHidden = false;
+    RegisterCoachComponent.prototype.goToForm = function () {
+        this.router.navigate(['/register_coach/step2']);
     };
-    RegisterCoachComponent.prototype.filePreview = function (event, type) {
-        console.log("filePreview", event.target.files[0]);
-        if (type === 'avatar') {
-            this.avatarUrl = event.target.files[0];
-            if (event.target.files && event.target.files[0]) {
-                var reader = new FileReader();
-                reader.onload = function (e) {
-                    $('#avatar-preview').attr('src', e.target.result);
-                };
-                reader.readAsDataURL(event.target.files[0]);
-            }
-        }
-        if (type === 'insurance') {
-            this.insuranceUrl = event.target.files[0];
+    RegisterCoachComponent.prototype.hasAcceptedConditions = function () {
+        var cookie = this.cookieService.get('COACH_REGISTER_CONDITIONS_ACCEPTED');
+        console.log('Coach register conditions accepted, ', cookie);
+        if (cookie !== null && cookie !== undefined) {
+            return true;
         }
     };
-    RegisterCoachComponent.prototype.onRegister = function () {
+    RegisterCoachComponent.prototype.setAcceptedConditions = function () {
+        console.log('Coach register accept conditions');
+        this.cookieService.put('COACH_REGISTER_CONDITIONS_ACCEPTED', 'true');
+    };
+    RegisterCoachComponent.prototype.deleteAcceptedConditions = function () {
+        console.log('Coach register refuse conditions');
+        this.cookieService.remove('COACH_REGISTER_CONDITIONS_ACCEPTED');
+    };
+    RegisterCoachComponent.prototype.toggleAcceptedConditions = function () {
+        if (this.hasAcceptedConditions())
+            this.deleteAcceptedConditions();
+        else
+            this.setAcceptedConditions();
     };
     return RegisterCoachComponent;
 }());
@@ -84,7 +53,7 @@ RegisterCoachComponent = __decorate([
         templateUrl: './register-coach.component.html',
         styleUrls: ['./register-coach.component.scss']
     }),
-    __metadata("design:paramtypes", [FormBuilder])
+    __metadata("design:paramtypes", [Router, CookieService])
 ], RegisterCoachComponent);
 export { RegisterCoachComponent };
 //# sourceMappingURL=/Users/guillaume/angular/eritis_fe/src/app/login/register/register-coach/register-coach.component.js.map

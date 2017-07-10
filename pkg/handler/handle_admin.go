@@ -18,13 +18,24 @@ func HandleAdmin(w http.ResponseWriter, r *http.Request) {
 	case "GET":
 
 		if strings.Contains(r.URL.Path, "user") {
-			handleGetConnectedAdminUser(w, r)// GET /api/v1/admins/user
+			handleGetConnectedAdminUser(w, r) // GET /api/v1/admins/user
+		} else if strings.Contains(r.URL.Path, "possible_coachs") {
+
+			// detect an id
+			params := response.PathParams(ctx, r, "/api/v1/admins/possible_coachs/:id")
+			userId, ok := params[":id"]
+			if ok {
+				getPossibleCoach(w, r, userId) // GET /api/v1/admins/possible_coachs/:id
+				return
+			}
+			// return all possible coachs
+			getAllPossibleCoachs(w, r) // GET /api/v1/admins/possible_coachs
 		} else if strings.Contains(r.URL.Path, "coachs") {
-			handleAdminGetCoachs(w, r)// GET /api/v1/admins/coachs
+			handleAdminGetCoachs(w, r) // GET /api/v1/admins/coachs
 		} else if strings.Contains(r.URL.Path, "coachees") {
-			handleAdminGetCoachees(w, r)// GET /api/v1/admins/coachees
+			handleAdminGetCoachees(w, r) // GET /api/v1/admins/coachees
 		} else if strings.Contains(r.URL.Path, "rhs") {
-			handleAdminGetRhs(w, r)// GET /api/v1/admins/rhs
+			handleAdminGetRhs(w, r) // GET /api/v1/admins/rhs
 		}
 	default:
 		http.NotFound(w, r)
@@ -73,5 +84,3 @@ func handleAdminGetRhs(w http.ResponseWriter, r *http.Request) {
 
 	handleGetAllRHs(w, r)
 }
-
-

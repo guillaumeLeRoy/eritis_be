@@ -8,10 +8,16 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 import { Component } from '@angular/core';
+import { Router } from "@angular/router";
 var CodeDeontologieComponent = (function () {
-    function CodeDeontologieComponent() {
+    function CodeDeontologieComponent(router) {
+        this.router = router;
     }
     CodeDeontologieComponent.prototype.ngOnInit = function () {
+        window.scrollTo(0, 0);
+    };
+    CodeDeontologieComponent.prototype.goToCoachRegister = function () {
+        this.router.navigate(['/register_coach/step1']);
     };
     return CodeDeontologieComponent;
 }());
@@ -21,7 +27,7 @@ CodeDeontologieComponent = __decorate([
         templateUrl: './code-deontologie.component.html',
         styleUrls: ['./code-deontologie.component.scss']
     }),
-    __metadata("design:paramtypes", [])
+    __metadata("design:paramtypes", [Router])
 ], CodeDeontologieComponent);
 export { CodeDeontologieComponent };
 //# sourceMappingURL=/Users/guillaume/angular/eritis_fe/src/app/login/register/register-coach/code-deontologie/code-deontologie.component.js.map

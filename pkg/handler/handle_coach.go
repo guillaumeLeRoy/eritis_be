@@ -9,6 +9,7 @@ import (
 	"eritis_be/pkg/response"
 	"strings"
 	"eritis_be/pkg/utils"
+	"fmt"
 )
 
 func HandleCoachs(w http.ResponseWriter, r *http.Request) {
@@ -174,7 +175,7 @@ func handleCreateCoach(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	//get potential Rh : email must mach
+	//get potential Coach : email must mach
 	potential, err := model.GetPotentialCoachForEmail(ctx, body.Email)
 	if err != nil {
 		response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
@@ -185,6 +186,41 @@ func handleCreateCoach(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
 		return
+	}
+
+	// get PossibleCoach if any
+	possibleCoach, err := model.FindPossibleCoachByEmail(ctx, body.Email)
+	if err != nil && err != model.ErrNoPossibleCoach {
+		response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
+		return
+	}
+
+	if err == nil {
+		// add extra data
+		coach.FirstName = possibleCoach.FirstName
+		coach.LastName = possibleCoach.LastName
+		coach.Description = possibleCoach.Description
+		coach.AvatarURL = possibleCoach.AvatarURL
+		coach.LinkedinUrl = possibleCoach.LinkedinUrl
+		coach.Training = possibleCoach.Training
+		coach.Degree = possibleCoach.Degree
+		coach.ExtraActivities = possibleCoach.ExtraActivities
+		coach.CoachForYears = possibleCoach.CoachForYears
+		coach.CoachingExperience = possibleCoach.CoachingExperience
+		coach.CoachingHours = possibleCoach.CoachingHours
+		coach.Supervisor = possibleCoach.Supervisor
+		coach.FavoriteCoachingSituation = possibleCoach.FavoriteCoachingSituation
+		coach.Status = possibleCoach.Status
+		coach.Revenue = possibleCoach.Revenue
+
+		err = coach.Update(ctx)
+		if err != nil {
+			response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
+			return
+		}
+
+		// delete possible coach
+		possibleCoach.Delete(ctx)
 	}
 
 	//remove potential
@@ -223,14 +259,21 @@ func uploadCoachProfilePicture(w http.ResponseWriter, r *http.Request, uid strin
 
 	log.Debugf(ctx, "uploadProfilePicture, coach ok")
 
-	fileName, err := utils.ReadPictureProfile(r, uid)
+	fileName, err := utils.UploadPictureProfile(r, uid, "profile")
 	if err != nil {
 		response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
 		return
 	}
 
 	// save new picture url
-	coach.AvatarURL = "https://storage.googleapis.com/eritis-be-glr.appspot.com/" + fileName
+	storage, err := utils.GetStorageUrl(ctx)
+	if err != nil {
+		response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
+		return
+	}
+
+	avatarUrl := fmt.Sprintf("%s/%s", storage, fileName)
+	coach.AvatarURL = avatarUrl
 	coach.Update(ctx)
 
 	log.Debugf(ctx, "handle file upload, DONE")

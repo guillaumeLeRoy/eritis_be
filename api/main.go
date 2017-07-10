@@ -51,7 +51,6 @@ goapp deploy -application eritis-be-glr -version 1 default/app.yaml api/app.yaml
 appcfg.py -A eritis-be-glr update_dispatch .
 appcfg.py update_indexes -A eritis-be-glr ./default
 
-
 CRON :
 gcloud app deploy cron.yaml
 
@@ -86,6 +85,9 @@ func init() {
 	//coach
 	http.HandleFunc("/api/coachs/", authHandler(handler.HandleCoachs))
 	http.HandleFunc("/api/v1/coachs/", authHandler(handler.HandleCoachs))
+
+	// possible coach
+	http.HandleFunc("/api/v1/possible_coachs/", nonAuthHandler(handler.HandlePossibleCoach))
 
 	//coachee
 	http.HandleFunc("/api/coachees/", authHandler(handler.HandleCoachees))

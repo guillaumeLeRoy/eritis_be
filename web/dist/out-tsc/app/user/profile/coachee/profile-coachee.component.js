@@ -24,7 +24,6 @@ var ProfileCoacheeComponent = (function () {
         this.coachService = coachService;
         this.route = route;
         this.isOwner = false;
-        this.isAdmin = false;
         this.updateUserLoading = false;
     }
     ProfileCoacheeComponent.prototype.ngOnInit = function () {
@@ -41,7 +40,6 @@ var ProfileCoacheeComponent = (function () {
         var _this = this;
         this.subscriptionGetCoachee = this.route.params.subscribe(function (params) {
             var coacheeId = params['id'];
-            _this.isAdmin = params['admin'];
             _this.coachService.getCoacheeForId(coacheeId).subscribe(function (coachee) {
                 console.log("gotCoachee", coachee);
                 _this.setFormValues(coachee);

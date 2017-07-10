@@ -137,6 +137,17 @@ var AuthService = AuthService_1 = (function () {
         });
         return method;
     };
+    AuthService.prototype.putNotAuth = function (path, params, body, options) {
+        var headers = new Headers();
+        if (options != null)
+            for (var _i = 0, _a = options.headers.keys(); _i < _a.length; _i++) {
+                var headerKey = _a[_i];
+                console.log('put, options headerKey : ', headerKey);
+                console.log('put, options value : ', options.headers.get(headerKey));
+                headers.append(headerKey, options.headers.get(headerKey));
+            }
+        return this.httpService.put(this.generatePath(path, params), body, { headers: headers });
+    };
     AuthService.prototype.get = function (path, params) {
         return this.getWithSearchParams(path, params, null);
     };
@@ -517,8 +528,12 @@ AuthService.LOGIN = "/login/:firebaseId";
 AuthService.GET_POTENTIAL_COACHEE_FOR_TOKEN = "/v1/potentials/coachees/:token";
 AuthService.GET_POTENTIAL_COACH_FOR_TOKEN = "/v1/potentials/coachs/:token";
 AuthService.GET_POTENTIAL_RH_FOR_TOKEN = "/v1/potentials/rhs/:token";
+/* Possible coach */
+AuthService.UPDATE_POSSIBLE_COACH = "/v1/possible_coachs";
+AuthService.UPDATE_POSSIBLE_COACH_PICTURE = "/v1/possible_coachs/profile_picture";
+AuthService.UPDATE_POSSIBLE_COACH_ASSURANCE_DOC = "/v1/possible_coachs/assurance";
 /* coachee */
-AuthService.UPDATE_COACHEE = "v1/coachees/:id";
+AuthService.UPDATE_COACHEE = "/v1/coachees/:id";
 AuthService.POST_SIGN_UP_COACHEE = "/v1/coachees";
 AuthService.GET_COACHEES = "/v1/coachees";
 AuthService.GET_COACHEE_FOR_ID = "/v1/coachees/:id";
@@ -545,9 +560,14 @@ AuthService.POST_COACHEE_OBJECTIVE = "/v1/rhs/:uidRH/coachees/:uidCoachee/object
 /* admin */
 AuthService.GET_ADMIN = "/v1/admins/user";
 AuthService.ADMIN_GET_COACHS = "/v1/admins/coachs";
+AuthService.ADMIN_GET_COACH = "/v1/admins/coachs/:id";
 AuthService.ADMIN_GET_COACHEES = "/v1/admins/coachees";
+AuthService.ADMIN_GET_COACHEE = "/v1/admins/coachees/:id";
 AuthService.ADMIN_GET_RHS = "/v1/admins/rhs";
-/*Meeting*/
+AuthService.ADMIN_GET_RH = "/v1/admins/rhs/:id";
+AuthService.ADMIN_GET_POSSIBLE_COACHS = "/v1/admins/possible_coachs";
+AuthService.ADMIN_GET_POSSIBLE_COACH = "/v1/admins/possible_coachs/:id";
+/* Meeting */
 AuthService.POST_MEETING = "/v1/meetings";
 AuthService.DELETE_MEETING = "/v1/meetings/:meetingId";
 AuthService.GET_MEETING_REVIEWS = "/v1/meetings/:meetingId/reviews";
