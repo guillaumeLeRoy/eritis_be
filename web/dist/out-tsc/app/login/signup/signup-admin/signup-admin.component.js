@@ -79,10 +79,7 @@ var SignupAdminComponent = (function () {
     };
     SignupAdminComponent.prototype.createPotentialCoach = function (email) {
         console.log('createPotentialCoach');
-        var body = {
-            "email": email,
-        };
-        this.adminAPIService.createPotentialCoach(body).subscribe(function (res) {
+        this.adminAPIService.createPotentialCoach(email).subscribe(function (res) {
             console.log('createPotentialCoach, res', res);
             Materialize.toast('Collaborateur Coach ajouté !', 3000, 'rounded');
         }, function (error) {

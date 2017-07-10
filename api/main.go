@@ -51,7 +51,6 @@ goapp deploy -application eritis-be-glr -version 1 default/app.yaml api/app.yaml
 appcfg.py -A eritis-be-glr update_dispatch .
 appcfg.py update_indexes -A eritis-be-glr ./default
 
-
 CRON :
 gcloud app deploy cron.yaml
 

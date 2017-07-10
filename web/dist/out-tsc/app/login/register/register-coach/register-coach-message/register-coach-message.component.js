@@ -9,15 +9,27 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 import { Component } from '@angular/core';
 import { Router } from "@angular/router";
+import { CookieService } from "ngx-cookie";
 var RegisterCoachMessageComponent = (function () {
-    function RegisterCoachMessageComponent(router) {
+    function RegisterCoachMessageComponent(router, cookieService) {
         this.router = router;
+        this.cookieService = cookieService;
     }
     RegisterCoachMessageComponent.prototype.ngOnInit = function () {
         window.scrollTo(0, 0);
+        if (!this.isRegistered()) {
+            this.router.navigate(['register_coach/step2']);
+        }
     };
     RegisterCoachMessageComponent.prototype.goToWelcomePage = function () {
         this.router.navigate(['/welcome']);
+    };
+    RegisterCoachMessageComponent.prototype.isRegistered = function () {
+        var cookie = this.cookieService.get('COACH_REGISTER_FORM_SENT');
+        console.log('Coach register form sent, ', cookie);
+        if (cookie !== null && cookie !== undefined) {
+            return true;
+        }
     };
     return RegisterCoachMessageComponent;
 }());
@@ -27,7 +39,7 @@ RegisterCoachMessageComponent = __decorate([
         templateUrl: './register-coach-message.component.html',
         styleUrls: ['./register-coach-message.component.scss']
     }),
-    __metadata("design:paramtypes", [Router])
+    __metadata("design:paramtypes", [Router, CookieService])
 ], RegisterCoachMessageComponent);
 export { RegisterCoachMessageComponent };
 //# sourceMappingURL=/Users/guillaume/angular/eritis_fe/src/app/login/register/register-coach/register-coach-message/register-coach-message.component.js.map

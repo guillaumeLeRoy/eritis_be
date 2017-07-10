@@ -9,10 +9,11 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 import { Component } from "@angular/core";
 import { Router } from "@angular/router";
+import { CookieService } from "ngx-cookie";
 var RegisterCoachComponent = (function () {
-    function RegisterCoachComponent(router) {
+    function RegisterCoachComponent(router, cookieService) {
         this.router = router;
-        this.conditionsChecked = false;
+        this.cookieService = cookieService;
     }
     RegisterCoachComponent.prototype.ngOnInit = function () {
         window.scrollTo(0, 0);
@@ -23,6 +24,27 @@ var RegisterCoachComponent = (function () {
     RegisterCoachComponent.prototype.goToForm = function () {
         this.router.navigate(['/register_coach/step2']);
     };
+    RegisterCoachComponent.prototype.hasAcceptedConditions = function () {
+        var cookie = this.cookieService.get('COACH_REGISTER_CONDITIONS_ACCEPTED');
+        console.log('Coach register conditions accepted, ', cookie);
+        if (cookie !== null && cookie !== undefined) {
+            return true;
+        }
+    };
+    RegisterCoachComponent.prototype.setAcceptedConditions = function () {
+        console.log('Coach register accept conditions');
+        this.cookieService.put('COACH_REGISTER_CONDITIONS_ACCEPTED', 'true');
+    };
+    RegisterCoachComponent.prototype.deleteAcceptedConditions = function () {
+        console.log('Coach register refuse conditions');
+        this.cookieService.remove('COACH_REGISTER_CONDITIONS_ACCEPTED');
+    };
+    RegisterCoachComponent.prototype.toggleAcceptedConditions = function () {
+        if (this.hasAcceptedConditions())
+            this.deleteAcceptedConditions();
+        else
+            this.setAcceptedConditions();
+    };
     return RegisterCoachComponent;
 }());
 RegisterCoachComponent = __decorate([
@@ -31,7 +53,7 @@ RegisterCoachComponent = __decorate([
         templateUrl: './register-coach.component.html',
         styleUrls: ['./register-coach.component.scss']
     }),
-    __metadata("design:paramtypes", [Router])
+    __metadata("design:paramtypes", [Router, CookieService])
 ], RegisterCoachComponent);
 export { RegisterCoachComponent };
 //# sourceMappingURL=/Users/guillaume/angular/eritis_fe/src/app/login/register/register-coach/register-coach.component.js.map

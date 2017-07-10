@@ -264,6 +264,10 @@ var HeaderComponent = (function () {
         window.scrollTo(0, 0);
         this.router.navigate(['admin/rhs-list']);
     };
+    HeaderComponent.prototype.navigateToPossibleCoachsList = function () {
+        console.log("navigateToPossibleCoachsList");
+        this.router.navigate(['admin/possible_coachs-list']);
+    };
     return HeaderComponent;
 }());
 HeaderComponent = __decorate([

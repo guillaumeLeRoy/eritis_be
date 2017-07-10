@@ -33,6 +33,10 @@ var AdminComponent = (function () {
             });
         }
     };
+    AdminComponent.prototype.isOnProfile = function () {
+        var admin = new RegExp('/profile');
+        return admin.test(this.router.url);
+    };
     AdminComponent.prototype.navigateAdminHome = function () {
         console.log("navigateAdminHome");
         this.router.navigate(['/admin']);
@@ -40,18 +44,6 @@ var AdminComponent = (function () {
     AdminComponent.prototype.navigateToSignup = function () {
         console.log("navigateToSignup");
         this.router.navigate(['admin/signup']);
-    };
-    AdminComponent.prototype.navigateToCoachsList = function () {
-        console.log("navigateToCoachsList");
-        this.router.navigate(['admin/coachs-list']);
-    };
-    AdminComponent.prototype.navigateToCoacheesList = function () {
-        console.log("navigateToCoacheesList");
-        this.router.navigate(['admin/coachees-list']);
-    };
-    AdminComponent.prototype.navigateToRhsList = function () {
-        console.log("navigateToRhsList");
-        this.router.navigate(['admin/rhs-list']);
     };
     return AdminComponent;
 }());

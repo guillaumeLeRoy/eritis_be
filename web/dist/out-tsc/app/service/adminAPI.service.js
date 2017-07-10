@@ -16,7 +16,10 @@ var AdminAPIService = (function () {
         this.httpService = httpService;
         console.log("ctr done");
     }
-    AdminAPIService.prototype.createPotentialCoach = function (body) {
+    AdminAPIService.prototype.createPotentialCoach = function (email) {
+        var body = {
+            "email": email,
+        };
         return this.post(AuthService.POST_POTENTIAL_COACH, null, body).map(function (res) {
             var potentialCoach = res.json();
             return potentialCoach;
@@ -40,16 +43,50 @@ var AdminAPIService = (function () {
             return coachs;
         });
     };
+    AdminAPIService.prototype.getCoach = function (id) {
+        var params = [id];
+        return this.get(AuthService.ADMIN_GET_COACH, params).map(function (res) {
+            var coach = res.json();
+            return coach;
+        });
+    };
     AdminAPIService.prototype.getCoachees = function () {
         return this.get(AuthService.ADMIN_GET_COACHEES, null).map(function (res) {
             var Coachees = res.json();
             return Coachees;
         });
     };
+    AdminAPIService.prototype.getCoachee = function (id) {
+        var params = [id];
+        return this.get(AuthService.ADMIN_GET_COACHEE, params).map(function (res) {
+            var coachee = res.json();
+            return coachee;
+        });
+    };
     AdminAPIService.prototype.getRhs = function () {
         return this.get(AuthService.ADMIN_GET_RHS, null).map(function (res) {
             var HRs = res.json();
             return HRs;
+        });
+    };
+    AdminAPIService.prototype.getRh = function (id) {
+        var params = [id];
+        return this.get(AuthService.ADMIN_GET_RH, params).map(function (res) {
+            var rh = res.json();
+            return rh;
+        });
+    };
+    AdminAPIService.prototype.getPossibleCoachs = function () {
+        return this.get(AuthService.ADMIN_GET_POSSIBLE_COACHS, null).map(function (res) {
+            var coachs = res.json();
+            return coachs;
+        });
+    };
+    AdminAPIService.prototype.getPossibleCoach = function (id) {
+        var params = [id];
+        return this.get(AuthService.ADMIN_GET_POSSIBLE_COACH, params).map(function (res) {
+            var possibleCoach = res.json();
+            return possibleCoach;
         });
     };
     AdminAPIService.prototype.post = function (path, params, body) {
@@ -75,8 +112,6 @@ var AdminAPIService = (function () {
             if (seg == "" || seg == null) {
                 continue;
             }
-            // console.log("generatePath, seg : ", seg);
-            // console.log("generatePath, paramIndex : ", paramIndex);
             completedPath += "/";
             if (seg.charAt(0) == ":") {
                 completedPath += params[paramIndex];

@@ -64,6 +64,8 @@ func GetFirebaseJsonPath(ctx context.Context) (string, error) {
 }
 
 func SendEmailToGivenEmail(ctx context.Context, emailAddress string, subject string, message string) error {
+	log.Debugf(ctx, "SendEmailToGivenEmail %s", emailAddress)
+
 	addrs := []string{emailAddress}
 
 	msg := &mail.Message{
@@ -77,6 +79,8 @@ func SendEmailToGivenEmail(ctx context.Context, emailAddress string, subject str
 		log.Errorf(ctx, "Couldn't send email: %v", err)
 		return err
 	}
+
+	log.Debugf(ctx, "SendEmailToGivenEmail DONE")
 
 	return nil
 }
@@ -219,7 +223,7 @@ func decrypt(key, text []byte) ([]byte, error) {
 	text = text[aes.BlockSize:]
 	cfb := cipher.NewCFBDecrypter(block, iv)
 	cfb.XORKeyStream(text, text)
-	data, err := base64.StdEncoding.DecodeString(string(text))
+	data, err := base64.URLEncoding.DecodeString(string(text))
 	if err != nil {
 		return nil, err
 	}

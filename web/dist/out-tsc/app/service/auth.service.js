@@ -560,8 +560,13 @@ AuthService.POST_COACHEE_OBJECTIVE = "/v1/rhs/:uidRH/coachees/:uidCoachee/object
 /* admin */
 AuthService.GET_ADMIN = "/v1/admins/user";
 AuthService.ADMIN_GET_COACHS = "/v1/admins/coachs";
+AuthService.ADMIN_GET_COACH = "/v1/admins/coachs/:id";
 AuthService.ADMIN_GET_COACHEES = "/v1/admins/coachees";
+AuthService.ADMIN_GET_COACHEE = "/v1/admins/coachees/:id";
 AuthService.ADMIN_GET_RHS = "/v1/admins/rhs";
+AuthService.ADMIN_GET_RH = "/v1/admins/rhs/:id";
+AuthService.ADMIN_GET_POSSIBLE_COACHS = "/v1/admins/possible_coachs";
+AuthService.ADMIN_GET_POSSIBLE_COACH = "/v1/admins/possible_coachs/:id";
 /* Meeting */
 AuthService.POST_MEETING = "/v1/meetings";
 AuthService.DELETE_MEETING = "/v1/meetings/:meetingId";

@@ -20,6 +20,11 @@ import { RegisterCoachComponent } from "./login/register/register-coach/register
 import { RegisterCoachFormComponent } from "./login/register/register-coach/register-coach-form/register-coach-form.component";
 import { RegisterCoachMessageComponent } from "./login/register/register-coach/register-coach-message/register-coach-message.component";
 import { CodeDeontologieComponent } from "./login/register/register-coach/code-deontologie/code-deontologie.component";
+import { PossibleCoachsListComponent } from "./admin/possible-coachs-list/possible-coachs-list.component";
+import { ProfileCoachAdminComponent } from "./user/profile/coach/profile-coach-admin/profile-coach-admin.component";
+import { ProfilePossibleCoachComponent } from "./user/profile/possible-coach/profile-possible-coach.component";
+import { ProfileCoacheeAdminComponent } from "app/user/profile/coachee/profile-coachee-admin/profile-coachee-admin.component";
+import { ProfileRhAdminComponent } from "./user/profile/rh/profile-rh-admin/profile-rh-admin.component";
 var APP_ROUTES = [
     { path: '', redirectTo: '/welcome', pathMatch: 'full' },
     { path: 'welcome', component: WelcomeComponent },
@@ -35,20 +40,23 @@ var APP_ROUTES = [
     // {path: 'profile_coach', component: ProfileCoachComponent},
     // {path: 'profile_coachee', component: ProfileCoacheeComponent},
     { path: 'profile_rh', component: ProfileRhComponent },
-    { path: 'profile_coach/:admin/:id', component: ProfileCoachComponent },
     { path: 'profile_coach/:id', component: ProfileCoachComponent },
     { path: 'profile_coachee/:admin/:id', component: ProfileCoacheeComponent },
     { path: 'profile_coachee/:id', component: ProfileCoacheeComponent },
     { path: 'meetings', component: MeetingListComponent },
     { path: 'date/:meetingId', component: MeetingDateComponent },
     { path: 'available_meetings', component: AvailableMeetingsComponent },
-    {
-        path: 'admin', component: AdminComponent,
+    { path: 'admin', component: AdminComponent,
         children: [
             { path: 'signup', component: SignupAdminComponent },
             { path: 'coachs-list', component: AdminCoachsListComponent },
             { path: 'coachees-list', component: CoacheesListComponent },
-            { path: 'rhs-list', component: RhsListComponent }
+            { path: 'rhs-list', component: RhsListComponent },
+            { path: 'possible_coachs-list', component: PossibleCoachsListComponent },
+            { path: 'profile/coach/:id', component: ProfileCoachAdminComponent },
+            { path: 'profile/coachee/:id', component: ProfileCoacheeAdminComponent },
+            { path: 'profile/possible-coach/:id', component: ProfilePossibleCoachComponent },
+            { path: 'profile/rh/:id', component: ProfileRhAdminComponent }
         ]
     },
 ];

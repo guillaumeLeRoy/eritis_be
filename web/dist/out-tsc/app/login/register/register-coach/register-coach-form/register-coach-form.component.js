@@ -7,42 +7,96 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
-import { Component } from '@angular/core';
-import { Validators, FormBuilder } from '@angular/forms';
-import { AuthService } from '../../../../service/auth.service';
-import { Router } from '@angular/router';
-import { Headers } from '@angular/http';
+import { Component } from "@angular/core";
+import { FormBuilder, Validators } from "@angular/forms";
+import { AuthService } from "../../../../service/auth.service";
+import { Router } from "@angular/router";
+import { Headers } from "@angular/http";
 import { Observable } from "rxjs/Observable";
+import { environment } from "../../../../../environments/environment";
+import { CookieService } from "ngx-cookie";
 var RegisterCoachFormComponent = (function () {
-    function RegisterCoachFormComponent(formBuilder, authService, router) {
+    function RegisterCoachFormComponent(formBuilder, authService, router, cookieService) {
         this.formBuilder = formBuilder;
         this.authService = authService;
         this.router = router;
+        this.cookieService = cookieService;
         this.onRegisterLoading = false;
+        this.hasSavedValues = false;
     }
     RegisterCoachFormComponent.prototype.ngOnInit = function () {
         window.scrollTo(0, 0);
+        if (!this.hasAcceptedConditions()) {
+            this.router.navigate(['register_coach/step1']);
+        }
         this.registerForm = this.formBuilder.group({
             email: ['', [Validators.required, Validators.pattern('[a-z0-9!#$%&\'*+/=?^_`{|}~-]+(?:.[a-z0-9!#$%&\'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?')]],
             name: ['', Validators.required],
             surname: ['', Validators.required],
             avatar: [''],
             linkedin: [''],
-            description: [''],
-            formation: [''],
-            diplomas: [''],
-            otherActivities: [''],
-            experienceTime: [''],
-            experienceVisio: [''],
-            coachingHours: [''],
-            supervision: [''],
-            preferedCoaching: [''],
-            status: [''],
-            ca1: [''],
-            ca2: [''],
-            ca3: [''],
+            description: ['', Validators.required],
+            formation: ['', Validators.required],
+            diplomas: ['', Validators.required],
+            otherActivities: ['', Validators.required],
+            experienceTime: ['', Validators.required],
+            experienceVisio: ['', Validators.required],
+            coachingHours: ['', Validators.required],
+            supervision: ['', Validators.required],
+            preferedCoaching: ['', Validators.required],
+            status: ['', Validators.required],
+            ca1: ['', Validators.required],
+            ca2: ['', Validators.required],
+            ca3: ['', Validators.required],
             insurance: ['']
         });
+        this.getSavedFormValues();
+    };
+    RegisterCoachFormComponent.prototype.hasAcceptedConditions = function () {
+        var cookie = this.cookieService.get('COACH_REGISTER_CONDITIONS_ACCEPTED');
+        console.log('Coach register conditions accepted, ', cookie);
+        if (cookie !== null && cookie !== undefined) {
+            return true;
+        }
+    };
+    // private hasSavedFormValues() {
+    //   let cookie = this.cookieService.get('COACH_REGISTER_FORM_VALUES');
+    //   console.log('hasSavedFormValues, ', cookie);
+    //   if (cookie !== null && cookie !== undefined) {
+    //     this.hasSavedValues = true;
+    //   }
+    // }
+    RegisterCoachFormComponent.prototype.getSavedFormValues = function () {
+        var cookie = this.cookieService.getObject('COACH_REGISTER_FORM_VALUES');
+        console.log("getSavedFormValues", cookie);
+        if (cookie !== null && cookie !== undefined) {
+            this.registerForm = this.formBuilder.group({
+                email: [cookie['email'], [Validators.required, Validators.pattern('[a-z0-9!#$%&\'*+/=?^_`{|}~-]+(?:.[a-z0-9!#$%&\'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?')]],
+                name: [cookie['name'], Validators.required],
+                surname: [cookie['surname'], Validators.required],
+                avatar: [cookie['avatar']],
+                linkedin: [cookie['linkedin']],
+                description: [cookie['description'], Validators.required],
+                formation: [cookie['formation'], Validators.required],
+                diplomas: [cookie['diplomas'], Validators.required],
+                otherActivities: [cookie['otherActivities'], Validators.required],
+                experienceTime: [cookie['experienceTime'], Validators.required],
+                experienceVisio: [cookie['experienceVisio'], Validators.required],
+                coachingHours: [cookie['coachingHours'], Validators.required],
+                supervision: [cookie['supervision'], Validators.required],
+                preferedCoaching: [cookie['preferedCoaching'], Validators.required],
+                status: [cookie['status'], Validators.required],
+                ca1: [cookie['ca1'], Validators.required],
+                ca2: [cookie['ca2'], Validators.required],
+                ca3: [cookie['ca3'], Validators.required],
+                insurance: [cookie['insurance']]
+            });
+        }
+    };
+    RegisterCoachFormComponent.prototype.saveFormValues = function () {
+        var date = (new Date());
+        date.setFullYear(2030);
+        this.cookieService.putObject('COACH_REGISTER_FORM_VALUES', this.registerForm.value, { expires: date.toDateString() });
     };
     RegisterCoachFormComponent.prototype.filePreview = function (event, type) {
         console.log('filePreview', event.target.files[0]);
@@ -64,8 +118,8 @@ var RegisterCoachFormComponent = (function () {
         var _this = this;
         console.log('onRegister');
         this.onRegisterLoading = true;
-        this.updatePossibleCoach().flatMap(function (res) {
-            console.log("onRegister upadatePicture");
+        return this.updatePossibleCoach().flatMap(function (res) {
+            console.log("onRegister, userCreated");
             return _this.updatePossibleCoachPicture();
         }).flatMap(function (res) {
             console.log("onRegister upadateAssurance");
@@ -74,57 +128,55 @@ var RegisterCoachFormComponent = (function () {
             console.log("onRegister success", res);
             Materialize.toast('Votre candiature a été envoyée !', 3000, 'rounded');
             _this.onRegisterLoading = false;
+            _this.cookieService.put('COACH_REGISTER_FORM_SENT', 'true');
             _this.router.navigate(['register_coach/step3']);
         }, function (error) {
             console.log('onRegister error', error);
             Materialize.toast('Impossible de soumettre votre candidature', 3000, 'rounded');
             _this.onRegisterLoading = false;
         });
-        // this.updatePossibleCoach().subscribe(
-        //   data => {
-        //     console.log('onRegister, updatePossibleCoach success');
-        //     this.updatePossibleCoachPicture().subscribe(
-        //       data2 => {
-        //         console.log('onRegister, updatePossibleCoachPicture success');
-        //         this.updatePossibleCoachAssuranceDoc().subscribe(
-        //           data3 => {
-        //             console.log('onRegister, updatePossibleCoachAssuranceDoc success');
-        //             Materialize.toast('Votre candiature a été envoyée !', 3000, 'rounded');
-        //             this.onRegisterLoading = false;
-        //             this.router.navigate(['register_coach/step3']);
-        //           }, error => {
-        //             console.log('onRegister, updatePossibleCoachAssuranceDoc error', error);
-        //             Materialize.toast('Impossible de soumettre votre candidature', 3000, 'rounded');
-        //             this.onRegisterLoading = false;
-        //           }
-        //         );
-        //       }, error => {
-        //         console.log('onRegister, updatePossibleCoachPicture error', error);
-        //         Materialize.toast('Impossible de soumettre votre candidature', 3000, 'rounded');
-        //         this.onRegisterLoading = false;
-        //       }
-        //     );
-        //   }, error => {
-        //     console.log('onRegister, updatePossibleCoach error', error);
-        //     Materialize.toast('Impossible de soumettre votre candidature', 3000, 'rounded');
-        //     this.onRegisterLoading = false;
-        //   }
-        // );
+    };
+    RegisterCoachFormComponent.prototype.displayAutoCompleteButton = function () {
+        return !environment.production;
+    };
+    /**
+     * Complete the form with fake values
+     */
+    RegisterCoachFormComponent.prototype.autoCompleteForm = function () {
+        console.log('autoCompleteForm');
+        this.getSavedFormValues();
     };
     RegisterCoachFormComponent.prototype.updatePossibleCoach = function () {
-        // TODO create body
+        console.log('updatePossibleCoach');
         var body = {
             'email': this.registerForm.value.email,
             'firstName': this.registerForm.value.name,
-            'lastName': this.registerForm.value.surname
+            'lastName': this.registerForm.value.surname,
+            'linkedin_url': this.registerForm.value.linkedin,
+            'assurance_url': this.registerForm.value.insurance,
+            'description': this.registerForm.value.description,
+            'training': this.registerForm.value.formation,
+            'degree': this.registerForm.value.diplomas,
+            'extraActivities': this.registerForm.value.otherActivities,
+            'coachForYears': this.registerForm.value.experienceTime,
+            'coachingExperience': this.registerForm.value.experienceVisio,
+            'coachingHours': this.registerForm.value.coachingHours,
+            'supervisor': this.registerForm.value.supervision,
+            'favoriteCoachingSituation': this.registerForm.value.preferedCoaching,
+            'status': this.registerForm.value.status,
+            'revenue': this.registerForm.value.ca1 + "_" + this.registerForm.value.ca2 + "_" + this.registerForm.value.ca2,
         };
         var params = [];
-        this.authService.putNotAuth(AuthService.UPDATE_POSSIBLE_COACH, params, body).subscribe(function (response) {
-            return Observable.of(response);
+        return this.authService.putNotAuth(AuthService.UPDATE_POSSIBLE_COACH, params, body).map(function (response) {
+            var res = response.json();
+            console.log('updatePossibleCoach success', res);
+            return res;
+        }, function (error) {
+            console.log('updatePossibleCoach error', error);
         });
-        return Observable.of(null);
     };
     RegisterCoachFormComponent.prototype.updatePossibleCoachPicture = function () {
+        console.log('updatePossibleCoachPicture');
         if (this.avatarUrl !== undefined) {
             var formData = new FormData();
             formData.append('uploadFile', this.avatarUrl, this.avatarUrl.name);
@@ -132,13 +184,20 @@ var RegisterCoachFormComponent = (function () {
             var headers = new Headers();
             headers.append('Accept', 'application/json');
             var params = [];
-            this.authService.putNotAuth(AuthService.UPDATE_POSSIBLE_COACH_PICTURE, params, formData, { headers: headers }).subscribe(function (response) {
-                return Observable.of(response);
+            return this.authService.putNotAuth(AuthService.UPDATE_POSSIBLE_COACH_PICTURE, params, formData, { headers: headers }).map(function (response) {
+                var res = response.json();
+                console.log('updatePossibleCoachPicture success', res);
+                return res;
+            }, function (error) {
+                console.log('updatePossibleCoachPicture error', error);
             });
         }
-        return Observable.of(null);
+        else {
+            return Observable.of(null);
+        }
     };
     RegisterCoachFormComponent.prototype.updatePossibleCoachAssuranceDoc = function () {
+        console.log('updatePossibleCoachAssuranceDoc');
         if (this.insuranceUrl !== undefined) {
             var formData = new FormData();
             formData.append('uploadFile', this.insuranceUrl, this.insuranceUrl.name);
@@ -146,11 +205,17 @@ var RegisterCoachFormComponent = (function () {
             var headers = new Headers();
             headers.append('Accept', 'application/json');
             var params = [];
-            this.authService.putNotAuth(AuthService.UPDATE_POSSIBLE_COACH_ASSURANCE_DOC, params, formData, { headers: headers }).subscribe(function (response) {
-                return Observable.of(response);
+            return this.authService.putNotAuth(AuthService.UPDATE_POSSIBLE_COACH_ASSURANCE_DOC, params, formData, { headers: headers }).map(function (response) {
+                var res = response.json();
+                console.log('updatePossibleCoachAssuranceDoc success', res);
+                return res;
+            }, function (error) {
+                console.log('updatePossibleCoachAssuranceDoc error', error);
             });
         }
-        return Observable.of(null);
+        else {
+            return Observable.of(null);
+        }
     };
     return RegisterCoachFormComponent;
 }());
@@ -160,7 +225,7 @@ RegisterCoachFormComponent = __decorate([
         templateUrl: './register-coach-form.component.html',
         styleUrls: ['./register-coach-form.component.scss']
     }),
-    __metadata("design:paramtypes", [FormBuilder, AuthService, Router])
+    __metadata("design:paramtypes", [FormBuilder, AuthService, Router, CookieService])
 ], RegisterCoachFormComponent);
 export { RegisterCoachFormComponent };
 //# sourceMappingURL=/Users/guillaume/angular/eritis_fe/src/app/login/register/register-coach/register-coach-form/register-coach-form.component.js.map
