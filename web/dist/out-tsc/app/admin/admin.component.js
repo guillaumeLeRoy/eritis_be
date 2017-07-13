@@ -19,6 +19,7 @@ var AdminComponent = (function () {
         this.cd = cd;
     }
     AdminComponent.prototype.ngOnInit = function () {
+        window.scrollTo(0, 0);
         this.getAdmin();
     };
     AdminComponent.prototype.getAdmin = function () {

@@ -16,6 +16,7 @@ var PossibleCoachsListComponent = (function () {
         this.cd = cd;
     }
     PossibleCoachsListComponent.prototype.ngOnInit = function () {
+        window.scrollTo(0, 0);
     };
     PossibleCoachsListComponent.prototype.ngAfterViewInit = function () {
         console.log('ngAfterViewInit');

@@ -16,6 +16,7 @@ var CoacheesListComponent = (function () {
         this.cd = cd;
     }
     CoacheesListComponent.prototype.ngOnInit = function () {
+        window.scrollTo(0, 0);
     };
     CoacheesListComponent.prototype.ngAfterViewInit = function () {
         console.log('ngAfterViewInit');

@@ -11,17 +11,22 @@ import { Component } from '@angular/core';
 import { AuthService } from "../service/auth.service";
 import { FormBuilder, Validators } from "@angular/forms";
 import { Router } from "@angular/router";
+import { CookieService } from "ngx-cookie";
 var WelcomeComponent = (function () {
-    function WelcomeComponent(router, authService, formBuilder) {
+    function WelcomeComponent(router, authService, formBuilder, cookieService) {
         this.router = router;
         this.authService = authService;
         this.formBuilder = formBuilder;
+        this.cookieService = cookieService;
         this.loginActivated = false;
         this.error = false;
     }
     WelcomeComponent.prototype.ngOnInit = function () {
         var _this = this;
         window.scrollTo(0, 0);
+        // Clean cookies
+        this.cookieService.remove('COACH_REGISTER_CONDITIONS_ACCEPTED');
+        this.cookieService.remove('COACH_REGISTER_FORM_SENT');
         this.contactForm = this.formBuilder.group({
             name: ['', Validators.compose([Validators.required])],
             mail: ['', Validators.compose([Validators.required])],
@@ -74,7 +79,7 @@ WelcomeComponent = __decorate([
         templateUrl: './welcome.component.html',
         styleUrls: ['./welcome.component.scss']
     }),
-    __metadata("design:paramtypes", [Router, AuthService, FormBuilder])
+    __metadata("design:paramtypes", [Router, AuthService, FormBuilder, CookieService])
 ], WelcomeComponent);
 export { WelcomeComponent };
 //# sourceMappingURL=/Users/guillaume/angular/eritis_fe/src/app/welcome/welcome.component.js.map

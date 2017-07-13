@@ -16,6 +16,7 @@ var AdminCoachsListComponent = (function () {
         this.cd = cd;
     }
     AdminCoachsListComponent.prototype.ngOnInit = function () {
+        window.scrollTo(0, 0);
     };
     AdminCoachsListComponent.prototype.ngAfterViewInit = function () {
         console.log('ngAfterViewInit');

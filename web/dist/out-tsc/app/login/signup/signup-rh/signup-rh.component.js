@@ -26,6 +26,7 @@ var SignupRhComponent = (function () {
     }
     SignupRhComponent.prototype.ngOnInit = function () {
         var _this = this;
+        window.scrollTo(0, 0);
         console.log("ngOnInit");
         // meetingId should be in the router
         this.route.queryParams.subscribe(function (params) {

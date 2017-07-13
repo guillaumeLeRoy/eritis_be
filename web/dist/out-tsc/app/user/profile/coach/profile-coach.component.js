@@ -127,7 +127,8 @@ var ProfileCoachComponent = (function () {
             console.log("filePreview", this.avatarUrl);
             var reader = new FileReader();
             reader.onload = function (e) {
-                $('#avatar-preview').attr('src', e.target.result);
+                // $('#avatar-preview').attr('src', e.target.result);
+                $('#avatar-preview').css('background-image', 'url(' + e.target.result + ')');
             };
             reader.readAsDataURL(event.target.files[0]);
         }

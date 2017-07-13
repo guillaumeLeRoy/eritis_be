@@ -33,6 +33,7 @@ var SignupAdminComponent = (function () {
         console.log("constructor");
     }
     SignupAdminComponent.prototype.ngOnInit = function () {
+        window.scrollTo(0, 0);
         console.log("ngOnInit");
         // this.signUpTypes = [SignUpType.COACH, SignUpType.COACHEE, SignUpType.RH];
         this.signUpTypes = [SignUpType.COACH, SignUpType.RH];

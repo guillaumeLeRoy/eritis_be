@@ -19,6 +19,7 @@ var ProfilePossibleCoachComponent = (function () {
         this.route = route;
     }
     ProfilePossibleCoachComponent.prototype.ngOnInit = function () {
+        window.scrollTo(0, 0);
         this.getCoach();
     };
     ProfilePossibleCoachComponent.prototype.getCoach = function () {

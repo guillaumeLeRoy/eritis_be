@@ -89,7 +89,6 @@ var HeaderComponent = (function () {
         this.router.navigate(['/signin']);
     };
     HeaderComponent.prototype.onSignUp = function () {
-        window.scrollTo(0, 0);
         this.router.navigate(['/signup']);
     };
     HeaderComponent.prototype.goToHome = function () {
@@ -108,25 +107,21 @@ var HeaderComponent = (function () {
         }
     };
     HeaderComponent.prototype.goToAdmin = function () {
-        window.scrollTo(0, 0);
         this.router.navigate(['/admin']);
     };
     HeaderComponent.prototype.goToMeetings = function () {
         var user = this.authService.getConnectedUser();
         if (user != null) {
-            window.scrollTo(0, 0);
             this.router.navigate(['/meetings']);
         }
     };
     HeaderComponent.prototype.goToAvailableSessions = function () {
         var user = this.authService.getConnectedUser();
         if (user != null) {
-            window.scrollTo(0, 0);
             this.router.navigate(['/available_meetings']);
         }
     };
     HeaderComponent.prototype.goToProfile = function () {
-        window.scrollTo(0, 0);
         if (this.mUser instanceof Coach) {
             this.router.navigate(['/profile_coach', this.mUser.id]);
         }
@@ -170,6 +165,10 @@ var HeaderComponent = (function () {
         var admin = new RegExp('/admin');
         return admin.test(this.router.url);
     };
+    HeaderComponent.prototype.isHomePage = function () {
+        var home = new RegExp('/welcome');
+        return home.test(this.router.url);
+    };
     HeaderComponent.prototype.isSigningUp = function () {
         var signupCoach = new RegExp('/signup_coach');
         var signupCoachee = new RegExp('/signup_coachee');
@@ -178,8 +177,10 @@ var HeaderComponent = (function () {
         return signupCoach.test(this.router.url) || signupCoachee.test(this.router.url) || signupRh.test(this.router.url) || registerCoach.test(this.router.url);
     };
     HeaderComponent.prototype.goToCoachs = function () {
-        window.scrollTo(0, 0);
         this.router.navigate(['/coachs']);
+    };
+    HeaderComponent.prototype.goToRegisterCoach = function () {
+        this.router.navigate(['register_coach/step1']);
     };
     HeaderComponent.prototype.canDisplayListOfCoach = function () {
         if (this.mUser == null) {
@@ -241,27 +242,22 @@ var HeaderComponent = (function () {
     /******* Admin page *****/
     HeaderComponent.prototype.navigateAdminHome = function () {
         console.log("navigateAdminHome");
-        window.scrollTo(0, 0);
         this.router.navigate(['/admin']);
     };
     HeaderComponent.prototype.navigateToSignup = function () {
         console.log("navigateToSignup");
-        window.scrollTo(0, 0);
         this.router.navigate(['admin/signup']);
     };
     HeaderComponent.prototype.navigateToCoachsList = function () {
         console.log("navigateToCoachsList");
-        window.scrollTo(0, 0);
         this.router.navigate(['admin/coachs-list']);
     };
     HeaderComponent.prototype.navigateToCoacheesList = function () {
         console.log("navigateToCoacheesList");
-        window.scrollTo(0, 0);
         this.router.navigate(['admin/coachees-list']);
     };
     HeaderComponent.prototype.navigateToRhsList = function () {
         console.log("navigateToRhsList");
-        window.scrollTo(0, 0);
         this.router.navigate(['admin/rhs-list']);
     };
     HeaderComponent.prototype.navigateToPossibleCoachsList = function () {

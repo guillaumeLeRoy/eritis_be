@@ -19,6 +19,7 @@ var ProfileCoachAdminComponent = (function () {
         this.route = route;
     }
     ProfileCoachAdminComponent.prototype.ngOnInit = function () {
+        window.scrollTo(0, 0);
         this.getCoach();
     };
     ProfileCoachAdminComponent.prototype.getCoach = function () {

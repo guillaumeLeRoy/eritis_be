@@ -19,6 +19,7 @@ var ProfileRhComponent = (function () {
         this.cd = cd;
     }
     ProfileRhComponent.prototype.ngOnInit = function () {
+        window.scrollTo(0, 0);
         this.formRh = this.formBuilder.group({
             firstName: [''],
             lastName: [''],

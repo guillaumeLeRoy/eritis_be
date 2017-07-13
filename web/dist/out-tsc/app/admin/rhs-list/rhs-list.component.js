@@ -16,6 +16,7 @@ var RhsListComponent = (function () {
         this.cd = cd;
     }
     RhsListComponent.prototype.ngOnInit = function () {
+        window.scrollTo(0, 0);
     };
     RhsListComponent.prototype.ngAfterViewInit = function () {
         console.log('ngAfterViewInit');
