@@ -13,28 +13,36 @@ const POTENTIAL_RH_ENTITY string = "PotentialRh"
 type PotentialRh struct {
 	Key          *datastore.Key `json:"id" datastore:"-"`
 	Email        string `json:"email"`
+	FirstName    string `json:"first_name"`
+	LastName     string `json:"last_name"`
 	CreationDate time.Time `json:"create_date"`
 }
 
 type PotentialRhAPI struct {
 	Id           string `json:"id"`
 	Email        string `json:"email"`
+	FirstName    string `json:"first_name"`
+	LastName     string `json:"last_name"`
 	CreationDate time.Time `json:"create_date"`
 }
 
-func (pot *PotentialRh)ToPotentialRhAPI() (*PotentialRhAPI) {
+func (pot *PotentialRh) ToPotentialRhAPI() (*PotentialRhAPI) {
 	var res PotentialRhAPI
 	res.Id = pot.Key.Encode()
 	res.Email = pot.Email
 	res.CreationDate = pot.CreationDate
+	res.FirstName = pot.FirstName
+	res.LastName = pot.LastName
 	return &res
 }
 
-func CreatePotentialRh(ctx context.Context, email string) (*PotentialRh, error) {
+func CreatePotentialRh(ctx context.Context, email string, firstName string, lastName string) (*PotentialRh, error) {
 	log.Debugf(ctx, "CreatePotentialRh, email %s", email)
 
 	var pot PotentialRh
 	pot.Email = email
+	pot.FirstName = firstName
+	pot.LastName = lastName
 	pot.CreationDate = time.Now()
 	pot.Key = datastore.NewIncompleteKey(ctx, POTENTIAL_RH_ENTITY, nil)
 

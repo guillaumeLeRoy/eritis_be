@@ -294,7 +294,7 @@ func handleCreateRh(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	rh, err := model.CreateRH(ctx, &body.FirebaseUser)
+	rh, err := model.CreateRH(ctx, &body.FirebaseUser, potential.FirstName, potential.LastName)
 	if err != nil {
 		response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
 		return

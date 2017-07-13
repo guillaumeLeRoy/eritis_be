@@ -39,7 +39,7 @@ func (rh *Rh) ToRhAPI() *RhAPI {
 	return &res
 }
 
-func CreateRhFromFirebaseUser(ctx context.Context, fbUser *FirebaseUser) (*Rh, error) {
+func CreateRhFromFirebaseUser(ctx context.Context, fbUser *FirebaseUser, firstName string, lastName string) (*Rh, error) {
 	log.Debugf(ctx, "CreateRhFromFirebaseUser")
 
 	var rh Rh
@@ -48,8 +48,8 @@ func CreateRhFromFirebaseUser(ctx context.Context, fbUser *FirebaseUser) (*Rh, e
 	//create new user
 	rh.FirebaseId = fbUser.UID
 	rh.Email = fbUser.Email
-	rh.FirstName = ""
-	rh.LastName = ""
+	rh.FirstName = firstName
+	rh.LastName = lastName
 	rh.StartDate = time.Now()
 	rh.AvatarURL = gravatarURL(fbUser.Email)
 

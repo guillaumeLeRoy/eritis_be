@@ -287,7 +287,9 @@ func handleCreatePotentialRh(w http.ResponseWriter, r *http.Request) {
 	ctx := appengine.NewContext(r)
 
 	var body struct {
-		Email string `json:"email"`
+		Email     string `json:"email"`
+		FirstName string `json:"first_name"`
+		LastName  string `json:"last_name"`
 	}
 
 	log.Debugf(ctx, "handleCreatePotentialRh, %s", body)
@@ -319,7 +321,7 @@ func handleCreatePotentialRh(w http.ResponseWriter, r *http.Request) {
 	log.Debugf(ctx, "handleCreatePotentialRh, no Rh with this email")
 
 	//create potential
-	pot, err := model.CreatePotentialRh(ctx, body.Email)
+	pot, err := model.CreatePotentialRh(ctx, body.Email, body.FirstName, body.LastName)
 	if err != nil {
 		response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
 		return
