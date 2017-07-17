@@ -66,8 +66,8 @@ func handleCreatePossibleCoach(w http.ResponseWriter, r *http.Request) {
 
 	var possibleCoach struct {
 		Email                     string `json:"email"`
-		FirstName                 string `json:"firstName"`
-		LastName                  string `json:"lastName"`
+		FirstName                 string `json:"first_name"`
+		LastName                  string `json:"last_name"`
 		LinkedinUrl               string `json:"linkedin_url"`
 		AssuranceUrl              string `json:"assurance_url"`
 		Description               string `json:"description"`

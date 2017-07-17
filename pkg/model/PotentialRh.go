@@ -10,7 +10,7 @@ import (
 
 const POTENTIAL_RH_ENTITY string = "PotentialRh"
 
-type PotentialRh struct {
+type PotentialHR struct {
 	Key          *datastore.Key `json:"id" datastore:"-"`
 	Email        string `json:"email"`
 	FirstName    string `json:"first_name"`
@@ -18,7 +18,7 @@ type PotentialRh struct {
 	CreationDate time.Time `json:"create_date"`
 }
 
-type PotentialRhAPI struct {
+type PotentialHRAPI struct {
 	Id           string `json:"id"`
 	Email        string `json:"email"`
 	FirstName    string `json:"first_name"`
@@ -26,8 +26,8 @@ type PotentialRhAPI struct {
 	CreationDate time.Time `json:"create_date"`
 }
 
-func (pot *PotentialRh) ToPotentialRhAPI() (*PotentialRhAPI) {
-	var res PotentialRhAPI
+func (pot *PotentialHR) ToPotentialHRAPI() (*PotentialHRAPI) {
+	var res PotentialHRAPI
 	res.Id = pot.Key.Encode()
 	res.Email = pot.Email
 	res.CreationDate = pot.CreationDate
@@ -36,10 +36,10 @@ func (pot *PotentialRh) ToPotentialRhAPI() (*PotentialRhAPI) {
 	return &res
 }
 
-func CreatePotentialRh(ctx context.Context, email string, firstName string, lastName string) (*PotentialRh, error) {
-	log.Debugf(ctx, "CreatePotentialRh, email %s", email)
+func CreatePotentialHR(ctx context.Context, email string, firstName string, lastName string) (*PotentialHR, error) {
+	log.Debugf(ctx, "CreatePotentialHR, email %s", email)
 
-	var pot PotentialRh
+	var pot PotentialHR
 	pot.Email = email
 	pot.FirstName = firstName
 	pot.LastName = lastName
@@ -68,10 +68,10 @@ func DeletePotentialRh(ctx context.Context, key *datastore.Key) error {
 
 var ErrNoPotentialRh = errors.New("Potential Rh : No Potential Rh found")
 
-func GetPotentialRhForEmail(ctx context.Context, email string) (*PotentialRh, error) {
+func GetPotentialRhForEmail(ctx context.Context, email string) (*PotentialHR, error) {
 	log.Debugf(ctx, "GetPotentialRhForEmail, email %s", email)
 
-	var potentials []*PotentialRh
+	var potentials []*PotentialHR
 	keys, err := datastore.NewQuery(POTENTIAL_RH_ENTITY).Filter("Email =", email).GetAll(ctx, &potentials)
 	if err != nil {
 		return nil, err

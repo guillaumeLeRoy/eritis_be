@@ -10,22 +10,24 @@ import (
 const RH_ENTITY string = "Rh"
 
 type Rh struct {
-	Key        *datastore.Key `json:"id" datastore:"-"`
-	Email      string `json:"email"`
-	FirebaseId string `json:"firebase_id"`
-	FirstName  string `json:"firstName"`
-	LastName   string `json:"lastName"`
-	StartDate  time.Time `json:"start_date"`
-	AvatarURL  string`json:"avatar_url"`
+	Key         *datastore.Key `json:"id" datastore:"-"`
+	Email       string
+	FirebaseId  string
+	FirstName   string
+	LastName    string
+	Description string
+	StartDate   time.Time
+	AvatarURL   string
 }
 
 type RhAPI struct {
-	Id        string `json:"id"`
-	Email     string `json:"email"`
-	FirstName string `json:"firstName"`
-	LastName  string `json:"lastName"`
-	StartDate time.Time `json:"start_date"`
-	AvatarURL string`json:"avatar_url"`
+	Id          string `json:"id"`
+	Email       string `json:"email"`
+	FirstName   string `json:"first_name"`
+	LastName    string `json:"last_name"`
+	StartDate   time.Time `json:"start_date"`
+	AvatarURL   string`json:"avatar_url"`
+	Description string  `json:"description"`
 }
 
 func (rh *Rh) ToRhAPI() *RhAPI {
@@ -55,7 +57,7 @@ func CreateRhFromFirebaseUser(ctx context.Context, fbUser *FirebaseUser, firstNa
 
 	log.Debugf(ctx, "saving new rh, firebase id  : %s, email : %s ", fbUser.UID, fbUser.Email)
 
-	err := rh.update(ctx)
+	err := rh.Update(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -93,7 +95,7 @@ func GetRhFromFirebaseId(ctx context.Context, fbId string) (*Rh, error) {
 		return nil, ErrNoUser
 	}
 
-	rh, err := GetRh(ctx, keys[0])
+	rh, err := GetHR(ctx, keys[0])
 	if err != nil {
 		return nil, err
 	}
@@ -101,8 +103,8 @@ func GetRhFromFirebaseId(ctx context.Context, fbId string) (*Rh, error) {
 	return rh, nil
 }
 
-func GetRh(ctx context.Context, key *datastore.Key) (*Rh, error) {
-	log.Debugf(ctx, "GetRh")
+func GetHR(ctx context.Context, key *datastore.Key) (*Rh, error) {
+	log.Debugf(ctx, "GetHR")
 
 	var rh Rh
 	err := datastore.Get(ctx, key, &rh)
@@ -113,7 +115,7 @@ func GetRh(ctx context.Context, key *datastore.Key) (*Rh, error) {
 	return &rh, nil
 }
 
-func (rh *Rh) update(ctx context.Context) error {
+func (rh *Rh) Update(ctx context.Context) error {
 	key, err := datastore.Put(ctx, rh.Key, rh)
 	if err != nil {
 		return err

@@ -17,8 +17,8 @@ type Coachee struct {
 	Key                     *datastore.Key `json:"-" datastore:"-"`
 	FirebaseId              string `json:"-"`
 	Email                   string `json:"email"`
-	FirstName               string `json:"firstName"`
-	LastName                string `json:"lastName"`
+	FirstName               string `json:"first_name"`
+	LastName                string `json:"last_name"`
 	AvatarURL               string`json:"avatar_url"`
 	CoacheeObjective        *datastore.Key `json:"_"` // coachee's objective set by an HR
 	StartDate               time.Time `json:"start_date"`
@@ -32,13 +32,13 @@ type Coachee struct {
 type CoacheeAPI struct {
 	Id                      string `json:"id"`
 	Email                   string `json:"email"`
-	FirstName               string `json:"firstName"`
-	LastName                string `json:"lastName"`
+	FirstName               string `json:"first_name"`
+	LastName                string `json:"last_name"`
 	AvatarURL               string`json:"avatar_url"`
 	StartDate               time.Time `json:"start_date"`
 	AvailableSessionsCount  int `json:"available_sessions_count"`
 	UpdateSessionsCountDate time.Time `json:"update_sessions_count_date"`
-	AssociatedRh            *Rh `json:"associatedRh"`
+	AssociatedRh            *RhAPI `json:"associatedRh"`
 	Plan                    *Plan `json:"plan"`
 	CoacheeObjective        *CoacheeObjective `json:"last_objective"`
 }
@@ -113,7 +113,7 @@ func GetAPICoachee(ctx context.Context, key *datastore.Key) (*CoacheeAPI, error)
 func (c *Coachee) GetAPICoachee(ctx context.Context) (*CoacheeAPI, error) {
 
 	//get the Rh
-	rh, err := GetRh(ctx, c.AssociatedRh)
+	rh, err := GetHR(ctx, c.AssociatedRh)
 	if err != nil {
 		return nil, err
 	}

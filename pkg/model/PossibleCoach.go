@@ -17,8 +17,8 @@ type PossibleCoach struct {
 	Key                       *datastore.Key `datastore:"-" json:"id"`
 	InscriptionDate           time.Time `json:"inscription_date"`
 	Email                     string `json:"email"`
-	FirstName                 string `json:"firstName"`
-	LastName                  string `json:"lastName"`
+	FirstName                 string `json:"first_name"`
+	LastName                  string `json:"last_name"`
 	LinkedinUrl               string `json:"linkedin_url"`
 	Description               string `json:"description"`
 	Training                  string `json:"training"`

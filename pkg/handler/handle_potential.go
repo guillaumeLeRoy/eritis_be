@@ -25,7 +25,7 @@ func HandlePotential(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if ok := strings.Contains(r.URL.Path, "rhs"); ok {
-			handleCreatePotentialRh(w, r)
+			handleCreatePotentialHR(w, r)
 			return
 		}
 
@@ -113,7 +113,7 @@ func handleGetPotentialRhForToken(w http.ResponseWriter, r *http.Request, token 
 	}
 
 	//convert to api
-	api := potential.ToPotentialRhAPI()
+	api := potential.ToPotentialHRAPI()
 
 	response.Respond(ctx, w, r, &api, http.StatusOK)
 }
@@ -283,7 +283,7 @@ func createPotentialCoachFromEmail(ctx context.Context, email string) (*model.Po
 	return res, nil
 }
 
-func handleCreatePotentialRh(w http.ResponseWriter, r *http.Request) {
+func handleCreatePotentialHR(w http.ResponseWriter, r *http.Request) {
 	ctx := appengine.NewContext(r)
 
 	var body struct {
@@ -292,7 +292,7 @@ func handleCreatePotentialRh(w http.ResponseWriter, r *http.Request) {
 		LastName  string `json:"last_name"`
 	}
 
-	log.Debugf(ctx, "handleCreatePotentialRh, %s", body)
+	log.Debugf(ctx, "handleCreatePotentialHR, %s", body)
 
 	err := response.Decode(r, &body)
 	if err != nil {
@@ -308,20 +308,20 @@ func handleCreatePotentialRh(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Debugf(ctx, "handleCreatePotentialRh, no potential with this email")
+	log.Debugf(ctx, "handleCreatePotentialHR, no potential with this email")
 
-	//check this email is not used by a Rh
-	coachs, err := model.GetRhForEmail(ctx, body.Email)
-	if err != nil || len(coachs) > 0 {
+	// check this email is not used by a Rh
+	HRs, err := model.GetRhForEmail(ctx, body.Email)
+	if err != nil || len(HRs) > 0 {
 		//it means there is already a Coach with this email
-		response.RespondErr(ctx, w, r, errors.New("There is already a Rh for this email"), http.StatusInternalServerError)
+		response.RespondErr(ctx, w, r, errors.New("There is already a HR for this email"), http.StatusInternalServerError)
 		return
 	}
 
-	log.Debugf(ctx, "handleCreatePotentialRh, no Rh with this email")
+	log.Debugf(ctx, "handleCreatePotentialHR, no HR with this email")
 
-	//create potential
-	pot, err := model.CreatePotentialRh(ctx, body.Email, body.FirstName, body.LastName)
+	// create potential
+	pot, err := model.CreatePotentialHR(ctx, body.Email, body.FirstName, body.LastName)
 	if err != nil {
 		response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
 		return
@@ -334,8 +334,8 @@ func handleCreatePotentialRh(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	//create API response
-	res := pot.ToPotentialRhAPI()
+	// create API response
+	res := pot.ToPotentialHRAPI()
 
 	response.Respond(ctx, w, r, &res, http.StatusCreated)
 }
