@@ -53,7 +53,7 @@ func (c *Coachee) ToCoacheeAPI(rh *Rh, plan *Plan, coacheeObjective *CoacheeObje
 	res.StartDate = c.StartDate
 	res.AvailableSessionsCount = c.AvailableSessionsCount
 	res.UpdateSessionsCountDate = c.UpdateSessionsCountDate
-	res.AssociatedRh = rh
+	res.AssociatedRh = rh.ToRhAPI()
 	res.Plan = plan
 	res.CoacheeObjective = coacheeObjective
 

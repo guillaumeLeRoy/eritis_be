@@ -525,7 +525,11 @@ func closeMeeting(w http.ResponseWriter, r *http.Request, meetingId string) {
 		model.CreateNotification(ctx, model.TO_COACHEE_MEETING_CLOSED_BY_COACH, meeting.Key.Parent())
 
 		//add notification to HR
-		model.CreateNotification(ctx, fmt.Sprintf(model.TO_HR_MEETING_CLOSED, ApiMeeting.Coachee.GetDisplayName()), ApiMeeting.Coachee.AssociatedRh.Key)
+		associatedHRKey, err := datastore.DecodeKey(ApiMeeting.Coachee.AssociatedRh.Id)
+		if err != nil {
+			return err
+		}
+		model.CreateNotification(ctx, fmt.Sprintf(model.TO_HR_MEETING_CLOSED, ApiMeeting.Coachee.GetDisplayName()), associatedHRKey)
 
 		//add notification to coach
 		model.CreateNotification(ctx, fmt.Sprintf(model.TO_COACH_MEETING_CLOSED, ApiMeeting.Coachee.GetDisplayName()), coachKey)
