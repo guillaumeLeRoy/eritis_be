@@ -76,7 +76,7 @@ func CreateCoachee(ctx context.Context, u *FirebaseUser, planId PlanInt, rhKey *
 	return coachee, nil
 }
 
-func CreateRH(ctx context.Context, u *FirebaseUser, firstName string, lastName string) (*Rh, error) {
+func CreateRH(ctx context.Context, u *FirebaseUser, firstName string, lastName string, companyName string) (*Rh, error) {
 	log.Debugf(ctx, "createRH, create, %s", u)
 
 	rh, err := GetRhFromFirebaseId(ctx, u.UID)
@@ -90,6 +90,14 @@ func CreateRH(ctx context.Context, u *FirebaseUser, firstName string, lastName s
 
 	//create a new user
 	rh, err = CreateRhFromFirebaseUser(ctx, u, firstName, lastName)
+	if err != nil {
+		return nil, err
+	}
+
+	// update
+	rh.CompanyName = companyName
+
+	rh.Update(ctx)
 	if err != nil {
 		return nil, err
 	}

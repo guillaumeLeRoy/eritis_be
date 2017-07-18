@@ -16,6 +16,7 @@ type PotentialHR struct {
 	FirstName    string `json:"first_name"`
 	LastName     string `json:"last_name"`
 	CreationDate time.Time `json:"create_date"`
+	CompanyName  string  `json:"company_name"`
 }
 
 type PotentialHRAPI struct {
@@ -24,6 +25,7 @@ type PotentialHRAPI struct {
 	FirstName    string `json:"first_name"`
 	LastName     string `json:"last_name"`
 	CreationDate time.Time `json:"create_date"`
+	CompanyName  string  `json:"company_name"`
 }
 
 func (pot *PotentialHR) ToPotentialHRAPI() (*PotentialHRAPI) {
@@ -36,13 +38,14 @@ func (pot *PotentialHR) ToPotentialHRAPI() (*PotentialHRAPI) {
 	return &res
 }
 
-func CreatePotentialHR(ctx context.Context, email string, firstName string, lastName string) (*PotentialHR, error) {
+func CreatePotentialHR(ctx context.Context, email string, firstName string, lastName string, companyName string) (*PotentialHR, error) {
 	log.Debugf(ctx, "CreatePotentialHR, email %s", email)
 
 	var pot PotentialHR
 	pot.Email = email
 	pot.FirstName = firstName
 	pot.LastName = lastName
+	pot.CompanyName = companyName
 	pot.CreationDate = time.Now()
 	pot.Key = datastore.NewIncompleteKey(ctx, POTENTIAL_RH_ENTITY, nil)
 

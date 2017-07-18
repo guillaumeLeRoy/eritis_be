@@ -287,9 +287,10 @@ func handleCreatePotentialHR(w http.ResponseWriter, r *http.Request) {
 	ctx := appengine.NewContext(r)
 
 	var body struct {
-		Email     string `json:"email"`
-		FirstName string `json:"first_name"`
-		LastName  string `json:"last_name"`
+		Email       string `json:"email"`
+		FirstName   string `json:"first_name"`
+		LastName    string `json:"last_name"`
+		CompanyName string `json:"company_name"`
 	}
 
 	log.Debugf(ctx, "handleCreatePotentialHR, %s", body)
@@ -321,7 +322,7 @@ func handleCreatePotentialHR(w http.ResponseWriter, r *http.Request) {
 	log.Debugf(ctx, "handleCreatePotentialHR, no HR with this email")
 
 	// create potential
-	pot, err := model.CreatePotentialHR(ctx, body.Email, body.FirstName, body.LastName)
+	pot, err := model.CreatePotentialHR(ctx, body.Email, body.FirstName, body.LastName, body.CompanyName)
 	if err != nil {
 		response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
 		return

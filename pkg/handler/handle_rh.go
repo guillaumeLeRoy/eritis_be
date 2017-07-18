@@ -73,6 +73,7 @@ func HandlerRH(w http.ResponseWriter, r *http.Request) {
 		userId, ok := params[":id"]
 		if ok {
 			handleUpdateHrForId(w, r, userId) //PUT /api/v1/rhs/:id
+			return
 		}
 
 		http.NotFound(w, r)
@@ -310,14 +311,14 @@ func handleCreateHR(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	//get potential Rh : email must mach
+	//get potential HR : email must mach
 	potential, err := model.GetPotentialRhForEmail(ctx, body.Email)
 	if err != nil {
 		response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
 		return
 	}
 
-	rh, err := model.CreateRH(ctx, &body.FirebaseUser, potential.FirstName, potential.LastName)
+	rh, err := model.CreateRH(ctx, &body.FirebaseUser, potential.FirstName, potential.LastName, potential.CompanyName)
 	if err != nil {
 		response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
 		return

@@ -18,6 +18,7 @@ type Rh struct {
 	Description string
 	StartDate   time.Time
 	AvatarURL   string
+	CompanyName string
 }
 
 type RhAPI struct {
@@ -28,6 +29,7 @@ type RhAPI struct {
 	StartDate   time.Time `json:"start_date"`
 	AvatarURL   string`json:"avatar_url"`
 	Description string  `json:"description"`
+	CompanyName string  `json:"company_name"`
 }
 
 func (rh *Rh) ToRhAPI() *RhAPI {
@@ -38,6 +40,8 @@ func (rh *Rh) ToRhAPI() *RhAPI {
 	res.LastName = rh.LastName
 	res.StartDate = rh.StartDate
 	res.AvatarURL = rh.AvatarURL
+	res.CompanyName = rh.CompanyName
+	res.Description = rh.Description
 	return &res
 }
 
