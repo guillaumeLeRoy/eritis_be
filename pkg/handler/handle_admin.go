@@ -31,10 +31,41 @@ func HandleAdmin(w http.ResponseWriter, r *http.Request) {
 			// return all possible coachs
 			getAllPossibleCoachs(w, r) // GET /api/v1/admins/possible_coachs
 		} else if strings.Contains(r.URL.Path, "coachs") {
+
+			params := response.PathParams(ctx, r, "/api/v1/admins/coachs/:id")
+			userId, ok := params[":id"]
+			if ok {
+				handleGetCoachForId(w, r, userId) // GET /api/v1/admins/coachs/ID
+				return
+			}
+
 			handleAdminGetCoachs(w, r) // GET /api/v1/admins/coachs
 		} else if strings.Contains(r.URL.Path, "coachees") {
+
+			/**
+		 		GET a specific coachee
+		 	*/
+			params := response.PathParams(ctx, r, "/api/v1/admins/coachees/:uid")
+			userId, ok := params[":uid"]
+			if ok {
+				handleGetCoacheeForId(w, r, userId) // GET /api/v1/admins/coachees/:uid
+				return
+			}
+
+			// get ALL coachees
 			handleAdminGetCoachees(w, r) // GET /api/v1/admins/coachees
 		} else if strings.Contains(r.URL.Path, "rhs") {
+
+			/**
+			* Get HR for uid
+			 */
+			params := response.PathParams(ctx, r, "/api/v1/admins/rhs/:id")
+			userId, ok := params[":id"]
+			if ok {
+				handleGetHrForId(w, r, userId) // GET /api/v1/admins/rhs/ID
+				return
+			}
+
 			handleAdminGetRhs(w, r) // GET /api/v1/admins/rhs
 		}
 	default:

@@ -42,8 +42,8 @@ type Coach struct {
 type CoachAPI struct {
 	Id                        string `json:"id"`
 	Email                     string `json:"email"`
-	FirstName                 string `json:"firstName"`
-	LastName                  string `json:"lastName"`
+	FirstName                 string `json:"first_name"`
+	LastName                  string `json:"last_name"`
 	AvatarURL                 string `json:"avatar_url"`
 	ChatRoomURL               string `json:"chat_room_url"`
 	Score                     int    `json:"score"`

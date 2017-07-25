@@ -18,13 +18,12 @@ type Login struct {
 	Rh      *RhAPI `json:"rh"`
 }
 
-func ( u FirebaseUser) OK() error {
+func (u FirebaseUser) OK() error {
 	if u.Email == "" {
 		errors.New("use should have an email")
 	}
 	return nil
 }
-
 
 // ErrNoUser is the error that is returned when the
 // datastore instance is unable to provide a User because it doesn't exist.
@@ -77,7 +76,7 @@ func CreateCoachee(ctx context.Context, u *FirebaseUser, planId PlanInt, rhKey *
 	return coachee, nil
 }
 
-func CreateRH(ctx context.Context, u *FirebaseUser) (*Rh, error) {
+func CreateRH(ctx context.Context, u *FirebaseUser, firstName string, lastName string, companyName string) (*Rh, error) {
 	log.Debugf(ctx, "createRH, create, %s", u)
 
 	rh, err := GetRhFromFirebaseId(ctx, u.UID)
@@ -90,7 +89,15 @@ func CreateRH(ctx context.Context, u *FirebaseUser) (*Rh, error) {
 	}
 
 	//create a new user
-	rh, err = CreateRhFromFirebaseUser(ctx, u)
+	rh, err = CreateRhFromFirebaseUser(ctx, u, firstName, lastName)
+	if err != nil {
+		return nil, err
+	}
+
+	// update
+	rh.CompanyName = companyName
+
+	rh.Update(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -115,7 +122,7 @@ func (u *FirebaseUser) GetUser(ctx context.Context) (*Login, error) {
 		//convert to API object
 		api := coach.ToCoachAPI()
 		//we have a coach
-		return &Login{Coach:api}, nil
+		return &Login{Coach: api}, nil
 	}
 
 	//no coach
@@ -130,9 +137,8 @@ func (u *FirebaseUser) GetUser(ctx context.Context) (*Login, error) {
 	if err == nil {
 		log.Debugf(ctx, "GetUser, found a coachee")
 		//we have a coachee
-		return &Login{Coachee:coachee}, nil
+		return &Login{Coachee: coachee}, nil
 	}
-
 
 	//no coachee
 
@@ -143,7 +149,7 @@ func (u *FirebaseUser) GetUser(ctx context.Context) (*Login, error) {
 		//convert into API object
 		api := rh.ToRhAPI()
 		//we have a rh
-		return &Login{Rh:api}, nil
+		return &Login{Rh: api}, nil
 	}
 	//no rh
 	log.Debugf(ctx, "GetUser, no one")
@@ -151,4 +157,3 @@ func (u *FirebaseUser) GetUser(ctx context.Context) (*Login, error) {
 	//no one ...
 	return nil, ErrNoUser
 }
-

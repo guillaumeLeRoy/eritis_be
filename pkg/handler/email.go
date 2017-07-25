@@ -204,7 +204,7 @@ const COACH_SELECTED_FOR_SESSION_MSG = `
 </html>
 `
 
-const MEETING_TIME_SELECTED_FOR_SESSION_TITLE = `Votre coach Erits vient d'ajouter un horaire à votre séance`
+const MEETING_TIME_SELECTED_FOR_SESSION_TITLE = `Votre coach Eritis vient d'ajouter un horaire à votre séance`
 const MEETING_TIME_SELECTED_FOR_SESSION_MSG = `
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
         "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
