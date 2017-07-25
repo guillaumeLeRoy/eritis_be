@@ -230,6 +230,7 @@ func handleCreatePotentialCoach(w http.ResponseWriter, r *http.Request) {
 }
 
 func createPotentialCoachFromEmail(ctx context.Context, email string) (*model.PotentialCoachAPI, error) {
+	log.Debugf(ctx, "createPotentialCoachFromEmail, email %s", email)
 
 	//check if there is already a PotentialCoach for this email
 	_, err := model.GetPotentialCoachForEmail(ctx, email)
