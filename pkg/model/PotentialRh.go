@@ -10,31 +10,42 @@ import (
 
 const POTENTIAL_RH_ENTITY string = "PotentialRh"
 
-type PotentialRh struct {
+type PotentialHR struct {
 	Key          *datastore.Key `json:"id" datastore:"-"`
 	Email        string `json:"email"`
+	FirstName    string `json:"first_name"`
+	LastName     string `json:"last_name"`
 	CreationDate time.Time `json:"create_date"`
+	CompanyName  string  `json:"company_name"`
 }
 
-type PotentialRhAPI struct {
+type PotentialHRAPI struct {
 	Id           string `json:"id"`
 	Email        string `json:"email"`
+	FirstName    string `json:"first_name"`
+	LastName     string `json:"last_name"`
 	CreationDate time.Time `json:"create_date"`
+	CompanyName  string  `json:"company_name"`
 }
 
-func (pot *PotentialRh)ToPotentialRhAPI() (*PotentialRhAPI) {
-	var res PotentialRhAPI
+func (pot *PotentialHR) ToPotentialHRAPI() (*PotentialHRAPI) {
+	var res PotentialHRAPI
 	res.Id = pot.Key.Encode()
 	res.Email = pot.Email
 	res.CreationDate = pot.CreationDate
+	res.FirstName = pot.FirstName
+	res.LastName = pot.LastName
 	return &res
 }
 
-func CreatePotentialRh(ctx context.Context, email string) (*PotentialRh, error) {
-	log.Debugf(ctx, "CreatePotentialRh, email %s", email)
+func CreatePotentialHR(ctx context.Context, email string, firstName string, lastName string, companyName string) (*PotentialHR, error) {
+	log.Debugf(ctx, "CreatePotentialHR, email %s", email)
 
-	var pot PotentialRh
+	var pot PotentialHR
 	pot.Email = email
+	pot.FirstName = firstName
+	pot.LastName = lastName
+	pot.CompanyName = companyName
 	pot.CreationDate = time.Now()
 	pot.Key = datastore.NewIncompleteKey(ctx, POTENTIAL_RH_ENTITY, nil)
 
@@ -60,10 +71,10 @@ func DeletePotentialRh(ctx context.Context, key *datastore.Key) error {
 
 var ErrNoPotentialRh = errors.New("Potential Rh : No Potential Rh found")
 
-func GetPotentialRhForEmail(ctx context.Context, email string) (*PotentialRh, error) {
+func GetPotentialRhForEmail(ctx context.Context, email string) (*PotentialHR, error) {
 	log.Debugf(ctx, "GetPotentialRhForEmail, email %s", email)
 
-	var potentials []*PotentialRh
+	var potentials []*PotentialHR
 	keys, err := datastore.NewQuery(POTENTIAL_RH_ENTITY).Filter("Email =", email).GetAll(ctx, &potentials)
 	if err != nil {
 		return nil, err

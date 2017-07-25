@@ -8,6 +8,8 @@ import (
 	"eritis_be/pkg/response"
 	"google.golang.org/appengine/datastore"
 	"eritis_be/pkg/model"
+	"eritis_be/pkg/utils"
+	"fmt"
 )
 
 func HandlerRH(w http.ResponseWriter, r *http.Request) {
@@ -36,7 +38,7 @@ func HandlerRH(w http.ResponseWriter, r *http.Request) {
 		 * Create a new Rh account
 		 */
 		if ok := strings.Contains(r.URL.Path, "rh"); ok {
-			handleCreateRh(w, r)
+			handleCreateHR(w, r)
 			return
 		}
 
@@ -53,6 +55,25 @@ func HandlerRH(w http.ResponseWriter, r *http.Request) {
 				updateAllNotificationToRead(w, r, uid)
 				return
 			}
+		}
+
+		// upload picture
+		contains = strings.Contains(r.URL.Path, "profile_picture")
+		if contains {
+			params := response.PathParams(ctx, r, "/api/v1/rhs/:uid/profile_picture")
+			uid, ok := params[":uid"]
+			if ok {
+				uploadHrProfilePicture(w, r, uid) //PUT /api/v1/rhs/:uid/profile_picture
+				return
+			}
+		}
+
+		// update HR
+		params := response.PathParams(ctx, r, "/api/v1/rhs/:id")
+		userId, ok := params[":id"]
+		if ok {
+			handleUpdateHrForId(w, r, userId) //PUT /api/v1/rhs/:id
+			return
 		}
 
 		http.NotFound(w, r)
@@ -115,7 +136,7 @@ func HandlerRH(w http.ResponseWriter, r *http.Request) {
 			//get uid param
 			uid, ok := params[":uid"]
 			if ok {
-				handleGetRHusageRate(w, r, uid) // GET /api/v1/rhs/:uid/usage
+				handleGetHRusageRate(w, r, uid) // GET /api/v1/rhs/:uid/usage
 				return
 			}
 		}
@@ -144,12 +165,16 @@ func handleGetHrForId(w http.ResponseWriter, r *http.Request, id string) {
 		return
 	}
 
-	hr, err := model.GetRh(ctx, key)
+	hr, err := model.GetHR(ctx, key)
 	if err != nil {
 		response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
 		return
 	}
-	response.Respond(ctx, w, r, hr, http.StatusOK)
+
+	// convert to API
+	res := hr.ToRhAPI()
+
+	response.Respond(ctx, w, r, res, http.StatusOK)
 }
 
 func handleGetAllRHs(w http.ResponseWriter, r *http.Request) {
@@ -167,7 +192,6 @@ func handleGetAllRHs(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response.Respond(ctx, w, r, &rhsAPI, http.StatusOK)
-
 }
 
 func handleGetAllCoacheesForRH(w http.ResponseWriter, r *http.Request, rhId string) {
@@ -233,9 +257,9 @@ func handleGetAllPotentialsForRH(w http.ResponseWriter, r *http.Request, rhId st
 
 }
 
-func handleGetRHusageRate(w http.ResponseWriter, r *http.Request, rhId string) {
+func handleGetHRusageRate(w http.ResponseWriter, r *http.Request, rhId string) {
 	ctx := appengine.NewContext(r)
-	log.Debugf(ctx, "handleCreatePotentialCoachee, rhID %s", rhId)
+	log.Debugf(ctx, "handleGetHRusageRate, rhID %s", rhId)
 
 	rhKey, err := datastore.DecodeKey(rhId)
 	if err != nil {
@@ -263,7 +287,7 @@ func handleGetRHusageRate(w http.ResponseWriter, r *http.Request, rhId string) {
 		rate = totalSessionsCount / totalSessionsDone
 	}
 
-	log.Debugf(ctx, "handleGetRHusageRate, rate %s", rate)
+	log.Debugf(ctx, "handleGetHRusageRate, rate %s", rate)
 
 	var res struct {
 		UsageRate int `json:"usage_rate"`
@@ -273,9 +297,9 @@ func handleGetRHusageRate(w http.ResponseWriter, r *http.Request, rhId string) {
 	response.Respond(ctx, w, r, &res, http.StatusOK)
 }
 
-func handleCreateRh(w http.ResponseWriter, r *http.Request) {
+func handleCreateHR(w http.ResponseWriter, r *http.Request) {
 	ctx := appengine.NewContext(r)
-	log.Debugf(ctx, "handleCreateRh")
+	log.Debugf(ctx, "handleCreateHR")
 
 	var body struct {
 		model.FirebaseUser
@@ -287,34 +311,34 @@ func handleCreateRh(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	//get potential Rh : email must mach
+	//get potential HR : email must mach
 	potential, err := model.GetPotentialRhForEmail(ctx, body.Email)
 	if err != nil {
 		response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
 		return
 	}
 
-	rh, err := model.CreateRH(ctx, &body.FirebaseUser)
+	rh, err := model.CreateRH(ctx, &body.FirebaseUser, potential.FirstName, potential.LastName, potential.CompanyName)
 	if err != nil {
 		response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
 		return
 	}
 
-	//remove potential
+	// remove potential
 	model.DeletePotentialRh(ctx, potential.Key)
 	if err != nil {
 		response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
 		return
 	}
 
-	//send welcome email
+	// send welcome email
 	sendWelcomeEmailToRh(ctx, rh) //TODO could be on a thread
 
-	//convert into API object
-	api := rh.ToRhAPI()
+	// convert into API object
+	HRapi := rh.ToRhAPI()
 
-	//construct response
-	var res = &model.Login{Rh: api}
+	// construct response
+	var res = &model.Login{Rh: HRapi}
 	response.Respond(ctx, w, r, res, http.StatusCreated)
 }
 
@@ -354,4 +378,84 @@ func handleAddObjectiveToCoachee(w http.ResponseWriter, r *http.Request, uidRH s
 
 	response.Respond(ctx, w, r, objective, http.StatusCreated)
 
+}
+
+func uploadHrProfilePicture(w http.ResponseWriter, r *http.Request, uid string) {
+	ctx := appengine.NewContext(r)
+	log.Debugf(ctx, "uploadHrProfilePicture")
+
+	key, err := datastore.DecodeKey(uid)
+	if err != nil {
+		response.RespondErr(ctx, w, r, err, http.StatusBadRequest)
+		return
+	}
+
+	hr, err := model.GetHR(ctx, key)
+	if err != nil {
+		response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
+		return
+	}
+
+	log.Debugf(ctx, "uploadHrProfilePicture, hr ok")
+
+	fileName, err := utils.UploadPictureProfile(r, uid, "profile")
+	if err != nil {
+		response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
+		return
+	}
+
+	// save new picture url
+	storage, err := utils.GetStorageUrl(ctx)
+	if err != nil {
+		response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
+		return
+	}
+
+	avatarUrl := fmt.Sprintf("%s/%s", storage, fileName)
+	hr.AvatarURL = avatarUrl
+	hr.Update(ctx)
+
+	log.Debugf(ctx, "handle file upload, DONE")
+
+	response.Respond(ctx, w, r, nil, http.StatusOK)
+}
+
+func handleUpdateHrForId(w http.ResponseWriter, r *http.Request, id string) {
+	ctx := appengine.NewContext(r)
+	log.Debugf(ctx, "handleUpdateHrForId %s", id)
+
+	key, err := datastore.DecodeKey(id)
+	if err != nil {
+		response.RespondErr(ctx, w, r, err, http.StatusBadRequest)
+		return
+	}
+
+	hr, err := model.GetHR(ctx, key)
+	if err != nil {
+		response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
+		return
+	}
+
+	var updateHR struct {
+		FirstName   string `json:"first_name"`
+		LastName    string `json:"last_name"`
+		Description string `json:"description"`
+		AvatarUrl   string `json:"avatar_url"`
+	}
+	err = response.Decode(r, &updateHR)
+	if err != nil {
+		response.RespondErr(ctx, w, r, err, http.StatusBadRequest)
+		return
+	}
+
+	hr.FirstName = updateHR.FirstName
+	hr.LastName = updateHR.LastName
+	hr.Description = updateHR.Description
+	hr.AvatarURL = updateHR.AvatarUrl
+	hr.Update(ctx)
+
+	// to api
+	api := hr.ToRhAPI()
+
+	response.Respond(ctx, w, r, api, http.StatusOK)
 }
