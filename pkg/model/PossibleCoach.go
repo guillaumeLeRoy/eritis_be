@@ -30,10 +30,15 @@ type PossibleCoach struct {
 	Supervisor                string `json:"supervisor"`
 	FavoriteCoachingSituation string `json:"favoriteCoachingSituation"`
 	Status                    string `json:"status"`
-	Revenue                   string `json:"revenues"` //revenues for last 3 years
+	Revenues                  string `json:"revenues"` //revenues for last 3 years
 	AvatarURL                 string `json:"avatar_url"`
-	AssuranceUrl              string `json:"assurance_url"`
+	InsuranceUrl              string `json:"insurance_url"`
 	InviteSent                bool   `json:"invite_sent"`
+	InvoiceEntity             string `json:"invoice_entity"`
+	InvoiceAddress            string `json:"invoice_address"`
+	InvoiceCity               string `json:"invoice_city"`
+	InvoicePostcode           string `json:"invoice_postcode"`
+	Languages                 string `json:"languages"`
 }
 
 /*
@@ -42,12 +47,11 @@ entite: ['', Validators.required],
 adresse: ['', Validators.required],
 codePostal: ['', Validators.required],
 ville: ['', Validators.required],
-formation: ['', Validators.required],
-diplomas: ['', Validators.required],
-otherActivities: ['', Validators.required],
+
 lang1: ['', Validators.required],
 lang2: [''],
 lang3: [''],
+
 experienceTime: ['', Validators.required],
 experienceVisio: ['', Validators.required],
 experienceBref: ['', Validators.required],
