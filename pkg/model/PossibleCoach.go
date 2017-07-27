@@ -36,6 +36,34 @@ type PossibleCoach struct {
 	InviteSent                bool   `json:"invite_sent"`
 }
 
+/*
+this.registerForm = this.formBuilder.group({
+entite: ['', Validators.required],
+adresse: ['', Validators.required],
+codePostal: ['', Validators.required],
+ville: ['', Validators.required],
+formation: ['', Validators.required],
+diplomas: ['', Validators.required],
+otherActivities: ['', Validators.required],
+lang1: ['', Validators.required],
+lang2: [''],
+lang3: [''],
+experienceTime: ['', Validators.required],
+experienceVisio: ['', Validators.required],
+experienceBref: ['', Validators.required],
+specialities: ['', Validators.required],
+therapyElements: ['', Validators.required],
+coachingHours: ['', Validators.required],
+supervision: ['', Validators.required],
+preferedCoaching: ['', Validators.required],
+status: ['', Validators.required],
+ca1: ['', Validators.required],
+ca2: ['', Validators.required],
+ca3: ['', Validators.required],
+insurance: ['']
+});
+*/
+
 func CreatePossibleCoach(ctx context.Context, email string) (*PossibleCoach, error) {
 	log.Debugf(ctx, "Create possible coach for %s", email)
 
