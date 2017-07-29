@@ -147,6 +147,7 @@ func handleCreatePossibleCoach(w http.ResponseWriter, r *http.Request) {
 	possibleCoachToUpdate.InvoiceAddress = possibleCoach.InvoiceAddress
 	possibleCoachToUpdate.InvoiceCity = possibleCoach.InvoiceCity
 	possibleCoachToUpdate.InvoicePostcode = possibleCoach.InvoicePostcode
+	possibleCoachToUpdate.Languages = possibleCoach.Languages
 
 	err = possibleCoachToUpdate.Update(ctx)
 	if err != nil {
