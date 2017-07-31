@@ -133,10 +133,10 @@ var MeetingListRhComponent = (function () {
             _this.coachCoacheeService.postPotentialCoachee(body).subscribe(function (res) {
                 console.log('postPotentialCoachee, res', res);
                 _this.onRefreshRequested();
-                Materialize.toast('Manager ajouté !', 3000, 'rounded');
+                Materialize.toast('Collaborateur ajouté !', 3000, 'rounded');
             }, function (error) {
                 console.log('postPotentialCoachee, error', error);
-                Materialize.toast("Impossible d'ajouter le manager", 3000, 'rounded');
+                Materialize.toast("Impossible d'ajouter le collaborateur", 3000, 'rounded');
             });
         });
     };

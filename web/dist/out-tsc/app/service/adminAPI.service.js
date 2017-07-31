@@ -12,9 +12,8 @@ import { Http } from "@angular/http";
 import { environment } from "../../environments/environment";
 import { AuthService } from "./auth.service";
 var AdminAPIService = (function () {
-    function AdminAPIService(httpService, authService) {
+    function AdminAPIService(httpService) {
         this.httpService = httpService;
-        this.authService = authService;
         console.log("ctr done");
     }
     AdminAPIService.prototype.createPotentialCoach = function (email) {
@@ -45,11 +44,9 @@ var AdminAPIService = (function () {
         });
     };
     AdminAPIService.prototype.getCoach = function (id) {
-        var _this = this;
         var params = [id];
         return this.get(AuthService.ADMIN_GET_COACH, params).map(function (res) {
-            console.log('getCoach', res.json());
-            var coach = _this.authService.parseCoach(res.json());
+            var coach = res.json();
             return coach;
         });
     };
@@ -136,7 +133,7 @@ var AdminAPIService = (function () {
 }());
 AdminAPIService = __decorate([
     Injectable(),
-    __metadata("design:paramtypes", [Http, AuthService])
+    __metadata("design:paramtypes", [Http])
 ], AdminAPIService);
 export { AdminAPIService };
 //# sourceMappingURL=/Users/guillaume/angular/eritis_fe/src/app/service/adminAPI.service.js.map

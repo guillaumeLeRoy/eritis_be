@@ -43,8 +43,7 @@ var AuthService = AuthService_1 = (function () {
         var date = (new Date());
         date.setHours(date.getHours() + 1);
         console.log('COOKIE', date);
-        if (this.cookieService.get('ACTIVE_SESSION') === undefined)
-            this.cookieService.put('ACTIVE_SESSION', 'true', { expires: date.toDateString() });
+        this.cookieService.put('ACTIVE_SESSION', 'true', { expires: date.toDateString() });
     }
     /*
      * Get connected user from backend
@@ -101,9 +100,9 @@ var AuthService = AuthService_1 = (function () {
         });
     };
     AuthService.prototype.getConnectedUser = function () {
-        // if (this.ApiUser !== null)
-        // if (this.cookieService.get('ACTIVE_SESSION') !== 'true')
-        // this.loginOut();
+        if (this.ApiUser !== null)
+            if (this.cookieService.get('ACTIVE_SESSION') !== 'true')
+                this.loginOut();
         return this.ApiUser;
     };
     AuthService.prototype.getConnectedUserObservable = function () {
@@ -418,26 +417,6 @@ var AuthService = AuthService_1 = (function () {
         coach.start_date = json.start_date;
         coach.description = json.description;
         coach.chat_room_url = json.chat_room_url;
-        coach.linkedin_url = json.linkedin_url;
-        coach.training = json.training;
-        coach.degree = json.degree;
-        coach.extraActivities = json.extraActivities;
-        coach.coachForYears = json.coachForYears;
-        coach.coachingExperience = json.coachingExperience;
-        coach.coachingHours = json.coachingHours;
-        coach.supervisor = json.supervisor;
-        coach.favoriteCoachingSituation = json.favoriteCoachingSituation;
-        coach.status = json.status;
-        coach.revenues = json.revenue;
-        coach.insurance_url = json.insurance_url;
-        coach.invoice_address = json.invoice_address;
-        coach.invoice_city = json.invoice_city;
-        coach.invoice_entity = json.invoice_entity;
-        coach.invoice_postcode = json.invoice_postcode;
-        coach.languages = json.languages;
-        coach.experienceShortSession = json.experienceShortSession;
-        coach.coachingSpecifics = json.coachingSpecifics;
-        coach.therapyElements = json.therapyElements;
         return coach;
     };
     AuthService.prototype.parseCoachee = function (json) {
@@ -466,7 +445,6 @@ var AuthService = AuthService_1 = (function () {
         rh.last_name = json.last_name;
         rh.start_date = json.start_date;
         rh.avatar_url = json.avatar_url;
-        rh.company_name = json.company_name;
         return rh;
     };
     AuthService.prototype.parsePotentialRh = function (json) {
@@ -603,7 +581,7 @@ AuthService.GET_POTENTIAL_RH_FOR_TOKEN = "/v1/potentials/rhs/:token";
 /* Possible coach */
 AuthService.UPDATE_POSSIBLE_COACH = "/v1/possible_coachs";
 AuthService.UPDATE_POSSIBLE_COACH_PICTURE = "/v1/possible_coachs/profile_picture";
-AuthService.UPDATE_POSSIBLE_COACH_INSURANCE_DOC = "/v1/possible_coachs/insurance";
+AuthService.UPDATE_POSSIBLE_COACH_ASSURANCE_DOC = "/v1/possible_coachs/assurance";
 /* coachee */
 AuthService.UPDATE_COACHEE = "/v1/coachees/:id";
 AuthService.POST_SIGN_UP_COACHEE = "/v1/coachees";
