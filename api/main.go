@@ -142,6 +142,8 @@ func worker(w http.ResponseWriter, r *http.Request) {
 	ctx := appengine.NewContext(r)
 	log.Debugf(ctx, "worker start")
 
+	log.Debugf(ctx, "update coachees")
+
 	var coachees []*model.Coachee
 	keys, _ := datastore.NewQuery(model.COACHEE_ENTITY).GetAll(ctx, &coachees)
 
@@ -153,6 +155,8 @@ func worker(w http.ResponseWriter, r *http.Request) {
 
 	//update coachs
 
+	log.Debugf(ctx, "update coachs")
+
 	var coachs []*model.Coach
 	keysCoach, _ := datastore.NewQuery(model.COACH_ENTITY).GetAll(ctx, &coachs)
 
@@ -163,6 +167,9 @@ func worker(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//update rhs
+
+	log.Debugf(ctx, "update hrs")
+
 	var hrs []*model.Rh
 	keysHrs, _ := datastore.NewQuery(model.RH_ENTITY).GetAll(ctx, &hrs)
 
@@ -171,6 +178,20 @@ func worker(w http.ResponseWriter, r *http.Request) {
 		log.Debugf(ctx, "worker, hr update %s", hr)
 		datastore.Put(ctx, hr.Key, hr)
 	}
+
+	// update possible coachs
+
+	log.Debugf(ctx, "update possible coachs")
+
+	var possibleCoachs []*model.PossibleCoach
+	keysPossibleCoachs, _ := datastore.NewQuery(model.POSSIBLE_COACH_ENTITY).GetAll(ctx, &possibleCoachs)
+
+	for i, pCoach := range possibleCoachs {
+		pCoach.Key = keysPossibleCoachs[i]
+		log.Debugf(ctx, "worker, hr update %s", pCoach)
+		datastore.Put(ctx, pCoach.Key, pCoach)
+	}
+
 	log.Debugf(ctx, "worker DONE")
 
 }

@@ -26,14 +26,22 @@ type PossibleCoach struct {
 	ExtraActivities           string `json:"extraActivities"`    //ActivitiesOutOfCoaching
 	CoachForYears             string `json:"coachForYears"`      // been a coach xx years
 	CoachingExperience        string `json:"coachingExperience"` // coaching experience
-	CoachingHours             string `json:"coachingHours"`      // number of coaching hours
+	ExperienceShortSession    string `json:"experienceShortSession"`
+	CoachingSpecifics         string `json:"coachingSpecifics"`
+	TherapyElements           string `json:"therapyElements"`
+	CoachingHours             string `json:"coachingHours"` // number of coaching hours
 	Supervisor                string `json:"supervisor"`
 	FavoriteCoachingSituation string `json:"favoriteCoachingSituation"`
 	Status                    string `json:"status"`
-	Revenue                   string `json:"revenues"` //revenues for last 3 years
+	Revenues                  string `json:"revenues"` //revenues for last 3 years
 	AvatarURL                 string `json:"avatar_url"`
-	AssuranceUrl              string `json:"assurance_url"`
+	InsuranceUrl              string `json:"insurance_url"`
 	InviteSent                bool   `json:"invite_sent"`
+	InvoiceEntity             string `json:"invoice_entity"`
+	InvoiceAddress            string `json:"invoice_address"`
+	InvoiceCity               string `json:"invoice_city"`
+	InvoicePostcode           string `json:"invoice_postcode"`
+	Languages                 string `json:"languages"`
 }
 
 func CreatePossibleCoach(ctx context.Context, email string) (*PossibleCoach, error) {

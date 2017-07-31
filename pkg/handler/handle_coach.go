@@ -207,11 +207,20 @@ func handleCreateCoach(w http.ResponseWriter, r *http.Request) {
 		coach.ExtraActivities = possibleCoach.ExtraActivities
 		coach.CoachForYears = possibleCoach.CoachForYears
 		coach.CoachingExperience = possibleCoach.CoachingExperience
+		coach.ExperienceShortSession = possibleCoach.ExperienceShortSession
+		coach.CoachingSpecifics = possibleCoach.CoachingSpecifics
+		coach.TherapyElements = possibleCoach.TherapyElements
 		coach.CoachingHours = possibleCoach.CoachingHours
 		coach.Supervisor = possibleCoach.Supervisor
 		coach.FavoriteCoachingSituation = possibleCoach.FavoriteCoachingSituation
 		coach.Status = possibleCoach.Status
-		coach.Revenue = possibleCoach.Revenue
+		coach.Revenues = possibleCoach.Revenues
+		coach.InsuranceUrl = possibleCoach.InsuranceUrl
+		coach.InvoiceEntity = possibleCoach.InvoiceEntity
+		coach.InvoiceAddress = possibleCoach.InvoiceAddress
+		coach.InvoiceCity = possibleCoach.InvoiceCity
+		coach.InvoicePostcode = possibleCoach.InvoicePostcode
+		coach.Languages = possibleCoach.Languages
 
 		err = coach.Update(ctx)
 		if err != nil {
