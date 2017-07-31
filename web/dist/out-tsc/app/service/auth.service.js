@@ -429,7 +429,15 @@ var AuthService = AuthService_1 = (function () {
         coach.favoriteCoachingSituation = json.favoriteCoachingSituation;
         coach.status = json.status;
         coach.revenues = json.revenue;
-        coach.assurance_url = json.assurance_url;
+        coach.insurance_url = json.insurance_url;
+        coach.invoice_address = json.invoice_address;
+        coach.invoice_city = json.invoice_city;
+        coach.invoice_entity = json.invoice_entity;
+        coach.invoice_postcode = json.invoice_postcode;
+        coach.languages = json.languages;
+        coach.experienceShortSession = json.experienceShortSession;
+        coach.coachingSpecifics = json.coachingSpecifics;
+        coach.therapyElements = json.therapyElements;
         return coach;
     };
     AuthService.prototype.parseCoachee = function (json) {
@@ -458,6 +466,7 @@ var AuthService = AuthService_1 = (function () {
         rh.last_name = json.last_name;
         rh.start_date = json.start_date;
         rh.avatar_url = json.avatar_url;
+        rh.company_name = json.company_name;
         return rh;
     };
     AuthService.prototype.parsePotentialRh = function (json) {

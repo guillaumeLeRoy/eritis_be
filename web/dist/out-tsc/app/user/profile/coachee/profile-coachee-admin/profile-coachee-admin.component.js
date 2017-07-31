@@ -29,6 +29,7 @@ var ProfileCoacheeAdminComponent = (function () {
             _this.apiService.getCoachee(coacheeId).subscribe(function (coachee) {
                 console.log("gotCoachee", coachee);
                 _this.coachee = Observable.of(coachee);
+                _this.rhId = coachee.associatedRh.id;
                 _this.cd.detectChanges();
             });
         });
@@ -36,6 +37,9 @@ var ProfileCoacheeAdminComponent = (function () {
     ProfileCoacheeAdminComponent.prototype.goToCoacheesAdmin = function () {
         window.scrollTo(0, 0);
         this.router.navigate(['admin/coachees-list']);
+    };
+    ProfileCoacheeAdminComponent.prototype.goToRhProfile = function () {
+        this.router.navigate(['admin/profile/rh', this.rhId]);
     };
     ProfileCoacheeAdminComponent.prototype.ngAfterViewInit = function () {
     };

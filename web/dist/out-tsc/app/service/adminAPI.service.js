@@ -48,6 +48,7 @@ var AdminAPIService = (function () {
         var _this = this;
         var params = [id];
         return this.get(AuthService.ADMIN_GET_COACH, params).map(function (res) {
+            console.log('getCoach', res.json());
             var coach = _this.authService.parseCoach(res.json());
             return coach;
         });
