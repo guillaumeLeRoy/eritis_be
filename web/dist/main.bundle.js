@@ -7194,10 +7194,10 @@ var HR = (function () {
  * Created by guillaume on 31/03/2017.
  */ var environment = {
     production: true,
-    BACKEND_BASE_URL: "https://eritis-be-glr.appspot.com/api",
-    firebase_apiKey: "AIzaSyAAszel5d8YQuuGyZ65lX89zYb3V6oqoyA",
-    firebase_authDomain: "eritis-be-glr.firebaseapp.com",
-    firebase_databaseURL: "https://eritis-be-glr.firebaseio.com",
+    BACKEND_BASE_URL: "https://eritis-be-dev.appspot.com/api",
+    firebase_apiKey: "AIzaSyDGJt42caQMGiRJDg8z_0C_sWhy1NFlHJ0",
+    firebase_authDomain: "eritis-be-dev.firebaseapp.com",
+    firebase_databaseURL: "https://eritis-be-dev.firebaseio.com",
 };
 //# sourceMappingURL=/Users/guillaume/angular/eritis_fe/src/environment.js.map
 
