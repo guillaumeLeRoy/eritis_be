@@ -32,11 +32,20 @@ type Coach struct {
 	ExtraActivities           string
 	CoachForYears             string
 	CoachingExperience        string
+	ExperienceShortSession    string
+	CoachingSpecifics         string
+	TherapyElements           string
 	CoachingHours             string
 	Supervisor                string
 	FavoriteCoachingSituation string
 	Status                    string
-	Revenue                   string
+	Revenues                  string
+	InsuranceUrl              string
+	InvoiceEntity             string
+	InvoiceAddress            string
+	InvoiceCity               string
+	InvoicePostcode           string
+	Languages                 string
 }
 
 type CoachAPI struct {
@@ -56,11 +65,20 @@ type CoachAPI struct {
 	ExtraActivities           string `json:"extraActivities"`    //ActivitiesOutOfCoaching
 	CoachForYears             string `json:"coachForYears"`      // been a coach xx years
 	CoachingExperience        string `json:"coachingExperience"` // coaching experience
-	CoachingHours             string `json:"coachingHours"`      // number of coaching hours
+	ExperienceShortSession    string `json:"experienceShortSession"`
+	CoachingSpecifics         string `json:"coachingSpecifics"`
+	TherapyElements           string `json:"therapyElements"`
+	CoachingHours             string `json:"coachingHours"` // number of coaching hours
 	Supervisor                string `json:"supervisor"`
 	FavoriteCoachingSituation string `json:"favoriteCoachingSituation"`
 	Status                    string `json:"status"`
-	Revenue                   string `json:"revenue"` //revenues for last 3 years
+	Revenues                  string `json:"revenues"` //revenues for last 3 years
+	InsuranceUrl              string `json:"insurance_url"`
+	InvoiceEntity             string `json:"invoice_entity"`
+	InvoiceAddress            string `json:"invoice_address"`
+	InvoiceCity               string `json:"invoice_city"`
+	InvoicePostcode           string `json:"invoice_postcode"`
+	Languages                 string `json:"languages"`
 }
 
 func (c *Coach) ToCoachAPI() *CoachAPI {
@@ -82,11 +100,20 @@ func (c *Coach) ToCoachAPI() *CoachAPI {
 	res.ExtraActivities = c.ExtraActivities
 	res.CoachForYears = c.CoachForYears
 	res.CoachingExperience = c.CoachingExperience
+	res.ExperienceShortSession = c.ExperienceShortSession
+	res.CoachingSpecifics = c.CoachingSpecifics
+	res.TherapyElements = c.TherapyElements
 	res.CoachingHours = c.CoachingHours
 	res.Supervisor = c.Supervisor
 	res.FavoriteCoachingSituation = c.FavoriteCoachingSituation
 	res.Status = c.Status
-	res.Revenue = c.Revenue
+	res.Revenues = c.Revenues
+	res.InsuranceUrl = c.InsuranceUrl
+	res.InvoiceEntity = c.InvoiceEntity
+	res.InvoiceAddress = c.InvoiceAddress
+	res.InvoiceCity = c.InvoiceCity
+	res.InvoicePostcode = c.InvoicePostcode
+	res.Languages = c.Languages
 
 	return &res
 }

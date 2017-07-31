@@ -28,7 +28,7 @@ func HandlePossibleCoach(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// upload assurance
-		if ok := strings.Contains(r.URL.Path, "assurance"); ok {
+		if ok := strings.Contains(r.URL.Path, "insurance"); ok {
 			uploadPossibleCoachAssurance(w, r)
 			return
 		}
@@ -69,18 +69,25 @@ func handleCreatePossibleCoach(w http.ResponseWriter, r *http.Request) {
 		FirstName                 string `json:"first_name"`
 		LastName                  string `json:"last_name"`
 		LinkedinUrl               string `json:"linkedin_url"`
-		AssuranceUrl              string `json:"assurance_url"`
 		Description               string `json:"description"`
 		Training                  string `json:"training"`
 		Degree                    string `json:"degree"`
 		ExtraActivities           string `json:"extraActivities"`    // ActivitiesOutOfCoaching
 		CoachForYears             string `json:"coachForYears"`      // been a coach xx years
 		CoachingExperience        string `json:"coachingExperience"` // coaching experience
-		CoachingHours             string `json:"coachingHours"`      // number of coaching hours
+		ExperienceShortSession    string `json:"experienceShortSession"`
+		CoachingSpecifics         string `json:"coachingSpecifics"`
+		TherapyElements           string `json:"therapyElements"`
+		CoachingHours             string `json:"coachingHours"` // number of coaching hours
 		Supervisor                string `json:"supervisor"`
 		FavoriteCoachingSituation string `json:"favoriteCoachingSituation"`
 		Status                    string `json:"status"`
-		Revenue                   string `json:"revenue"` //revenues for last 3 years
+		Revenues                  string `json:"revenues"` //revenues for last 3 years
+		InvoiceEntity             string `json:"invoice_entity"`
+		InvoiceAddress            string `json:"invoice_address"`
+		InvoiceCity               string `json:"invoice_city"`
+		InvoicePostcode           string `json:"invoice_postcode"`
+		Languages                 string `json:"languages"`
 	}
 
 	err := response.Decode(r, &possibleCoach)
@@ -129,17 +136,24 @@ func handleCreatePossibleCoach(w http.ResponseWriter, r *http.Request) {
 	possibleCoachToUpdate.LastName = possibleCoach.LastName
 	possibleCoachToUpdate.Description = possibleCoach.Description
 	possibleCoachToUpdate.LinkedinUrl = possibleCoach.LinkedinUrl
-	possibleCoachToUpdate.AssuranceUrl = possibleCoach.AssuranceUrl
 	possibleCoachToUpdate.Training = possibleCoach.Training
 	possibleCoachToUpdate.Degree = possibleCoach.Degree
 	possibleCoachToUpdate.ExtraActivities = possibleCoach.ExtraActivities
 	possibleCoachToUpdate.CoachForYears = possibleCoach.CoachForYears
 	possibleCoachToUpdate.CoachingExperience = possibleCoach.CoachingExperience
+	possibleCoachToUpdate.ExperienceShortSession = possibleCoach.ExperienceShortSession
+	possibleCoachToUpdate.CoachingSpecifics = possibleCoach.CoachingSpecifics
+	possibleCoachToUpdate.TherapyElements = possibleCoach.TherapyElements
 	possibleCoachToUpdate.CoachingHours = possibleCoach.CoachingHours
 	possibleCoachToUpdate.Supervisor = possibleCoach.Supervisor
 	possibleCoachToUpdate.FavoriteCoachingSituation = possibleCoach.FavoriteCoachingSituation
 	possibleCoachToUpdate.Status = possibleCoach.Status
-	possibleCoachToUpdate.Revenue = possibleCoach.Revenue
+	possibleCoachToUpdate.Revenues = possibleCoach.Revenues
+	possibleCoachToUpdate.InvoiceEntity = possibleCoach.InvoiceEntity
+	possibleCoachToUpdate.InvoiceAddress = possibleCoach.InvoiceAddress
+	possibleCoachToUpdate.InvoiceCity = possibleCoach.InvoiceCity
+	possibleCoachToUpdate.InvoicePostcode = possibleCoach.InvoicePostcode
+	possibleCoachToUpdate.Languages = possibleCoach.Languages
 
 	err = possibleCoachToUpdate.Update(ctx)
 	if err != nil {
@@ -272,8 +286,8 @@ func uploadPossibleCoachAssurance(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	assuranceUrl := fmt.Sprintf("%s/%s", storage, fileName)
-	coach.AssuranceUrl = assuranceUrl
+	insuranceUrl := fmt.Sprintf("%s/%s", storage, fileName)
+	coach.InsuranceUrl = insuranceUrl
 	coach.Update(ctx)
 
 	log.Debugf(ctx, "uploadPossibleCoachAssurance, url updated")
