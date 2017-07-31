@@ -7,17 +7,15 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
-import { Component } from "@angular/core";
-import { FormBuilder, Validators } from "@angular/forms";
-import { AuthService } from "../../service/auth.service";
-import { Router } from "@angular/router";
-import { CookieService } from "ngx-cookie";
+import { Component } from '@angular/core';
+import { FormBuilder, Validators } from '@angular/forms';
+import { AuthService } from '../../service/auth.service';
+import { Router } from '@angular/router';
 var SigninComponent = (function () {
-    function SigninComponent(formBuilder, authService, router, cookieService) {
+    function SigninComponent(formBuilder, authService, router) {
         this.formBuilder = formBuilder;
         this.authService = authService;
         this.router = router;
-        this.cookieService = cookieService;
         this.error = false;
         this.loginLoading = false;
         authService.isAuthenticated().subscribe(function (isAuth) { return console.log('onSignIn, isAuth', isAuth); });
@@ -28,9 +26,15 @@ var SigninComponent = (function () {
             email: ['', [Validators.required, Validators.pattern('[a-z0-9!#$%&\'*+/=?^_`{|}~-]+(?:.[a-z0-9!#$%&\'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?')]],
             password: ['', Validators.required],
         });
+        ga('send', 'signin component init');
     };
     SigninComponent.prototype.onSignIn = function () {
         var _this = this;
+        ga('send', 'event', {
+            eventCategory: 'signin',
+            eventLabel: 'start',
+            eventAction: 'click',
+        });
         // Activate spinner loader
         this.loginLoading = true;
         // reset errors
@@ -65,9 +69,6 @@ var SigninComponent = (function () {
             //this.errorMessage = error;
         });
     };
-    SigninComponent.prototype.goToSignUp = function () {
-        this.router.navigate(['/signup']);
-    };
     return SigninComponent;
 }());
 SigninComponent = __decorate([
@@ -76,7 +77,7 @@ SigninComponent = __decorate([
         templateUrl: './signin.component.html',
         styleUrls: ['./signin.component.scss']
     }),
-    __metadata("design:paramtypes", [FormBuilder, AuthService, Router, CookieService])
+    __metadata("design:paramtypes", [FormBuilder, AuthService, Router])
 ], SigninComponent);
 export { SigninComponent };
 //# sourceMappingURL=/Users/guillaume/angular/eritis_fe/src/app/login/signin/signin.component.js.map
