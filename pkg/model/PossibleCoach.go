@@ -26,7 +26,10 @@ type PossibleCoach struct {
 	ExtraActivities           string `json:"extraActivities"`    //ActivitiesOutOfCoaching
 	CoachForYears             string `json:"coachForYears"`      // been a coach xx years
 	CoachingExperience        string `json:"coachingExperience"` // coaching experience
-	CoachingHours             string `json:"coachingHours"`      // number of coaching hours
+	ExperienceShortSession    string `json:"experienceShortSession"`
+	CoachingSpecifics         string `json:"coachingSpecifics"`
+	TherapyElements           string `json:"therapyElements"`
+	CoachingHours             string `json:"coachingHours"` // number of coaching hours
 	Supervisor                string `json:"supervisor"`
 	FavoriteCoachingSituation string `json:"favoriteCoachingSituation"`
 	Status                    string `json:"status"`

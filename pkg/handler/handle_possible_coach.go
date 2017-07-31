@@ -28,7 +28,7 @@ func HandlePossibleCoach(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// upload assurance
-		if ok := strings.Contains(r.URL.Path, "assurance"); ok {
+		if ok := strings.Contains(r.URL.Path, "insurance"); ok {
 			uploadPossibleCoachAssurance(w, r)
 			return
 		}
@@ -75,7 +75,10 @@ func handleCreatePossibleCoach(w http.ResponseWriter, r *http.Request) {
 		ExtraActivities           string `json:"extraActivities"`    // ActivitiesOutOfCoaching
 		CoachForYears             string `json:"coachForYears"`      // been a coach xx years
 		CoachingExperience        string `json:"coachingExperience"` // coaching experience
-		CoachingHours             string `json:"coachingHours"`      // number of coaching hours
+		ExperienceShortSession    string `json:"experienceShortSession"`
+		CoachingSpecifics         string `json:"coachingSpecifics"`
+		TherapyElements           string `json:"therapyElements"`
+		CoachingHours             string `json:"coachingHours"` // number of coaching hours
 		Supervisor                string `json:"supervisor"`
 		FavoriteCoachingSituation string `json:"favoriteCoachingSituation"`
 		Status                    string `json:"status"`
@@ -138,6 +141,9 @@ func handleCreatePossibleCoach(w http.ResponseWriter, r *http.Request) {
 	possibleCoachToUpdate.ExtraActivities = possibleCoach.ExtraActivities
 	possibleCoachToUpdate.CoachForYears = possibleCoach.CoachForYears
 	possibleCoachToUpdate.CoachingExperience = possibleCoach.CoachingExperience
+	possibleCoachToUpdate.ExperienceShortSession = possibleCoach.ExperienceShortSession
+	possibleCoachToUpdate.CoachingSpecifics = possibleCoach.CoachingSpecifics
+	possibleCoachToUpdate.TherapyElements = possibleCoach.TherapyElements
 	possibleCoachToUpdate.CoachingHours = possibleCoach.CoachingHours
 	possibleCoachToUpdate.Supervisor = possibleCoach.Supervisor
 	possibleCoachToUpdate.FavoriteCoachingSituation = possibleCoach.FavoriteCoachingSituation

@@ -32,6 +32,9 @@ type Coach struct {
 	ExtraActivities           string
 	CoachForYears             string
 	CoachingExperience        string
+	ExperienceShortSession    string
+	CoachingSpecifics         string
+	TherapyElements           string
 	CoachingHours             string
 	Supervisor                string
 	FavoriteCoachingSituation string
@@ -62,7 +65,10 @@ type CoachAPI struct {
 	ExtraActivities           string `json:"extraActivities"`    //ActivitiesOutOfCoaching
 	CoachForYears             string `json:"coachForYears"`      // been a coach xx years
 	CoachingExperience        string `json:"coachingExperience"` // coaching experience
-	CoachingHours             string `json:"coachingHours"`      // number of coaching hours
+	ExperienceShortSession    string `json:"experienceShortSession"`
+	CoachingSpecifics         string `json:"coachingSpecifics"`
+	TherapyElements           string `json:"therapyElements"`
+	CoachingHours             string `json:"coachingHours"` // number of coaching hours
 	Supervisor                string `json:"supervisor"`
 	FavoriteCoachingSituation string `json:"favoriteCoachingSituation"`
 	Status                    string `json:"status"`
@@ -94,6 +100,9 @@ func (c *Coach) ToCoachAPI() *CoachAPI {
 	res.ExtraActivities = c.ExtraActivities
 	res.CoachForYears = c.CoachForYears
 	res.CoachingExperience = c.CoachingExperience
+	res.ExperienceShortSession = c.ExperienceShortSession
+	res.CoachingSpecifics = c.CoachingSpecifics
+	res.TherapyElements = c.TherapyElements
 	res.CoachingHours = c.CoachingHours
 	res.Supervisor = c.Supervisor
 	res.FavoriteCoachingSituation = c.FavoriteCoachingSituation
