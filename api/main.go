@@ -66,6 +66,10 @@ coachee.2.eritis@gmail.com
 
 rh.1.eritis@gmail.com
 rh.2.eritis@gmail.com
+
+// run queue_tasks
+https://eritis-150320.appspot.com/api/queue_tasks
+
 */
 
 // keep a ref to init the app only once
