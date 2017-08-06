@@ -8,11 +8,11 @@ webpackJsonp([0,3],{
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__angular_core__ = __webpack_require__(1);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_rxjs__ = __webpack_require__(44);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2_rxjs___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_2_rxjs__);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_rxjs_observable_PromiseObservable__ = __webpack_require__(164);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_rxjs_observable_PromiseObservable__ = __webpack_require__(103);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3_rxjs_observable_PromiseObservable___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_3_rxjs_observable_PromiseObservable__);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__angular_http__ = __webpack_require__(48);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_5__environments_environment__ = __webpack_require__(56);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__firebase_service__ = __webpack_require__(86);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_6__firebase_service__ = __webpack_require__(71);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_7__model_Coach__ = __webpack_require__(50);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_8__model_Coachee__ = __webpack_require__(54);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_9__model_HR__ = __webpack_require__(55);
@@ -1029,7 +1029,7 @@ var _a, _b;
 "use strict";
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__(1);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__environments_environment__ = __webpack_require__(56);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__service_firebase_service__ = __webpack_require__(86);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__service_firebase_service__ = __webpack_require__(71);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return AppComponent; });
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -1071,7 +1071,7 @@ var _a;
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_0__angular_core__ = __webpack_require__(1);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__service_auth_service__ = __webpack_require__(11);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__message__ = __webpack_require__(225);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__service_firebase_service__ = __webpack_require__(86);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__service_firebase_service__ = __webpack_require__(71);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return ChatComponent; });
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -1334,42 +1334,6 @@ var RegisterCoachFormComponent = (function () {
             invoice_city: ['', __WEBPACK_IMPORTED_MODULE_1__angular_forms__["Validators"].required],
             insurance_document: ['']
         });
-        /*
-         Email             string `json:"email"`
-         FirstName         string `json:"first_name"`
-         LastName          string `json:"last_name"`
-         LinkedinUrl       string `json:"linkedin_url"`
-         Description       string `json:"description"`
-         MobilePhoneNumber string `json:"mobile_phone_number"`
-         Languages         string `json:"languages"`
-    
-         Career          string `json:"career"`
-         ExtraActivities string `json:"extraActivities"`
-         Degree          string `json:"degree"`
-    
-         ExperienceCoaching       string `json:"experience_coaching"`
-         ExperienceRemoteCoaching string `json:"experience_remote_coaching"`
-         ExperienceShortSession   string `json:"experienceShortSession"`
-         CoachingSpecifics        string `json:"coachingSpecifics"`
-         Supervisor               string `json:"supervisor"`
-         TherapyElements          string `json:"therapyElements"`
-    
-         RevenuesLastThreeYears      string `json:"revenues_last_3_years"` //revenues for last 3 years
-         PercentageCoachingInRevenue string `json:"percentage_coaching_in_revenue"`
-         LegalStatus                 string `json:"legal_status"`
-    
-         InvoiceEntity      string `json:"invoice_entity"`
-         InvoiceSiretNumber string `json:"invoice_siret_number"`
-         InvoiceAddress     string `json:"invoice_address"`
-         InvoiceCity        string `json:"invoice_city"`
-         InvoicePostcode    string `json:"invoice_postcode"`
-    
-         AvatarURL     string `json:"avatar_url"`
-         InsuranceUrl  string `json:"insurance_url"`
-         InvoiceRIBurl string `json:"invoice_rib_url"`
-    
-         InviteSent bool   `json:"invite_sent"`
-         */
         this.getSavedFormValues();
     };
     RegisterCoachFormComponent.prototype.hasAcceptedConditions = function () {
@@ -1387,41 +1351,42 @@ var RegisterCoachFormComponent = (function () {
     //   }
     // }
     RegisterCoachFormComponent.prototype.getSavedFormValues = function () {
-        //   let cookie = this.cookieService.getObject('COACH_REGISTER_FORM_VALUES');
-        //   console.log("getSavedFormValues", cookie);
-        //   if (cookie !== null && cookie !== undefined) {
-        //     this.registerForm = this.formBuilder.group({
-        //       email: [cookie['email'], [Validators.required, Validators.pattern('[a-z0-9!#$%&\'*+/=?^_`{|}~-]+(?:.[a-z0-9!#$%&\'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?')]],
-        //       firstname: [cookie['firstname'], Validators.required],
-        //       lastname: [cookie['lastname'], Validators.required],
-        //       avatar: [cookie['avatar']],
-        //       linkedin: [cookie['linkedin']],
-        //       description: [cookie['description'], Validators.required],
-        //       invoice_entity: [cookie['invoice_entity'], Validators.required],
-        //       invoice_address: [cookie['invoice_address'], Validators.required],
-        //       invoice_postcode: [cookie['invoice_postcode'], Validators.required],
-        //       invoice_city: [cookie['invoice_city'], Validators.required],
-        //       formation: [cookie['formation'], Validators.required],
-        //       degree: [cookie['degree'], Validators.required],
-        //       otherActivities: [cookie['otherActivities'], Validators.required],
-        //       lang1: [cookie['lang1'], Validators.required],
-        //       lang2: [cookie['lang2']],
-        //       lang3: [cookie['lang3']],
-        //       experienceTime: [cookie['experienceTime'], Validators.required],
-        //       experienceVisio: [cookie['experienceVisio'], Validators.required],
-        //       experienceShortSession: [cookie['experienceShortSession'], Validators.required],
-        //       coachingSpecifics: [cookie['coachingSpecifics'], Validators.required],
-        //       therapyElements: [cookie['therapyElements'], Validators.required],
-        //       coachingHours: [cookie['coachingHours'], Validators.required],
-        //       supervision: [cookie['supervision'], Validators.required],
-        //       preferedCoaching: [cookie['preferedCoaching'], Validators.required],
-        //       status: [cookie['status'], Validators.required],
-        //       ca1: [cookie['ca1'], Validators.required],
-        //       ca2: [cookie['ca2'], Validators.required],
-        //       ca3: [cookie['ca3'], Validators.required],
-        //       insurance: [cookie['insurance']]
-        //     });
-        //   }
+        var cookie = this.cookieService.getObject('COACH_REGISTER_FORM_VALUES');
+        console.log("getSavedFormValues", cookie);
+        if (cookie !== null && cookie !== undefined) {
+            this.registerForm = this.formBuilder.group({
+                email: [cookie['email'], [__WEBPACK_IMPORTED_MODULE_1__angular_forms__["Validators"].required, __WEBPACK_IMPORTED_MODULE_1__angular_forms__["Validators"].pattern('[a-z0-9!#$%&\'*+/=?^_`{|}~-]+(?:.[a-z0-9!#$%&\'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?')]],
+                firstname: [cookie['firstname'], __WEBPACK_IMPORTED_MODULE_1__angular_forms__["Validators"].required],
+                lastname: [cookie['lastname'], __WEBPACK_IMPORTED_MODULE_1__angular_forms__["Validators"].required],
+                avatar: [cookie['avatar']],
+                linkedin_url: [cookie['linkedin_url']],
+                description: [cookie['description'], __WEBPACK_IMPORTED_MODULE_1__angular_forms__["Validators"].required],
+                phoneNumber: [cookie['phoneNumber'], __WEBPACK_IMPORTED_MODULE_1__angular_forms__["Validators"].required],
+                lang1: [cookie['lang1'], __WEBPACK_IMPORTED_MODULE_1__angular_forms__["Validators"].required],
+                lang2: [cookie['lang2']],
+                lang3: [cookie['lang3']],
+                career: [cookie['career'], __WEBPACK_IMPORTED_MODULE_1__angular_forms__["Validators"].required],
+                degree: [cookie['degree'], __WEBPACK_IMPORTED_MODULE_1__angular_forms__["Validators"].required],
+                extraActivities: [cookie['extraActivities'], __WEBPACK_IMPORTED_MODULE_1__angular_forms__["Validators"].required],
+                coachingExperience: [cookie['coachingExperience'], __WEBPACK_IMPORTED_MODULE_1__angular_forms__["Validators"].required],
+                remoteCoachingExperience: [cookie['remoteCoachingExperience'], __WEBPACK_IMPORTED_MODULE_1__angular_forms__["Validators"].required],
+                experienceShortSession: [cookie['experienceShortSession'], __WEBPACK_IMPORTED_MODULE_1__angular_forms__["Validators"].required],
+                coachingSpecifics: [cookie['coachingSpecifics'], __WEBPACK_IMPORTED_MODULE_1__angular_forms__["Validators"].required],
+                supervision: [cookie['supervision'], __WEBPACK_IMPORTED_MODULE_1__angular_forms__["Validators"].required],
+                therapyElements: [cookie['therapyElements'], __WEBPACK_IMPORTED_MODULE_1__angular_forms__["Validators"].required],
+                ca1: [cookie['ca1'], __WEBPACK_IMPORTED_MODULE_1__angular_forms__["Validators"].required],
+                ca2: [cookie['ca2'], __WEBPACK_IMPORTED_MODULE_1__angular_forms__["Validators"].required],
+                ca3: [cookie['ca3'], __WEBPACK_IMPORTED_MODULE_1__angular_forms__["Validators"].required],
+                percentageCoachingInRevenue: [cookie['percentageCoachingInRevenue']],
+                legalStatus: [cookie['legalStatus'], __WEBPACK_IMPORTED_MODULE_1__angular_forms__["Validators"].required],
+                invoice_entity: [cookie['invoice_entity'], __WEBPACK_IMPORTED_MODULE_1__angular_forms__["Validators"].required],
+                invoice_siret_number: [cookie['invoice_siret_number'], __WEBPACK_IMPORTED_MODULE_1__angular_forms__["Validators"].required],
+                invoice_address: [cookie['invoice_address'], __WEBPACK_IMPORTED_MODULE_1__angular_forms__["Validators"].required],
+                invoice_postcode: [cookie['invoice_postcode'], __WEBPACK_IMPORTED_MODULE_1__angular_forms__["Validators"].required],
+                invoice_city: [cookie['invoice_city'], __WEBPACK_IMPORTED_MODULE_1__angular_forms__["Validators"].required],
+                insurance_document: [cookie['insurance_document']]
+            });
+        }
     };
     RegisterCoachFormComponent.prototype.saveFormValues = function () {
         var date = (new Date());
@@ -1483,26 +1448,27 @@ var RegisterCoachFormComponent = (function () {
             'email': this.registerForm.value.email,
             'first_name': this.registerForm.value.firstname,
             'last_name': this.registerForm.value.lastname,
-            'linkedin_url': this.registerForm.value.linkedin,
             'description': this.registerForm.value.description,
-            'training': this.registerForm.value.formation,
+            'mobile_phone_number': this.registerForm.value.phoneNumber,
+            'languages': this.registerForm.value.lang1 + "_" + this.registerForm.value.lang2 + "_" + this.registerForm.value.lang3,
+            'linkedin_url': this.registerForm.value.linkedin_url,
+            'career': this.registerForm.value.career,
+            'extraActivities': this.registerForm.value.extraActivities,
             'degree': this.registerForm.value.degree,
-            'extraActivities': this.registerForm.value.otherActivities,
-            'coachForYears': this.registerForm.value.experienceTime,
-            'coachingExperience': this.registerForm.value.experienceVisio,
+            'experience_coaching': this.registerForm.value.coachingExperience,
+            'experience_remote_coaching': this.registerForm.value.remoteCoachingExperience,
             'experienceShortSession': this.registerForm.value.experienceShortSession,
             'coachingSpecifics': this.registerForm.value.coachingSpecifics,
-            'therapyElements': this.registerForm.value.therapyElements,
-            'coachingHours': this.registerForm.value.coachingHours,
             'supervisor': this.registerForm.value.supervision,
-            'favoriteCoachingSituation': this.registerForm.value.preferedCoaching,
-            'status': this.registerForm.value.status,
-            'revenues': this.registerForm.value.ca1 + "_" + this.registerForm.value.ca2 + "_" + this.registerForm.value.ca2,
+            'therapyElements': this.registerForm.value.therapyElements,
+            'legal_status': this.registerForm.value.legalStatus,
+            'revenues_last_3_years': this.registerForm.value.ca1 + "_" + this.registerForm.value.ca2 + "_" + this.registerForm.value.ca2,
+            'percentage_coaching_in_revenue': this.registerForm.value.percentageCoachingInRevenue,
             'invoice_entity': this.registerForm.value.invoice_entity,
+            'invoice_siret_number': this.registerForm.value.invoice_siret_number,
             'invoice_address': this.registerForm.value.invoice_address,
             'invoice_city': this.registerForm.value.invoice_city,
             'invoice_postcode': this.registerForm.value.invoice_postcode,
-            'languages': this.registerForm.value.lang1 + "_" + this.registerForm.value.lang2 + "_" + this.registerForm.value.lang3,
         };
         var params = [];
         return this.authService.putNotAuth(__WEBPACK_IMPORTED_MODULE_2__service_auth_service__["a" /* AuthService */].UPDATE_POSSIBLE_COACH, params, body).map(function (response) {
@@ -1710,6 +1676,9 @@ var _a, _b;
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_1__angular_forms__ = __webpack_require__(15);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_2__service_auth_service__ = __webpack_require__(11);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_3__angular_router__ = __webpack_require__(7);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_4__service_firebase_service__ = __webpack_require__(71);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5_rxjs_observable_PromiseObservable__ = __webpack_require__(103);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_5_rxjs_observable_PromiseObservable___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_5_rxjs_observable_PromiseObservable__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return SigninComponent; });
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -1724,11 +1693,14 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 
 
 
+
+
 var SigninComponent = (function () {
-    function SigninComponent(formBuilder, authService, router) {
+    function SigninComponent(formBuilder, authService, router, firebase) {
         this.formBuilder = formBuilder;
         this.authService = authService;
         this.router = router;
+        this.firebase = firebase;
         this.error = false;
         this.loginLoading = false;
         authService.isAuthenticated().subscribe(function (isAuth) { return console.log('onSignIn, isAuth', isAuth); });
@@ -1782,6 +1754,61 @@ var SigninComponent = (function () {
             //this.errorMessage = error;
         });
     };
+    SigninComponent.prototype.goToSignUp = function () {
+        this.router.navigate(['/signup']);
+    };
+    SigninComponent.prototype.onForgotPasswordClicked = function () {
+        console.log('onForgotPasswordClicked');
+        this.startForgotPasswordFlow();
+    };
+    /*************************************
+     ----------- Modal control for forgot password ------------
+     *************************************/
+    SigninComponent.prototype.updateForgotPasswordModalVisibility = function (isVisible) {
+        if (isVisible) {
+            $('#forgot_password_modal').openModal();
+        }
+        else {
+            $('#forgot_password_modal').closeModal();
+        }
+    };
+    SigninComponent.prototype.startForgotPasswordFlow = function () {
+        console.log('startForgotPasswordFlow');
+        this.updateForgotPasswordModalVisibility(true);
+    };
+    SigninComponent.prototype.cancelForgotPasswordModal = function () {
+        this.updateForgotPasswordModalVisibility(false);
+        this.forgotEmail = null;
+    };
+    SigninComponent.prototype.validateForgotPasswordModal = function () {
+        var _this = this;
+        console.log('validateForgotPasswordModal');
+        // make sure forgotEmail has a value
+        var firebaseObs = __WEBPACK_IMPORTED_MODULE_5_rxjs_observable_PromiseObservable__["PromiseObservable"].create(this.firebase.sendPasswordResetEmail(this.forgotEmail));
+        firebaseObs.subscribe(function () {
+            console.log("sendPasswordResetEmail ");
+            Materialize.toast("Email envoyé", 3000, 'rounded');
+            _this.cancelForgotPasswordModal();
+        }, function (error) {
+            /**
+             * {code: "auth/invalid-email", message: "The email address is badly formatted."}code: "auth/invalid-email"message: "The email address is badly formatted."__proto__: Error
+             *
+             * O {code: "auth/user-not-found", message: "There is no user record corresponding to this identifier. The user may have been deleted."}code: "auth/user-not-found"message: "There is no user record corresponding to this identifier. The user may have been deleted."__proto__: Error
+             */
+            console.log("sendPasswordResetEmail fail reason", error);
+            if (error != undefined) {
+                if (error.code == "auth/invalid-email") {
+                    Materialize.toast("L'email n'est pas correctement formatté", 3000, 'rounded');
+                    return;
+                }
+                else if (error.code == "auth/user-not-found") {
+                    Materialize.toast("L'email ne correspond à aucun de nos utilisateurs", 3000, 'rounded');
+                    return;
+                }
+            }
+            Materialize.toast("Une erreur est survenue", 3000, 'rounded');
+        });
+    };
     return SigninComponent;
 }());
 SigninComponent = __decorate([
@@ -1790,10 +1817,10 @@ SigninComponent = __decorate([
         template: __webpack_require__(667),
         styles: [__webpack_require__(615)]
     }),
-    __metadata("design:paramtypes", [typeof (_a = typeof __WEBPACK_IMPORTED_MODULE_1__angular_forms__["FormBuilder"] !== "undefined" && __WEBPACK_IMPORTED_MODULE_1__angular_forms__["FormBuilder"]) === "function" && _a || Object, typeof (_b = typeof __WEBPACK_IMPORTED_MODULE_2__service_auth_service__["a" /* AuthService */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_2__service_auth_service__["a" /* AuthService */]) === "function" && _b || Object, typeof (_c = typeof __WEBPACK_IMPORTED_MODULE_3__angular_router__["a" /* Router */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_3__angular_router__["a" /* Router */]) === "function" && _c || Object])
+    __metadata("design:paramtypes", [typeof (_a = typeof __WEBPACK_IMPORTED_MODULE_1__angular_forms__["FormBuilder"] !== "undefined" && __WEBPACK_IMPORTED_MODULE_1__angular_forms__["FormBuilder"]) === "function" && _a || Object, typeof (_b = typeof __WEBPACK_IMPORTED_MODULE_2__service_auth_service__["a" /* AuthService */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_2__service_auth_service__["a" /* AuthService */]) === "function" && _b || Object, typeof (_c = typeof __WEBPACK_IMPORTED_MODULE_3__angular_router__["a" /* Router */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_3__angular_router__["a" /* Router */]) === "function" && _c || Object, typeof (_d = typeof __WEBPACK_IMPORTED_MODULE_4__service_firebase_service__["a" /* FirebaseService */] !== "undefined" && __WEBPACK_IMPORTED_MODULE_4__service_firebase_service__["a" /* FirebaseService */]) === "function" && _d || Object])
 ], SigninComponent);
 
-var _a, _b, _c;
+var _a, _b, _c, _d;
 //# sourceMappingURL=/Users/guillaume/angular/eritis_fe/src/signin.component.js.map
 
 /***/ }),
@@ -4499,7 +4526,7 @@ var _a, _b;
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_25__user_profile_coach_profile_coach_component__ = __webpack_require__(242);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_26__user_profile_coachee_profile_coachee_component__ = __webpack_require__(244);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_27__meeting_meeting_list_coach_meeting_item_coach_meeting_item_coach_component__ = __webpack_require__(375);
-/* harmony import */ var __WEBPACK_IMPORTED_MODULE_28__service_firebase_service__ = __webpack_require__(86);
+/* harmony import */ var __WEBPACK_IMPORTED_MODULE_28__service_firebase_service__ = __webpack_require__(71);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_29__meeting_meeting_date_meeting_date_component__ = __webpack_require__(235);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_30_primeng_components_slider_slider__ = __webpack_require__(648);
 /* harmony import */ var __WEBPACK_IMPORTED_MODULE_30_primeng_components_slider_slider___default = __webpack_require__.n(__WEBPACK_IMPORTED_MODULE_30_primeng_components_slider_slider__);
@@ -7022,18 +7049,7 @@ var MEETING_REVIEW_TYPE_SESSION_RATE = "SESSION_RATE";
  */
 /**
  * Created by guillaume on 01/02/2017.
- *
- * [{"Key":"ahFkZXZ-ZXJpdGlzLWJlLWdscnJHCxINUG9zc2libGVDb2FjaCI0Zmd1NkJ5eUZscW1ZY2FmUEloUjhaZnNWdTNjRFBUeDFlQVo2REhqNVE4YzZEdEVrcWZnPQw",
-  "Email":"","FirstName":"","LastName":"","LinkedinUrl":"","Description":"","Training":"","Degree":"",
-  "ExtraActivities":"","CoachForYears":"","CoachingExperience":"","CoachingHours":"","Supervisor":"",
-  "FavoriteCoachingSituation":"","Status":"","Revenue":"","AvatarURL":"","AssuranceUrl":""}
- ,{"Key":"ahFkZXZ-ZXJpdGlzLWJlLWdscnJbCxINUG9zc2libGVDb2FjaCJIaEdJQWJqN2hqRzQzSFZsUUlsMnlvTGFudE5vSHk0ejNjOTQzYjlEVEpPX1hGd3RfUHpGN2dNWHlqUmlhXzk1ZUtTajlWQT09DA",
-  "Email":"fokzokfopkopzvz@gmail.com","FirstName":"vzeopcopczk","LastName":"fkoczk","LinkedinUrl":"","Description":"","Training":"","Degree":"","ExtraActivities":"",
-  "CoachForYears":"","CoachingExperience":"","CoachingHours":"","Supervisor":"","FavoriteCoachingSituation":"","Status":"","Revenue":"","AvatarURL":"","AssuranceUrl":""},
- {"Key":"ahFkZXZ-ZXJpdGlzLWJlLWdscnJTCxINUG9zc2libGVDb2FjaCJAaUJQSzBUNGtZb3E4NG5iOWczdmNmdGpHWDdMN2dFNlhsTmlITkVEbXpKZTNiS1pVNElYRXdSSXpnSXBCb0NCSQw","Email":"",
-   "FirstName":"","LastName":"","LinkedinUrl":"","Description":"","Training":"","Degree":"","ExtraActivities":"","CoachForYears":"","CoachingExperience":"","CoachingHours":"",
-   ``"Supervisor":"","FavoriteCoachingSituation":"","Status":"","Revenue":"","AvatarURL":"","AssuranceUrl":""}]
- */
+ * */
 var PossibleCoach = (function () {
     function PossibleCoach() {
     }
@@ -7536,7 +7552,7 @@ exports = module.exports = __webpack_require__(4)();
 
 
 // module
-exports.push([module.i, "/*#main_container {\n  padding:32px;\n}\n\n#form_container {\n  padding: 32px;\n  max-width: 50%;\n}*/\nlabel {\n  color: #ffffff;\n  font-size: 20px;\n  font-weight: 300;\n  opacity: .6; }\n\ninput[type=\"password\"],\ninput[type=\"password\"]:focus:not([readonly]),\ninput[type=\"email\"],\ninput[type=\"email\"]:focus:not([readonly]),\ntextarea,\ntextarea:focus:not([readonly]) {\n  background-color: rgba(255, 255, 255, 0.6) !important; }\n\nbutton[type=\"submit\"] {\n  background-color: #46b0ff;\n  border: none;\n  border-radius: 100%;\n  width: 64px;\n  height: 64px;\n  font-size: 24px;\n  font-weight: 300;\n  text-align: center; }\n\nbutton[type=\"submit\"]:hover {\n  box-shadow: 0 2px 5px 0 rgba(0, 0, 0, 0.16), 0 2px 10px 0 rgba(0, 0, 0, 0.12); }\n\nbutton[type=\"submit\"]:disabled {\n  opacity: .5; }\n\n#main_container {\n  width: 30%;\n  margin: auto; }\n\n@media (max-width: 960px) {\n  #main_container {\n    width: 80%; } }\n\n.spinner-white {\n  border-color: #FFF; }\n", ""]);
+exports.push([module.i, "/*#main_container {\n  padding:32px;\n}\n\n#form_container {\n  padding: 32px;\n  max-width: 50%;\n}*/\n.header-signin label {\n  color: #ffffff;\n  font-size: 20px;\n  font-weight: 300;\n  opacity: .6; }\n\n.header-signin input[type=\"password\"],\n.header-signin input[type=\"password\"]:focus:not([readonly]),\n.header-signin input[type=\"email\"],\n.header-signin input[type=\"email\"]:focus:not([readonly]),\n.header-signin textarea,\n.header-signin textarea:focus:not([readonly]) {\n  background-color: rgba(255, 255, 255, 0.6) !important; }\n\n.header-signin button[type=\"submit\"] {\n  background-color: #46b0ff;\n  border: none;\n  border-radius: 100%;\n  width: 64px;\n  height: 64px;\n  font-size: 24px;\n  font-weight: 300;\n  text-align: center; }\n\n.header-signin button[type=\"submit\"]:hover {\n  box-shadow: 0 2px 5px 0 rgba(0, 0, 0, 0.16), 0 2px 10px 0 rgba(0, 0, 0, 0.12); }\n\n.header-signin button[type=\"submit\"]:disabled {\n  opacity: .5; }\n\n#main_container {\n  width: 30%;\n  margin: auto; }\n\n@media (max-width: 960px) {\n  #main_container {\n    width: 80%; } }\n\n.spinner-white {\n  border-color: #FFF; }\n\n/* modal */\n.modal label,\n.modal input {\n  color: #3E3E3E; }\n\n#forgot_password_modal {\n  height: 230px; }\n", ""]);
 
 // exports
 
@@ -8064,7 +8080,7 @@ module.exports = "<div class=\"container\">\n  <div id=\"introduction\">\n    <h
 /***/ 667:
 /***/ (function(module, exports) {
 
-module.exports = "<div id=\"main_container\">\n  <div class=\"section\">\n    <form [formGroup]=\"signInForm\" (ngSubmit)=\"onSignIn()\" class=\"center\">\n      <div class=\"text-left\">\n        <label for=\"email\">Email</label>\n        <input type=\"email\" id=\"email\" name=\"email\" formControlName=\"email\"/>\n        <small\n          *ngIf=\"!signInForm.controls['email'].pristine &&!signInForm.controls['email'].valid\"\n          class=\"text-danger\">\n          Email is required and format should be <i>john@doe.com</i>.\n        </small>\n      </div>\n\n      <div class=\"text-left\">\n        <label for=\"password\">Mot de passe</label>\n        <input type=\"password\" id=\"password\" name=\"password\" formControlName=\"password\">\n        <small class=\"text-danger\"\n               *ngIf=\"!signInForm.controls['password'].pristine && !signInForm.controls['password'].valid\">\n          Password must be at least 6 characters.\n        </small>\n      </div>\n\n      <div class=\"text-center\">\n        <button type=\"submit\" name=\"action\" [disabled]=\"!signInForm.valid\" *ngIf=\"!loginLoading\">Go</button>\n\n        <div class=\"preloader-wrapper active\" *ngIf=\"loginLoading\">\n          <div class=\"spinner-layer spinner-white\">\n            <div class=\"circle-clipper left\">\n              <div class=\"circle\"></div>\n            </div>\n            <div class=\"gap-patch\">\n              <div class=\"circle\"></div>\n            </div>\n            <div class=\"circle-clipper right\">\n              <div class=\"circle\"></div>\n            </div>\n          </div>\n        </div>\n      </div>\n\n      <!-- sign up error div-->\n      <div *ngIf=\"error && errorMessage != ''\">\n        <!-- add extra separator-->\n        <hr>\n        <small class=\"text-danger\">\n          {{errorMessage}}\n        </small>\n      </div>\n\n    </form>\n  </div><!--end section-->\n\n</div>\n"
+module.exports = "<div id=\"main_container\">\n  <div class=\"section\">\n    <form [formGroup]=\"signInForm\" (ngSubmit)=\"onSignIn()\" class=\"center header-signin\">\n      <div class=\"text-left\">\n        <label for=\"email\">Email</label>\n        <input type=\"email\" id=\"email\" name=\"email\" formControlName=\"email\"/>\n        <!--<small-->\n          <!--*ngIf=\"!signInForm.controls['email'].pristine &&!signInForm.controls['email'].valid\"-->\n          <!--class=\"text-danger\">-->\n          <!--Email is required and format should be <i>john@doe.com</i>.-->\n        <!--</small>-->\n      </div>\n\n      <div class=\"text-left\">\n        <label for=\"password\">Mot de passe</label>\n        <input type=\"password\" id=\"password\" name=\"password\" formControlName=\"password\">\n        <!--<small class=\"text-danger\"-->\n               <!--*ngIf=\"!signInForm.controls['password'].pristine && !signInForm.controls['password'].valid\">-->\n          <!--Password must be at least 6 characters.-->\n        <!--</small>-->\n      </div>\n\n      <div class=\"text-center\">\n        <button type=\"submit\" name=\"action\" [disabled]=\"!signInForm.valid\" *ngIf=\"!loginLoading\">Go</button>\n\n        <div class=\"preloader-wrapper active\" *ngIf=\"loginLoading\">\n          <div class=\"spinner-layer spinner-white\">\n            <div class=\"circle-clipper left\">\n              <div class=\"circle\"></div>\n            </div>\n            <div class=\"gap-patch\">\n              <div class=\"circle\"></div>\n            </div>\n            <div class=\"circle-clipper right\">\n              <div class=\"circle\"></div>\n            </div>\n          </div>\n        </div>\n      </div>\n\n      <br>\n      <a (click)=\"onForgotPasswordClicked()\">Mot de passe oublié ?</a>\n\n      <!-- sign up error div-->\n      <div *ngIf=\"error && errorMessage != ''\">\n        <!-- add extra separator-->\n        <hr>\n        <small class=\"text-danger\">\n          {{errorMessage}}\n        </small>\n      </div>\n\n    </form>\n  </div><!--end section-->\n\n  <!-- Modal Forgot password -->\n  <div id=\"forgot_password_modal\" class=\"modal\">\n    <div class=\"action-modal-content\">\n      <div class=\"action-modal-message\">\n        <label>Veuillez saisir votre adresse mail.</label>\n        <input type=\"email\" placeholder=\"Email\" [(ngModel)]=\"forgotEmail\">\n      </div>\n      <div class=\"action-modal-footer\">\n        <button class=\"btn-basic btn-plain btn-small\" (click)=\"cancelForgotPasswordModal()\">Annuler</button>\n        <button class=\"btn-basic btn-blue btn-plain btn-small\" (click)=\"validateForgotPasswordModal()\"\n                [disabled]=\"!forgotEmail\">Confirmer\n        </button>\n      </div>\n    </div>\n  </div>\n</div>\n"
 
 /***/ }),
 
@@ -8197,7 +8213,7 @@ module.exports = "<div class=\"header-user\">\n  <div class=\"header-user-filter
 /***/ 686:
 /***/ (function(module, exports) {
 
-module.exports = "<div class=\"header-user\">\n  <div class=\"header-user-filter\">\n    <div class=\"container row\">\n\n      <div class=\"user col-lg-5\">\n        <button class=\"btn-back\" (click)=\"goToPossibleCoachsAdmin()\">\n          <i class=\"material-icons\">keyboard_arrow_left</i>\n        </button>\n\n        <!--<img src=\"{{(possibleCoach | async)?.avatar_url}}\" alt=\"profile image\"-->\n             <!--class=\"user-img circle responsive-img z-depth-2\">-->\n        <div class=\"user-img avatar z-depth-2\"\n             *ngIf=\"(possibleCoach | async)?.avatar_url != null\"\n             [style.background-image]=\"'url(' + (possibleCoach | async)?.avatar_url + ')'\"></div>\n\n        <div class=\"user-info\">\n          <h5>{{(possibleCoach | async)?.first_name}} {{(possibleCoach | async)?.last_name}}</h5>\n          <p class=\"light-grey-text\">{{(possibleCoach | async)?.email}}</p>\n        </div>\n      </div>\n\n      <div class=\"header-stats col-lg-7\">\n\n      </div>\n\n    </div>\n  </div>\n</div>\n\n<div class=\"container\">\n  <h4 class=\"text-right italic\">\"{{ (possibleCoach | async)?.description }}\"</h4>\n  <br>\n\n  <!--<div class=\"center\">-->\n    <!--<button class=\"btn-basic btn-plain btn-blue btn-small center\" (click)=\"goToPossibleCoachsAdmin()\">Retourner aux demandes de coach</button>-->\n  <!--</div>-->\n\n  <!--<br><br>-->\n\n  <div class=\"row\">\n\n    <div class=\"center col-lg-12\">\n      <a target=\"_blank\" class=\"btn-basic btn-blue btn-plain btn-small\" [href]=\"(possibleCoach | async)?.linkedin_url\"><i class=\"fa fa-linkedin\" aria-hidden=\"true\"></i></a>\n      <br><br>\n    </div>\n\n    <h2 class=\"col-lg-12 section-form-title\">Coordonnées de facturation</h2>\n\n    <div class=\"col-lg-12\">\n      <div class=\"row\">\n        <div class=\"col-lg-12 input-container\">\n          <p class=\"black-text\">{{ (possibleCoach | async)?.invoice_entity }}</p>\n          <p class=\"black-text\">{{ (possibleCoach | async)?.invoice_address }}</p>\n          <p class=\"black-text\">{{ (possibleCoach | async)?.invoice_city }}</p>\n          <p class=\"black-text\">{{ (possibleCoach | async)?.invoice_postcode }}</p>\n        </div>\n      </div>\n    </div>\n\n\n\n\n\n    <h2 class=\"col-lg-12 section-form-title\">Formation</h2>\n\n    <div class=\"col-lg-12\">\n      <div class=\"row\">\n        <div class=\"col-lg-12 input-container\">\n          <label>Quelle est votre formation initiale ?</label>\n          <p>{{ (possibleCoach | async)?.training }}</p>\n          <br>\n        </div>\n\n        <div class=\"col-lg-12 input-container\">\n          <label>Quels sont vos diplômes, certifications et accréditations en coaching ?</label>\n          <p>{{ (possibleCoach | async)?.degree }}</p>\n          <br>\n        </div>\n      </div>\n    </div>\n\n\n\n\n\n\n\n    <h2 class=\"col-lg-12 section-form-title\">Activité de coach</h2>\n\n    <div class=\"col-lg-12\">\n      <div class=\"row\">\n        <div class=\"col-lg-12 input-container\">\n          <label>Quelle(s) langue(s) pratiquez vous en coaching ?</label>\n          <p>{{ (possibleCoach | async)?.languages }}</p>\n          <br>\n        </div>\n\n        <div class=\"col-lg-12 input-container\">\n          <label>Exercez-vous d'autres activités que le coaching ?</label>\n          <p>{{ (possibleCoach | async)?.extraActivities }}</p>\n          <br>\n        </div>\n\n        <div class=\"col-lg-12 input-container\">\n          <label>Depuis combien de temps exercez-vous l'activité de coaching ?</label>\n          <p>{{ (possibleCoach | async)?.coachForYears }}</p>\n          <br>\n        </div>\n\n        <div class=\"col-lg-12 input-container\">\n          <label>Quelles sont vos expériences en coaching individuel et en coaching individuel via\n            visioconférence (Skype par exemple) ?</label>\n          <p>{{ (possibleCoach | async)?.coachingExperience }}</p>\n          <br>\n        </div>\n\n        <div class=\"col-lg-12 input-container\">\n          <label>Quelles sont vos expériences en coaching bref sur 45 minutes ?</label>\n          <p>{{ (possibleCoach | async)?.experienceShortSession }}</p>\n        </div>\n\n        <div class=\"col-lg-12 input-container\">\n          <label>Quelles sont les spécialités et/ou spécificités que vous utilisez lors du coaching ?</label>\n          <p>{{ (possibleCoach | async)?.coachingSpecifics }}</p>\n        </div>\n\n        <div class=\"col-lg-12 input-container\">\n          <label>Donnez quelques éléments de votre parcours de développement personnel / thérapie ?</label>\n          <p>{{ (possibleCoach | async)?.therapyElements }}</p>\n        </div>\n\n        <div class=\"col-lg-12 input-container\">\n          <label>Combien d'heures de coaching individuel avez-vous déjà réalisé ?</label>\n          <p>{{ (possibleCoach | async)?.coachingHours }}</p>\n          <br>\n        </div>\n\n        <div class=\"col-lg-12 input-container\">\n          <label>Quel est votre dispositif de supervision ?</label>\n          <p>{{ (possibleCoach | async)?.supervisor }}</p>\n          <br>\n        </div>\n\n        <div class=\"col-lg-12 input-container\">\n          <label>Quels types ou situations de coaching privilégiez-vous ?</label>\n          <p>{{ (possibleCoach | async)?.favoriteCoachingSituation}}</p>\n          <br>\n        </div>\n\n        <div class=\"col-lg-12 input-container\">\n          <label>Quel est votre statut ?</label>\n          <p>{{ (possibleCoach | async)?.status }}</p>\n          <br>\n        </div>\n\n        <div class=\"col-lg-12 input-container\">\n          <label>Quel est votre chiffre d'affaires sur les 3 dernières années ?</label>\n          <p>{{ (possibleCoach | async)?.revenues }}</p>\n          <br>\n        </div>\n\n        <div class=\"col-lg-12 input-container\">\n          <label>Avez-vous une copie de votre assurance RC Pro ?</label><br>\n          <p><a [href]=\"(possibleCoach | async)?.assurance_url\">Contrat d'assurance</a></p>\n          <br>\n        </div>\n      </div>\n    </div>\n\n    <div class=\" col-lg-12 text-center input-container\">\n      <br>\n      <button class=\"btn-basic btn-blue btn-plain btn-small\"\n              *ngIf=\"!(possibleCoach | async)?.invite_sent\"\n              (click)=\"sendInvite()\">Envoyer une invitation\n      </button>\n      <button class=\"btn-basic btn-small\"\n              *ngIf=\"(possibleCoach | async)?.invite_sent\"\n              disabled>En attente...\n      </button>\n    </div>\n\n  </div><!--end row>-->\n\n</div>\n"
+module.exports = "<div class=\"header-user\">\n  <div class=\"header-user-filter\">\n    <div class=\"container row\">\n\n      <div class=\"user col-lg-5\">\n        <button class=\"btn-back\" (click)=\"goToPossibleCoachsAdmin()\">\n          <i class=\"material-icons\">keyboard_arrow_left</i>\n        </button>\n\n        <!--<img src=\"{{(possibleCoach | async)?.avatar_url}}\" alt=\"profile image\"-->\n        <!--class=\"user-img circle responsive-img z-depth-2\">-->\n        <div class=\"user-img avatar z-depth-2\"\n             *ngIf=\"(possibleCoach | async)?.avatar_url != null\"\n             [style.background-image]=\"'url(' + (possibleCoach | async)?.avatar_url + ')'\"></div>\n\n        <div class=\"user-info\">\n          <h5>{{(possibleCoach | async)?.first_name}} {{(possibleCoach | async)?.last_name}}</h5>\n          <p class=\"light-grey-text\">{{(possibleCoach | async)?.email}}</p>\n        </div>\n      </div>\n\n      <div class=\"header-stats col-lg-7\">\n\n      </div>\n\n    </div>\n  </div>\n</div>\n\n<div class=\"container\">\n\n  <div class=\"row\">\n\n    <div class=\"col-lg-12\">\n\n      <div class=\"row\">\n        <div class=\"col-lg-12\">\n          <label>Description</label>\n          <p>{{ (possibleCoach | async)?.description }}</p>\n        </div>\n      </div>\n\n      <div class=\"row\">\n        <div class=\"center col-lg-12\">\n          <a target=\"_blank\" class=\"btn-basic btn-blue btn-plain btn-small\"\n             [href]=\"(possibleCoach | async)?.linkedin_url\"><i class=\"fa fa-linkedin\" aria-hidden=\"true\"></i></a>\n        </div>\n      </div>\n\n      <div class=\"row\">\n        <div class=\"col-lg-12\">\n          <label>Langue(s) pratiquée(s) en coaching ?</label>\n          <p>{{ (possibleCoach | async)?.languages }}</p>\n        </div>\n      </div>\n\n      <div class=\"row\">\n        <div class=\"col-lg-12\">\n          <label>Quelques éléments de parcours professionnel?</label>\n          <p>{{ (possibleCoach | async)?.career }}</p>\n        </div>\n      </div>\n\n      <div class=\"row\">\n        <div class=\"col-lg-12\">\n          <label>Quelles activités exercez-vous autres que le coaching individuel ?</label>\n          <p>{{ (possibleCoach | async)?.extraActivities }}</p>\n        </div>\n      </div>\n\n      <div class=\"row\">\n        <div class=\"col-lg-12\">\n          <label>Vos diplômes, certifications, référencements, accréditations dans le domaine du coaching ?</label>\n          <p>{{ (possibleCoach | async)?.degree }}</p>\n        </div>\n      </div>\n\n      <div class=\"row\">\n        <div class=\"col-lg-12\">\n          <label>Depuis combien de temps exercez-vous une activité de coaching individuel, et combien d’heures\n            avez-vous déjà réalisées ?</label>\n          <p>{{ (possibleCoach | async)?.experience_coaching }}</p>\n\n        </div>\n      </div>\n\n      <div class=\"row\">\n        <div class=\"col-lg-12\">\n          <label>Quelles sont vos expériences en coaching à distance, visio, skype ?</label>\n          <p>{{ (possibleCoach | async)?.experience_remote_coaching }}</p>\n\n        </div>\n      </div>\n\n      <div class=\"row\">\n        <div class=\"col-lg-12\">\n          <label>Quelles sont vos expériences en coaching bref sur 45 minutes ?</label>\n          <p>{{ (possibleCoach | async)?.experienceShortSession }}</p>\n\n        </div>\n      </div>\n\n      <div class=\"row\">\n        <div class=\"col-lg-12\">\n          <label>Des spécialités, des spécificités dans les situations de coaching que vous réalisez?</label>\n          <p>{{ (possibleCoach | async)?.coachingSpecifics }}</p>\n\n        </div>\n      </div>\n\n      <div class=\"row\">\n        <div class=\"col-lg-12\">\n          <label>Quel est votre dispositif de supervision ?</label>\n          <p>{{ (possibleCoach | async)?.supervisor }}</p>\n\n        </div>\n      </div>\n\n      <div class=\"row\">\n        <div class=\"col-lg-12\">\n          <label>Quelques éléments de votre parcours de développement personnel/ thérapie ?</label>\n          <p>{{ (possibleCoach | async)?.therapyElements }}</p>\n\n        </div>\n      </div>\n\n\n      <div class=\"row\">\n        <div class=\"col-lg-12\">\n          <label>Quel est votre chiffre d'affaires sur les 3 dernières années ?</label>\n          <p>{{ (possibleCoach | async)?.revenues_last_3_years }}</p>\n        </div>\n      </div>\n\n      <div class=\"row\">\n        <div class=\"col-lg-12\">\n          <label>Quelle est la part de votre CA en coaching individuel ?</label>\n          <p>{{ (possibleCoach | async)?.percentage_coaching_in_revenue }}</p>\n        </div>\n      </div>\n\n      <div class=\"row\">\n        <div class=\"col-lg-12\">\n          <label>Quel est votre statut juridique?</label>\n          <p>{{ (possibleCoach | async)?.legal_status }}</p>\n        </div>\n      </div>\n\n      <div class=\"row\">\n        <div class=\"col-lg-12\">\n          <label>Avez-vous une copie de votre assurance RC Pro ?</label><br>\n          <p><a [href]=\"(possibleCoach | async)?.assurance_url\">Contrat d'assurance</a></p>\n          <br>\n        </div>\n      </div>\n\n      <h2 class=\"row section-form-title\">Coordonnées de facturation</h2>\n\n      <div class=\"row\">\n        <div class=\"col-lg-12 input-container\">\n          <p class=\"black-text\">{{ (possibleCoach | async)?.invoice_entity }}</p>\n          <p class=\"black-text\">{{ (possibleCoach | async)?.invoice_siret_number }}</p>\n          <p class=\"black-text\">{{ (possibleCoach | async)?.invoice_address }}</p>\n          <p class=\"black-text\">{{ (possibleCoach | async)?.invoice_city }}</p>\n          <p class=\"black-text\">{{ (possibleCoach | async)?.invoice_postcode }}</p>\n        </div>\n      </div>\n\n\n    </div>\n\n    <div class=\" col-lg-12 text-center input-container\">\n      <br>\n      <button class=\"btn-basic btn-blue btn-plain btn-small\"\n              *ngIf=\"!(possibleCoach | async)?.invite_sent\"\n              (click)=\"sendInvite()\">Envoyer une invitation\n      </button>\n      <button class=\"btn-basic btn-small\"\n              *ngIf=\"(possibleCoach | async)?.invite_sent\"\n              disabled>En attente...\n      </button>\n    </div>\n\n  </div><!--end row>-->\n\n</div>\n"
 
 /***/ }),
 
@@ -8222,7 +8238,7 @@ module.exports = "<div class=\"content\">\n\n  <section id=\"presentation\" clas
 
 /***/ }),
 
-/***/ 86:
+/***/ 71:
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -8260,6 +8276,9 @@ var FirebaseService = (function () {
     };
     FirebaseService.prototype.auth = function () {
         return firebase.auth();
+    };
+    FirebaseService.prototype.sendPasswordResetEmail = function (email) {
+        return firebase.auth().sendPasswordResetEmail(email);
     };
     return FirebaseService;
 }());
