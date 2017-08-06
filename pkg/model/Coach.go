@@ -15,106 +15,55 @@ const COACH_ENTITY string = "Coach"
 const ROOM_APPEAR_IN_BASE_URL string = "https://appear.in/eritis"
 
 type Coach struct {
-	Key                       *datastore.Key `datastore:"-"`
-	Email                     string
-	FirebaseId                string
-	FirstName                 string
-	LastName                  string
-	AvatarURL                 string
-	ChatRoomURL               string
-	Score                     int
-	SessionsCount             int
-	StartDate                 time.Time
-	Description               string
-	LinkedinUrl               string
-	Training                  string
-	Degree                    string
-	ExtraActivities           string
-	CoachForYears             string
-	CoachingExperience        string
-	ExperienceShortSession    string
-	CoachingSpecifics         string
-	TherapyElements           string
-	CoachingHours             string
-	Supervisor                string
-	FavoriteCoachingSituation string
-	Status                    string
-	Revenues                  string
-	InsuranceUrl              string
-	InvoiceEntity             string
-	InvoiceAddress            string
-	InvoiceCity               string
-	InvoicePostcode           string
-	Languages                 string
+	Key        *datastore.Key `json:"id" datastore:"-"`
+	FirebaseId string
+
+	ChatRoomURL   string `json:"chat_room_url"`
+	Score         int `json:"score"`
+	SessionsCount int `json:"sessions_count"`
+	StartDate     time.Time `json:"start_date"`
+
+	Email             string `json:"email"`
+	FirstName         string `json:"first_name"`
+	LastName          string `json:"last_name"`
+	LinkedinUrl       string `json:"linkedin_url"`
+	Description       string `json:"description"`
+	MobilePhoneNumber string `json:"mobile_phone_number"`
+	Languages         string `json:"languages"`
+
+	Career          string `json:"career"`
+	ExtraActivities string `json:"extraActivities"`
+	Degree          string `json:"degree"`
+
+	ExperienceCoaching       string `json:"experience_coaching"`
+	ExperienceRemoteCoaching string `json:"experience_remote_coaching"`
+	ExperienceShortSession   string `json:"experienceShortSession"`
+	CoachingSpecifics        string `json:"coachingSpecifics"`
+	Supervisor               string `json:"supervisor"`
+	TherapyElements          string `json:"therapyElements"`
+
+	RevenuesLastThreeYears      string `json:"revenues_last_3_years"` //revenues for last 3 years
+	PercentageCoachingInRevenue string `json:"percentage_coaching_in_revenue"`
+	LegalStatus                 string `json:"legal_status"`
+
+	AvatarURL    string `json:"avatar_url"`
+	InsuranceUrl string `json:"insurance_url"`
+
+	InvoiceEntity      string `json:"invoice_entity"`
+	InvoiceSiretNumber string `json:"invoice_siret_number"`
+	InvoiceAddress     string `json:"invoice_address"`
+	InvoiceCity        string `json:"invoice_city"`
+	InvoicePostcode    string `json:"invoice_postcode"`
+	InvoiceRIBurl      string `json:"invoice_rib_url"`
 }
 
 type CoachAPI struct {
-	Id                        string `json:"id"`
-	Email                     string `json:"email"`
-	FirstName                 string `json:"first_name"`
-	LastName                  string `json:"last_name"`
-	AvatarURL                 string `json:"avatar_url"`
-	ChatRoomURL               string `json:"chat_room_url"`
-	Score                     int    `json:"score"`
-	StartDate                 time.Time `json:"start_date"`
-	Description               string `json:"description"`
-	SessionsCount             int    `json:"sessions_count"`
-	LinkedinUrl               string `json:"linkedin_url"`
-	Training                  string `json:"training"`
-	Degree                    string `json:"degree"`
-	ExtraActivities           string `json:"extraActivities"`    //ActivitiesOutOfCoaching
-	CoachForYears             string `json:"coachForYears"`      // been a coach xx years
-	CoachingExperience        string `json:"coachingExperience"` // coaching experience
-	ExperienceShortSession    string `json:"experienceShortSession"`
-	CoachingSpecifics         string `json:"coachingSpecifics"`
-	TherapyElements           string `json:"therapyElements"`
-	CoachingHours             string `json:"coachingHours"` // number of coaching hours
-	Supervisor                string `json:"supervisor"`
-	FavoriteCoachingSituation string `json:"favoriteCoachingSituation"`
-	Status                    string `json:"status"`
-	Revenues                  string `json:"revenues"` //revenues for last 3 years
-	InsuranceUrl              string `json:"insurance_url"`
-	InvoiceEntity             string `json:"invoice_entity"`
-	InvoiceAddress            string `json:"invoice_address"`
-	InvoiceCity               string `json:"invoice_city"`
-	InvoicePostcode           string `json:"invoice_postcode"`
-	Languages                 string `json:"languages"`
+	*Coach
 }
 
 func (c *Coach) ToCoachAPI() *CoachAPI {
 	var res CoachAPI
-	res.Id = c.Key.Encode()
-	res.Email = c.Email
-	res.FirstName = c.FirstName
-	res.LastName = c.LastName
-	res.AvatarURL = c.AvatarURL
-	res.ChatRoomURL = c.ChatRoomURL
-	res.Score = c.Score
-	res.StartDate = c.StartDate
-	res.Description = c.Description
-	res.SessionsCount = c.SessionsCount
-
-	res.LinkedinUrl = c.LinkedinUrl
-	res.Training = c.Training
-	res.Degree = c.Degree
-	res.ExtraActivities = c.ExtraActivities
-	res.CoachForYears = c.CoachForYears
-	res.CoachingExperience = c.CoachingExperience
-	res.ExperienceShortSession = c.ExperienceShortSession
-	res.CoachingSpecifics = c.CoachingSpecifics
-	res.TherapyElements = c.TherapyElements
-	res.CoachingHours = c.CoachingHours
-	res.Supervisor = c.Supervisor
-	res.FavoriteCoachingSituation = c.FavoriteCoachingSituation
-	res.Status = c.Status
-	res.Revenues = c.Revenues
-	res.InsuranceUrl = c.InsuranceUrl
-	res.InvoiceEntity = c.InvoiceEntity
-	res.InvoiceAddress = c.InvoiceAddress
-	res.InvoiceCity = c.InvoiceCity
-	res.InvoicePostcode = c.InvoicePostcode
-	res.Languages = c.Languages
-
+	res.Coach = c
 	return &res
 }
 
