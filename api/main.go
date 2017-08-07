@@ -69,6 +69,8 @@ rh.2.eritis@gmail.com
 
 // run queue_tasks
 https://eritis-150320.appspot.com/api/queue_tasks
+https://eritis-be-glr.appspot.com/api/queue_tasks
+
 
 */
 

@@ -200,27 +200,31 @@ func handleCreateCoach(w http.ResponseWriter, r *http.Request) {
 		coach.FirstName = possibleCoach.FirstName
 		coach.LastName = possibleCoach.LastName
 		coach.Description = possibleCoach.Description
-		coach.AvatarURL = possibleCoach.AvatarURL
+		coach.MobilePhoneNumber = possibleCoach.MobilePhoneNumber
+		coach.Languages = possibleCoach.Languages
 		coach.LinkedinUrl = possibleCoach.LinkedinUrl
-		coach.Training = possibleCoach.Training
-		coach.Degree = possibleCoach.Degree
+		coach.AvatarURL = possibleCoach.AvatarURL
+		coach.InsuranceUrl = possibleCoach.InsuranceUrl
+
+		coach.Career = possibleCoach.Career
 		coach.ExtraActivities = possibleCoach.ExtraActivities
-		coach.CoachForYears = possibleCoach.CoachForYears
-		coach.CoachingExperience = possibleCoach.CoachingExperience
+		coach.Degree = possibleCoach.Degree
+		coach.ExperienceCoaching = possibleCoach.ExperienceCoaching
+		coach.ExperienceRemoteCoaching = possibleCoach.ExperienceRemoteCoaching
 		coach.ExperienceShortSession = possibleCoach.ExperienceShortSession
 		coach.CoachingSpecifics = possibleCoach.CoachingSpecifics
-		coach.TherapyElements = possibleCoach.TherapyElements
-		coach.CoachingHours = possibleCoach.CoachingHours
 		coach.Supervisor = possibleCoach.Supervisor
-		coach.FavoriteCoachingSituation = possibleCoach.FavoriteCoachingSituation
-		coach.Status = possibleCoach.Status
-		coach.Revenues = possibleCoach.Revenues
-		coach.InsuranceUrl = possibleCoach.InsuranceUrl
+		coach.TherapyElements = possibleCoach.TherapyElements
+		coach.LegalStatus = possibleCoach.LegalStatus
+		coach.RevenuesLastThreeYears = possibleCoach.RevenuesLastThreeYears
+		coach.PercentageCoachingInRevenue = possibleCoach.PercentageCoachingInRevenue
+
 		coach.InvoiceEntity = possibleCoach.InvoiceEntity
+		coach.InvoiceSiretNumber = possibleCoach.InvoiceSiretNumber
 		coach.InvoiceAddress = possibleCoach.InvoiceAddress
 		coach.InvoiceCity = possibleCoach.InvoiceCity
 		coach.InvoicePostcode = possibleCoach.InvoicePostcode
-		coach.Languages = possibleCoach.Languages
+		coach.InvoiceRIBurl = possibleCoach.InvoiceRIBurl
 
 		err = coach.Update(ctx)
 		if err != nil {
