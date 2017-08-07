@@ -30,6 +30,9 @@ var FirebaseService = (function () {
     FirebaseService.prototype.auth = function () {
         return firebase.auth();
     };
+    FirebaseService.prototype.sendPasswordResetEmail = function (email) {
+        return firebase.auth().sendPasswordResetEmail(email);
+    };
     return FirebaseService;
 }());
 FirebaseService = __decorate([

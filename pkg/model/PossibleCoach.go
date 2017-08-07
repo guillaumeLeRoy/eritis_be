@@ -14,34 +14,43 @@ const POSSIBLE_COACH_ENTITY string = "PossibleCoach"
 var ErrNoPossibleCoach = errors.New("Possible coach : No Possible coach found")
 
 type PossibleCoach struct {
-	Key                       *datastore.Key `datastore:"-" json:"id"`
-	InscriptionDate           time.Time `json:"inscription_date"`
-	Email                     string `json:"email"`
-	FirstName                 string `json:"first_name"`
-	LastName                  string `json:"last_name"`
-	LinkedinUrl               string `json:"linkedin_url"`
-	Description               string `json:"description"`
-	Training                  string `json:"training"`
-	Degree                    string `json:"degree"`
-	ExtraActivities           string `json:"extraActivities"`    //ActivitiesOutOfCoaching
-	CoachForYears             string `json:"coachForYears"`      // been a coach xx years
-	CoachingExperience        string `json:"coachingExperience"` // coaching experience
-	ExperienceShortSession    string `json:"experienceShortSession"`
-	CoachingSpecifics         string `json:"coachingSpecifics"`
-	TherapyElements           string `json:"therapyElements"`
-	CoachingHours             string `json:"coachingHours"` // number of coaching hours
-	Supervisor                string `json:"supervisor"`
-	FavoriteCoachingSituation string `json:"favoriteCoachingSituation"`
-	Status                    string `json:"status"`
-	Revenues                  string `json:"revenues"` //revenues for last 3 years
-	AvatarURL                 string `json:"avatar_url"`
-	InsuranceUrl              string `json:"insurance_url"`
-	InviteSent                bool   `json:"invite_sent"`
-	InvoiceEntity             string `json:"invoice_entity"`
-	InvoiceAddress            string `json:"invoice_address"`
-	InvoiceCity               string `json:"invoice_city"`
-	InvoicePostcode           string `json:"invoice_postcode"`
-	Languages                 string `json:"languages"`
+	Key             *datastore.Key `datastore:"-" json:"id"`
+	InscriptionDate time.Time `json:"inscription_date"`
+
+	Email             string `json:"email"`
+	FirstName         string `json:"first_name"`
+	LastName          string `json:"last_name"`
+	LinkedinUrl       string `json:"linkedin_url"`
+	Description       string `json:"description"`
+	MobilePhoneNumber string `json:"mobile_phone_number"`
+	Languages         string `json:"languages"`
+
+	Career          string `json:"career"`
+	ExtraActivities string `json:"extraActivities"`
+	Degree          string `json:"degree"`
+
+	ExperienceCoaching       string `json:"experience_coaching"`
+	ExperienceRemoteCoaching string `json:"experience_remote_coaching"`
+	ExperienceShortSession   string `json:"experienceShortSession"`
+	CoachingSpecifics        string `json:"coachingSpecifics"`
+	Supervisor               string `json:"supervisor"`
+	TherapyElements          string `json:"therapyElements"`
+
+	RevenuesLastThreeYears      string `json:"revenues_last_3_years"` //revenues for last 3 years
+	PercentageCoachingInRevenue string `json:"percentage_coaching_in_revenue"`
+	LegalStatus                 string `json:"legal_status"`
+
+	AvatarURL    string `json:"avatar_url"`
+	InsuranceUrl string `json:"insurance_url"`
+
+	InvoiceEntity      string `json:"invoice_entity"`
+	InvoiceSiretNumber string `json:"invoice_siret_number"`
+	InvoiceAddress     string `json:"invoice_address"`
+	InvoiceCity        string `json:"invoice_city"`
+	InvoicePostcode    string `json:"invoice_postcode"`
+	InvoiceRIBurl      string `json:"invoice_rib_url"`
+
+	InviteSent bool   `json:"invite_sent"`
 }
 
 func CreatePossibleCoach(ctx context.Context, email string) (*PossibleCoach, error) {

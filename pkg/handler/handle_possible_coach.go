@@ -65,29 +65,32 @@ func handleCreatePossibleCoach(w http.ResponseWriter, r *http.Request) {
 	log.Debugf(ctx, "handleCreatePossibleCoach")
 
 	var possibleCoach struct {
-		Email                     string `json:"email"`
-		FirstName                 string `json:"first_name"`
-		LastName                  string `json:"last_name"`
-		LinkedinUrl               string `json:"linkedin_url"`
-		Description               string `json:"description"`
-		Training                  string `json:"training"`
-		Degree                    string `json:"degree"`
-		ExtraActivities           string `json:"extraActivities"`    // ActivitiesOutOfCoaching
-		CoachForYears             string `json:"coachForYears"`      // been a coach xx years
-		CoachingExperience        string `json:"coachingExperience"` // coaching experience
-		ExperienceShortSession    string `json:"experienceShortSession"`
-		CoachingSpecifics         string `json:"coachingSpecifics"`
-		TherapyElements           string `json:"therapyElements"`
-		CoachingHours             string `json:"coachingHours"` // number of coaching hours
-		Supervisor                string `json:"supervisor"`
-		FavoriteCoachingSituation string `json:"favoriteCoachingSituation"`
-		Status                    string `json:"status"`
-		Revenues                  string `json:"revenues"` //revenues for last 3 years
-		InvoiceEntity             string `json:"invoice_entity"`
-		InvoiceAddress            string `json:"invoice_address"`
-		InvoiceCity               string `json:"invoice_city"`
-		InvoicePostcode           string `json:"invoice_postcode"`
-		Languages                 string `json:"languages"`
+		Email             string `json:"email"`
+		FirstName         string `json:"first_name"`
+		LastName          string `json:"last_name"`
+		Description       string `json:"description"`
+		MobilePhoneNumber string `json:"mobile_phone_number"`
+		Languages         string `json:"languages"`
+		LinkedinUrl       string `json:"linkedin_url"`
+
+		Career                      string `json:"career"`
+		ExtraActivities             string `json:"extraActivities"` // ActivitiesOutOfCoaching
+		Degree                      string `json:"degree"`
+		ExperienceCoaching          string `json:"experience_coaching"`
+		ExperienceRemoteCoaching    string `json:"experience_remote_coaching"`
+		ExperienceShortSession      string `json:"experienceShortSession"`
+		CoachingSpecifics           string `json:"coachingSpecifics"`
+		Supervisor                  string `json:"supervisor"`
+		TherapyElements             string `json:"therapyElements"`
+		LegalStatus                 string `json:"legal_status"`
+		RevenuesLastThreeYears      string `json:"revenues_last_3_years"` //revenues for last 3 years
+		PercentageCoachingInRevenue string `json:"percentage_coaching_in_revenue"`
+
+		InvoiceEntity      string `json:"invoice_entity"`
+		InvoiceSiretNumber string `json:"invoice_siret_number"`
+		InvoiceAddress     string `json:"invoice_address"`
+		InvoiceCity        string `json:"invoice_city"`
+		InvoicePostcode    string `json:"invoice_postcode"`
 	}
 
 	err := response.Decode(r, &possibleCoach)
@@ -135,25 +138,28 @@ func handleCreatePossibleCoach(w http.ResponseWriter, r *http.Request) {
 	possibleCoachToUpdate.FirstName = possibleCoach.FirstName
 	possibleCoachToUpdate.LastName = possibleCoach.LastName
 	possibleCoachToUpdate.Description = possibleCoach.Description
+	possibleCoachToUpdate.MobilePhoneNumber = possibleCoach.MobilePhoneNumber
+	possibleCoachToUpdate.Languages = possibleCoach.Languages
 	possibleCoachToUpdate.LinkedinUrl = possibleCoach.LinkedinUrl
-	possibleCoachToUpdate.Training = possibleCoach.Training
-	possibleCoachToUpdate.Degree = possibleCoach.Degree
+
+	possibleCoachToUpdate.Career = possibleCoach.Career
 	possibleCoachToUpdate.ExtraActivities = possibleCoach.ExtraActivities
-	possibleCoachToUpdate.CoachForYears = possibleCoach.CoachForYears
-	possibleCoachToUpdate.CoachingExperience = possibleCoach.CoachingExperience
+	possibleCoachToUpdate.Degree = possibleCoach.Degree
+	possibleCoachToUpdate.ExperienceCoaching = possibleCoach.ExperienceCoaching
+	possibleCoachToUpdate.ExperienceRemoteCoaching = possibleCoach.ExperienceRemoteCoaching
 	possibleCoachToUpdate.ExperienceShortSession = possibleCoach.ExperienceShortSession
 	possibleCoachToUpdate.CoachingSpecifics = possibleCoach.CoachingSpecifics
-	possibleCoachToUpdate.TherapyElements = possibleCoach.TherapyElements
-	possibleCoachToUpdate.CoachingHours = possibleCoach.CoachingHours
 	possibleCoachToUpdate.Supervisor = possibleCoach.Supervisor
-	possibleCoachToUpdate.FavoriteCoachingSituation = possibleCoach.FavoriteCoachingSituation
-	possibleCoachToUpdate.Status = possibleCoach.Status
-	possibleCoachToUpdate.Revenues = possibleCoach.Revenues
+	possibleCoachToUpdate.TherapyElements = possibleCoach.TherapyElements
+	possibleCoachToUpdate.LegalStatus = possibleCoach.LegalStatus
+	possibleCoachToUpdate.RevenuesLastThreeYears = possibleCoach.RevenuesLastThreeYears
+	possibleCoachToUpdate.PercentageCoachingInRevenue = possibleCoach.PercentageCoachingInRevenue
+
 	possibleCoachToUpdate.InvoiceEntity = possibleCoach.InvoiceEntity
+	possibleCoachToUpdate.InvoiceSiretNumber = possibleCoach.InvoiceSiretNumber
 	possibleCoachToUpdate.InvoiceAddress = possibleCoach.InvoiceAddress
 	possibleCoachToUpdate.InvoiceCity = possibleCoach.InvoiceCity
 	possibleCoachToUpdate.InvoicePostcode = possibleCoach.InvoicePostcode
-	possibleCoachToUpdate.Languages = possibleCoach.Languages
 
 	err = possibleCoachToUpdate.Update(ctx)
 	if err != nil {
