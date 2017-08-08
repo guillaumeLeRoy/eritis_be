@@ -7243,15 +7243,12 @@ var HR = (function () {
 
 "use strict";
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return environment; });
-/**
- * Created by guillaume on 31/03/2017.
- */
 var environment = {
     production: true,
-    BACKEND_BASE_URL: "https://eritis-be-dev.appspot.com/api",
-    firebase_apiKey: "AIzaSyDGJt42caQMGiRJDg8z_0C_sWhy1NFlHJ0",
-    firebase_authDomain: "eritis-be-dev.firebaseapp.com",
-    firebase_databaseURL: "https://eritis-be-dev.firebaseio.com",
+    BACKEND_BASE_URL: "https://eritis-150320.appspot.com/api",
+    firebase_apiKey: "AIzaSyCDA7dW0JrLRJ0NZFLQKlLnt-vGOLWRet0",
+    firebase_authDomain: "eritis-150320.firebaseapp.com",
+    firebase_databaseURL: "https://eritis-150320.firebaseio.com",
 };
 //# sourceMappingURL=/Users/guillaume/angular/eritis_fe/src/environment.js.map
 
