@@ -16,7 +16,11 @@ const COACHEE_ENTITY string = "Coachee"
 type Coachee struct {
 	Key                        *datastore.Key
 	FirebaseId                 string
-	CoacheeDescription
+	Email                      string
+	FirstName                  string
+	LastName                   string
+	AvatarURL                  string
+	StartDate                  time.Time
 	CoacheeObjective           *datastore.Key
 	AssociatedRh               *datastore.Key
 	PlanId                     PlanInt
@@ -26,18 +30,14 @@ type Coachee struct {
 	SessionsDoneTotalCount     int
 }
 
-type CoacheeDescription struct {
-	Email     string `json:"email"`
-	FirstName string `json:"first_name"`
-	LastName  string `json:"last_name"`
-	AvatarURL string`json:"avatar_url"`
-	StartDate time.Time `json:"start_date"`
-}
-
 /* API struct */
 type CoacheeAPI struct {
 	Id                         string `json:"id"`
-	CoacheeDescription
+	Email                      string `json:"email"`
+	FirstName                  string `json:"first_name"`
+	LastName                   string `json:"last_name"`
+	AvatarURL                  string`json:"avatar_url"`
+	StartDate                  time.Time `json:"start_date"`
 	AvailableSessionsCount     int `json:"available_sessions_count"`
 	UpdateSessionsCountDate    time.Time `json:"update_sessions_count_date"`
 	SessionsDoneThisMonthCount int `json:"sessions_done_month_count"`

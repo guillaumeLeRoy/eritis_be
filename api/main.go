@@ -71,6 +71,8 @@ rh.2.eritis@gmail.com
 https://eritis-150320.appspot.com/api/queue_tasks
 https://eritis-be-glr.appspot.com/api/queue_tasks
 
+clean datastore :
+
 
 */
 
