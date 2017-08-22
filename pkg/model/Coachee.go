@@ -14,33 +14,37 @@ const COACHEE_ENTITY string = "Coachee"
 
 /* Internal struct */
 type Coachee struct {
-	Key                     *datastore.Key `json:"-" datastore:"-"`
-	FirebaseId              string `json:"-"`
-	Email                   string `json:"email"`
-	FirstName               string `json:"first_name"`
-	LastName                string `json:"last_name"`
-	AvatarURL               string`json:"avatar_url"`
-	CoacheeObjective        *datastore.Key `json:"_"` // coachee's objective set by an HR
-	StartDate               time.Time `json:"start_date"`
-	AvailableSessionsCount  int `json:"available_sessions_count"`
-	UpdateSessionsCountDate time.Time `json:"update_sessions_count_date"`
-	AssociatedRh            *datastore.Key `json:"-"`
-	PlanId                  PlanInt`json:"-"`
+	Key                        *datastore.Key
+	FirebaseId                 string
+	Email                      string
+	FirstName                  string
+	LastName                   string
+	AvatarURL                  string
+	StartDate                  time.Time
+	CoacheeObjective           *datastore.Key
+	AssociatedRh               *datastore.Key
+	PlanId                     PlanInt
+	AvailableSessionsCount     int
+	UpdateSessionsCountDate    time.Time
+	SessionsDoneThisMonthCount int
+	SessionsDoneTotalCount     int
 }
 
 /* API struct */
 type CoacheeAPI struct {
-	Id                      string `json:"id"`
-	Email                   string `json:"email"`
-	FirstName               string `json:"first_name"`
-	LastName                string `json:"last_name"`
-	AvatarURL               string`json:"avatar_url"`
-	StartDate               time.Time `json:"start_date"`
-	AvailableSessionsCount  int `json:"available_sessions_count"`
-	UpdateSessionsCountDate time.Time `json:"update_sessions_count_date"`
-	AssociatedRh            *RhAPI `json:"associatedRh"`
-	Plan                    *Plan `json:"plan"`
-	CoacheeObjective        *CoacheeObjective `json:"last_objective"`
+	Id                         string `json:"id"`
+	Email                      string `json:"email"`
+	FirstName                  string `json:"first_name"`
+	LastName                   string `json:"last_name"`
+	AvatarURL                  string`json:"avatar_url"`
+	StartDate                  time.Time `json:"start_date"`
+	AvailableSessionsCount     int `json:"available_sessions_count"`
+	UpdateSessionsCountDate    time.Time `json:"update_sessions_count_date"`
+	SessionsDoneThisMonthCount int `json:"sessions_done_month_count"`
+	SessionsDoneTotalCount     int `json:"sessions_done_total_count"`
+	AssociatedRh               *RhAPI `json:"associatedRh"`
+	Plan                       *Plan `json:"plan"`
+	CoacheeObjective           *CoacheeObjective `json:"last_objective"`
 }
 
 func (c *Coachee) ToCoacheeAPI(rh *Rh, plan *Plan, coacheeObjective *CoacheeObjective) *CoacheeAPI {
@@ -52,11 +56,12 @@ func (c *Coachee) ToCoacheeAPI(rh *Rh, plan *Plan, coacheeObjective *CoacheeObje
 	res.AvatarURL = c.AvatarURL
 	res.StartDate = c.StartDate
 	res.AvailableSessionsCount = c.AvailableSessionsCount
+	res.SessionsDoneThisMonthCount = c.SessionsDoneThisMonthCount
+	res.SessionsDoneTotalCount = c.SessionsDoneTotalCount
 	res.UpdateSessionsCountDate = c.UpdateSessionsCountDate
 	res.AssociatedRh = rh.ToRhAPI()
 	res.Plan = plan
 	res.CoacheeObjective = coacheeObjective
-
 	return &res
 }
 
@@ -209,6 +214,8 @@ func createCoacheeFromFirebaseUser(ctx context.Context, fbUser *FirebaseUser, pl
 	var count = getSessionsCount(planId)
 	coachee.AvailableSessionsCount = count
 	coachee.UpdateSessionsCountDate = time.Now()
+	coachee.SessionsDoneTotalCount = 0
+	coachee.SessionsDoneThisMonthCount = 0
 
 	//log.Infof(ctx, "saving new user: %s", aeuser.String())
 	log.Debugf(ctx, "saving new user, firebase id  : %s, email : %s ", fbUser.UID, fbUser.Email)
@@ -270,7 +277,8 @@ func (c *Coachee) RefreshAvailableSessionsCount(ctx context.Context) (error) {
 		c.AvailableSessionsCount = plan.SessionsCount
 		//refresh date
 		c.UpdateSessionsCountDate = time.Now()
-
+		// reset "sessions done" count
+		c.SessionsDoneThisMonthCount = 0;
 		log.Debugf(ctx, "refreshAvailableSessionsCount, for user %s, count %s", c.Email, c.AvailableSessionsCount)
 
 		//save
@@ -321,6 +329,22 @@ func (c *Coachee) IncreaseAvailableSessionsCount(ctx context.Context) error {
 
 	//inc of 1
 	c.AvailableSessionsCount = c.AvailableSessionsCount + 1
+
+	//save
+	err := c.Update(ctx)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// increase number of sessions done
+func (c *Coachee) IncreaseSessionsDoneCount(ctx context.Context) error {
+
+	//inc of 1
+	c.SessionsDoneThisMonthCount++
+	c.SessionsDoneTotalCount++
 
 	//save
 	err := c.Update(ctx)

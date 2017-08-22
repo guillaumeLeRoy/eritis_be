@@ -49,6 +49,9 @@ goapp deploy -application eritis-be-glr -version 1 default/app.yaml api/app.yaml
 appcfg.py -A eritis-be-glr update_dispatch .
 appcfg.py update_indexes -A eritis-be-glr ./default
 
+appcfg.py rollback /Users/guillaume/go_path_appengine/src/eritis_be/firebase/ -A eritcis-be-glr -V 1
+
+
 CRON :
 gcloud app deploy cron.yaml
 
@@ -68,6 +71,8 @@ rh.2.eritis@gmail.com
 // run queue_tasks
 https://eritis-150320.appspot.com/api/queue_tasks
 https://eritis-be-glr.appspot.com/api/queue_tasks
+
+clean datastore :
 
 
 */
