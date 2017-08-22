@@ -517,7 +517,19 @@ func closeMeeting(w http.ResponseWriter, r *http.Request, meetingId string) {
 
 		// increase coach sessions count
 		coach, err := model.GetCoach(ctx, coachKey)
+		if err != nil {
+			return err
+		}
 		coach.IncreaseSessionsCount(ctx)
+
+		// get coachee
+		coacheeKey := meeting.Key.Parent()
+		coachee, err := model.GetCoachee(ctx, coacheeKey)
+		if err != nil {
+			return err
+		}
+		// increase "sessions done" count
+		coachee.IncreaseSessionsDoneCount(ctx)
 
 		//TODO send email
 

@@ -274,25 +274,24 @@ func handleGetHRusageRate(w http.ResponseWriter, r *http.Request, rhId string) {
 	}
 
 	var totalSessionsCount = 0
+	var totalSessionsMonthDone = 0
 	var totalSessionsDone = 0
 	for _, coachee := range coachees {
 		//get the plan
 		plan := model.CreatePlanFromId(coachee.PlanId)
 		totalSessionsCount += plan.SessionsCount
-		totalSessionsDone += plan.SessionsCount - coachee.AvailableSessionsCount
+		totalSessionsMonthDone += coachee.SessionsDoneThisMonthCount
+		totalSessionsDone += coachee.SessionsDoneTotalCount
 	}
-
-	var rate = 0;
-	if totalSessionsDone > 0 {
-		rate = totalSessionsCount / totalSessionsDone
-	}
-
-	log.Debugf(ctx, "handleGetHRusageRate, rate %s", rate)
 
 	var res struct {
-		UsageRate int `json:"usage_rate"`
+		SessionsDoneMonthCount int `json:"sessions_done_month_count"`
+		TotalSessionsDoneCount int `json:"total_sessions_done_count"`
+		AvailableSessionsCount int `json:"available_sessions_count"`
 	}
-	res.UsageRate = rate
+	res.SessionsDoneMonthCount = totalSessionsMonthDone
+	res.TotalSessionsDoneCount = totalSessionsDone
+	res.AvailableSessionsCount = totalSessionsCount
 
 	response.Respond(ctx, w, r, &res, http.StatusOK)
 }
