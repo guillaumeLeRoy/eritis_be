@@ -51,7 +51,7 @@ goapp deploy -application eritis-be-glr -version 1 default/app.yaml api/app.yaml
 appcfg.py -A eritis-be-glr update_dispatch .
 appcfg.py update_indexes -A eritis-be-glr ./default
 
-appcfg.py rollback /Users/guillaume/go_path_appengine/src/eritis_be/firebase/ -A eritis-be-glr -V 1
+appcfg.py rollback /Users/guillaume/go_path_appengine/src/eritis_be/firebase/ -A eritcis-be-glr -V 1
 
 
 CRON :
