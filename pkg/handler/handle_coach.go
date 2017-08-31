@@ -94,12 +94,38 @@ func handleGetAllCoachs(w http.ResponseWriter, r *http.Request) {
 	ctx := appengine.NewContext(r)
 	log.Debugf(ctx, "handleGetAllCoachs")
 
-	coachs, err := model.GetAllAPICoachs(ctx)
+	var body struct {
+		StartCursor string `json:"start_cursor"`
+	}
+	err := response.Decode(r, &body)
+
+	var startCursor *datastore.Cursor
+	if err == nil {
+		cur, err := datastore.DecodeCursor(body.StartCursor)
+		if err != nil {
+			response.RespondErr(ctx, w, r, err, http.StatusBadRequest)
+			return
+		}
+		startCursor = &cur
+	}
+
+	APIresponse, err := model.GetAllAPICoachs(ctx, startCursor)
 	if err != nil {
 		response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
 		return
 	}
-	response.Respond(ctx, w, r, coachs, http.StatusOK)
+
+	var res struct {
+		Coachs []*model.CoachAPI `json:"coachs"`
+		Cursor string `json:"next_cursor"`
+		Total  int `json:"total"`
+	}
+
+	res.Cursor = APIresponse.NextCursor.String()
+	res.Coachs = APIresponse.Result
+	res.Total = APIresponse.Total
+
+	response.Respond(ctx, w, r, &res, http.StatusOK)
 }
 
 func handleGetCoachForId(w http.ResponseWriter, r *http.Request, id string) {

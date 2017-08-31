@@ -93,35 +93,69 @@ func GetCoach(ctx context.Context, key *datastore.Key) (*Coach, error) {
 	return &coach, nil
 }
 
-func GetAllCoach(ctx context.Context) ([]*Coach, error) {
-	var coachs []*Coach
-	keys, err := datastore.NewQuery(COACH_ENTITY).GetAll(ctx, &coachs)
-	if err != nil {
-		return nil, err
-	}
-
-	for i, coach := range coachs {
-		coach.Key = keys[i]
-	}
-
-	return coachs, nil
+type queryResponse struct {
+	Total      int
+	NextCursor *datastore.Cursor
+	//Result     interface{}
+	Result []*Coach
 }
 
-func GetAllAPICoachs(ctx context.Context) ([]*CoachAPI, error) {
-	log.Debugf(ctx, "GetAllAPICoachs")
+func GetAllCoach(ctx context.Context, next *datastore.Cursor) (*queryResponse, error) {
+	var coachs []*Coach = make([]*Coach, 0)
 
-	coachs, err := GetAllCoach(ctx)
+	count, err := datastore.NewQuery(COACH_ENTITY).Count(ctx)
+
+	query := datastore.NewQuery(COACH_ENTITY).Limit(1)
+	if next != nil {
+		query.Start(*next)
+	}
+	it := query.Run(ctx)
+	for {
+		var c Coach
+		key, err := it.Next(&c)
+		if err == datastore.Done {
+			break // No further entities match the query.
+		}
+		if err != nil {
+			return nil, err
+		}
+		c.Key = key
+		coachs = append(coachs, &c)
+	}
+
+	cursor, err := it.Cursor()
 	if err != nil {
 		return nil, err
 	}
 
-	var response []*CoachAPI = make([]*CoachAPI, len(coachs))
-	for i, coach := range coachs {
-		log.Debugf(ctx, "GetAllAPICoach, coach %s, index %s", coach, i)
-		response[i] = coach.ToCoachAPI()
+	res := queryResponse{Total: count, NextCursor: &cursor, Result: coachs}
+
+	return &res, nil
+}
+
+type APIqueryResponse struct {
+	Total      int
+	NextCursor *datastore.Cursor
+	//Result     interface{}
+	Result []*CoachAPI
+}
+
+func GetAllAPICoachs(ctx context.Context, next *datastore.Cursor) (*APIqueryResponse, error) {
+	log.Debugf(ctx, "GetAllAPICoachs")
+
+	queryRes, err := GetAllCoach(ctx, next)
+	if err != nil {
+		return nil, err
 	}
 
-	return response, nil
+	var coachsAPI []*CoachAPI = make([]*CoachAPI, len(queryRes.Result))
+	for i, coach := range queryRes.Result {
+		log.Debugf(ctx, "GetAllAPICoach, coach %s, index %s", coach, i)
+		coachsAPI[i] = coach.ToCoachAPI()
+	}
+
+	res := APIqueryResponse{Total: queryRes.Total, NextCursor: queryRes.NextCursor, Result: coachsAPI}
+	return &res, nil
 }
 
 func CreateCoachFromFirebaseUser(ctx context.Context, fbUser *FirebaseUser) (*Coach, error) {
