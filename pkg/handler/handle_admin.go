@@ -68,6 +68,19 @@ func HandleAdmin(w http.ResponseWriter, r *http.Request) {
 
 			handleAdminGetRhs(w, r) // GET /api/v1/admins/rhs
 		}
+
+	case "PUT":
+
+		// upload picture
+		contains := strings.Contains(r.URL.Path, "profile_picture")
+		if contains {
+			params := response.PathParams(ctx, r, "/api/v1/admins/coachs/:uid/profile_picture")
+			uid, ok := params[":uid"]
+			if ok {
+				uploadCoachProfilePicture(w, r, uid)
+				return
+			}
+		}
 	default:
 		http.NotFound(w, r)
 	}

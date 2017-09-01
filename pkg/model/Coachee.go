@@ -14,7 +14,7 @@ const COACHEE_ENTITY string = "Coachee"
 
 /* Internal struct */
 type Coachee struct {
-	Key                        *datastore.Key
+	Key                        *datastore.Key `datastore:"-"`
 	FirebaseId                 string
 	Email                      string
 	FirstName                  string
@@ -195,7 +195,7 @@ func GetCoacheeForEmail(ctx context.Context, email string) ([]*Coachee, error) {
 }
 
 func createCoacheeFromFirebaseUser(ctx context.Context, fbUser *FirebaseUser, planId PlanInt, rhKey *datastore.Key) (*Coachee, error) {
-	log.Debugf(ctx, "CoacheeFromFirebaseUser, fbUser %s, planId %s", fbUser, planId)
+	log.Debugf(ctx, "createCoacheeFromFirebaseUser, fbUser %s, planId %s", fbUser, planId)
 
 	var coachee Coachee
 	coachee.Key = datastore.NewIncompleteKey(ctx, COACHEE_ENTITY, nil)
@@ -217,13 +217,15 @@ func createCoacheeFromFirebaseUser(ctx context.Context, fbUser *FirebaseUser, pl
 	coachee.SessionsDoneTotalCount = 0
 	coachee.SessionsDoneThisMonthCount = 0
 
-	//log.Infof(ctx, "saving new user: %s", aeuser.String())
-	log.Debugf(ctx, "saving new user, firebase id  : %s, email : %s ", fbUser.UID, fbUser.Email)
+	log.Debugf(ctx, "createCoacheeFromFirebaseUser, firebase id  : %s, email : %s ", fbUser.UID, fbUser.Email)
 
 	err := coachee.Update(ctx)
 	if err != nil {
 		return nil, err
 	}
+
+	log.Debugf(ctx, "createCoacheeFromFirebaseUser, key : %s ", coachee.Key.Incomplete())
+	log.Debugf(ctx, "createCoacheeFromFirebaseUser, key Incomplete", coachee.Key.Incomplete())
 
 	return &coachee, nil
 }
@@ -264,6 +266,8 @@ func (c *Coachee) Update(ctx context.Context) (error) {
 		return err
 	}
 	c.Key = key
+
+	log.Debugf(ctx, "update coachee, final key : %s ", c.Key)
 
 	return nil
 }
