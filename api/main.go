@@ -75,6 +75,8 @@ https://eritis-150320.appspot.com/api/queue_tasks
 https://eritis-be-glr.appspot.com/api/queue_tasks
 
 clean datastore :
+dev_appserver.py -A eritis-be-glr --clear_datastore=yes dispatch.yaml default/app.yaml api/app.yaml web/app.yaml firebase/app.yaml --enable_sendmail
+
 
 
 */
