@@ -236,6 +236,22 @@ const MEETING_CREATED_MSG = `
 </html>
 `
 
+const MEETING_CREATED_FOR_ALL_COACHS_TITLE = `Nouvelle demande!`
+const MEETING_CREATED_FOR_ALL_COACHS_MSG = `
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html style="color:black;">
+
+	</head>
+	<body>
+		<p>Bonjour,</p>
+		<p>Nous vous informons qu'une nouvelle demande vient d'être créée. Pour y accéder, connectez-vous sur <a href="%s">%s</a>,</p>
+		<p>A très bientôt sur notre plateforme,</p>
+		<p>L’équipe Eritis</p>
+	</body>
+</html>
+`
+
 func HandleContact(w http.ResponseWriter, r *http.Request) {
 	ctx := appengine.NewContext(r)
 	log.Debugf(ctx, "handle contact")
@@ -387,6 +403,34 @@ func sendMeetingCreatedEmailToCoachee(ctx context.Context, coachee *model.Coache
 		log.Errorf(ctx, "Couldn't send email: %v", err)
 		return err
 	}
+	return nil
+}
+
+// send an email to all our coachs
+func sendMeetingCreatedEmailToAllCoachs(ctx context.Context, coachs []*model.Coach) error {
+	url, err := utils.GetCoachListOfAvailableMeetingsUrl(ctx)
+	if err != nil {
+		log.Errorf(ctx, "Couldn't send email: %v", err)
+		return err
+	}
+
+	for _, coach := range coachs {
+		err = utils.SendEmailToGivenEmail(ctx, coach.Email, MEETING_CREATED_FOR_ALL_COACHS_TITLE, fmt.Sprintf(MEETING_CREATED_FOR_ALL_COACHS_MSG, url, url))
+		if err != nil {
+			log.Errorf(ctx, "Couldn't send email: %v", err)
+			return err
+		}
+	}
+
+	// send emails to Theo, Etienne, Elaine
+	err = utils.SendEmailToGivenEmail(ctx, "theo@eritis.co.uk", MEETING_CREATED_FOR_ALL_COACHS_TITLE, fmt.Sprintf(MEETING_CREATED_FOR_ALL_COACHS_MSG, url, url))
+	err = utils.SendEmailToGivenEmail(ctx, "eroy@eritis.co.uk", MEETING_CREATED_FOR_ALL_COACHS_TITLE, fmt.Sprintf(MEETING_CREATED_FOR_ALL_COACHS_MSG, url, url))
+	err = utils.SendEmailToGivenEmail(ctx, "elaine.lecoeur@eritis.co.uk", MEETING_CREATED_FOR_ALL_COACHS_TITLE, fmt.Sprintf(MEETING_CREATED_FOR_ALL_COACHS_MSG, url, url))
+	if err != nil {
+		log.Errorf(ctx, "Couldn't send email: %v", err)
+		return err
+	}
+
 	return nil
 }
 
