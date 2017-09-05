@@ -114,6 +114,16 @@ func GetSiteUrl(ctx context.Context) (string, error) {
 	return baseUrl, nil
 }
 
+func GetCoachListOfAvailableMeetingsUrl(ctx context.Context) (string, error) {
+
+	url, err := GetSiteUrl(ctx)
+	if err != nil {
+		return "", err
+	}
+	url = url + "/available_meetings"
+	return url, nil
+}
+
 func GetStorageUrl(ctx context.Context) (string, error) {
 
 	appId := appengine.AppID(ctx)

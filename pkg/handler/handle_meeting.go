@@ -278,6 +278,18 @@ func handleCreateMeeting(w http.ResponseWriter, r *http.Request) {
 	// send notification to associated HR
 	model.CreateNotification(ctx, fmt.Sprintf(model.TO_HR_MEETING_CREATED, coachee.Email), coachee.AssociatedRh)
 
+	// send emails to all our coachs
+	coachs, err := model.GetAllCoach(ctx)
+	if err != nil {
+		response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
+		return
+	}
+	err = sendMeetingCreatedEmailToAllCoachs(ctx, coachs)
+	if err != nil {
+		response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
+		return
+	}
+
 	response.Respond(ctx, w, r, meeting, http.StatusCreated)
 }
 
