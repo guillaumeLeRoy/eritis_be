@@ -41,7 +41,6 @@ appcfg.py -A eritis-be-dev update_dispatch .
 appcfg.py update_indexes -A eritis-be-dev ./default
 
 
-
 ##### GLR ENV ######
 serve :
 dev_appserver.py -A eritis-be-glr dispatch.yaml default/app.yaml api/app.yaml web/app.yaml firebase/app.yaml --enable_sendmail
@@ -89,7 +88,6 @@ func init() {
 	http.HandleFunc("/api/login/", authHandler(handler.HandleLogin))
 
 	//admin
-	//http.HandleFunc("/api/v1/admins/", adminHandler(nonAuthHandler(handler.HandleAdmin)))
 	http.HandleFunc("/api/v1/admins/", nonAuthHandler(handler.HandleAdmin))
 
 	//meetings
