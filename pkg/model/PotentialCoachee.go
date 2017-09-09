@@ -12,10 +12,12 @@ const POTENTIAL_COACHEE_ENTITY string = "PotentialCoachee"
 
 // ancestor : Rh
 type PotentialCoachee struct {
-	Key          *datastore.Key `json:"id" datastore:"-"`
-	Email        string `json:"email"`
-	CreationDate time.Time `json:"create_date"`
-	PlanId       PlanInt `json:"plan_id"`
+	Key          *datastore.Key `datastore:"-"`
+	Email        string
+	CreationDate time.Time
+	PlanId       PlanInt
+	FirstName    string
+	LastName     string
 }
 
 type PotentialCoacheeAPI struct {
@@ -23,18 +25,22 @@ type PotentialCoacheeAPI struct {
 	Email        string `json:"email"`
 	CreationDate time.Time `json:"create_date"`
 	Plan         *Plan `json:"plan"`
+	FirstName    string `json:"first_name"`
+	LastName     string `json:"last_name"`
 }
 
-func (pot *PotentialCoachee)ToPotentialCoacheeAPI(plan *Plan) (*PotentialCoacheeAPI) {
+func (pot *PotentialCoachee) ToPotentialCoacheeAPI(plan *Plan) (*PotentialCoacheeAPI) {
 	var res PotentialCoacheeAPI
 	res.Id = pot.Key.Encode()
 	res.Email = pot.Email
 	res.CreationDate = pot.CreationDate
 	res.Plan = plan
+	res.FirstName = pot.FirstName
+	res.LastName = pot.LastName
 	return &res
 }
 
-func CreatePotentialCoachee(ctx context.Context, rhKey *datastore.Key, coacheeEmail string, plan PlanInt) (*PotentialCoachee, error) {
+func CreatePotentialCoachee(ctx context.Context, rhKey *datastore.Key, coacheeEmail string, plan PlanInt, firstName string, lastName string) (*PotentialCoachee, error) {
 	log.Debugf(ctx, "CreatePotentialCoachee, key %s", rhKey)
 
 	var pot PotentialCoachee
@@ -42,6 +48,8 @@ func CreatePotentialCoachee(ctx context.Context, rhKey *datastore.Key, coacheeEm
 	pot.CreationDate = time.Now()
 	pot.Key = datastore.NewIncompleteKey(ctx, POTENTIAL_COACHEE_ENTITY, rhKey)
 	pot.PlanId = plan
+	pot.FirstName = firstName
+	pot.LastName = lastName
 
 	key, err := datastore.Put(ctx, pot.Key, &pot)
 	if err != nil {
