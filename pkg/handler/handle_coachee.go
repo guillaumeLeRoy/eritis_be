@@ -199,7 +199,7 @@ func handleCreateCoachee(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	//get potential coachee : email must mach
+	//get potential coachee : email must match
 	potentialCoachee, err := model.GetPotentialCoacheeForEmail(ctx, body.Email)
 	if err != nil {
 		response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
@@ -210,6 +210,15 @@ func handleCreateCoachee(w http.ResponseWriter, r *http.Request) {
 
 	//we have 1 potential Coachee
 	coachee, err := model.CreateCoachee(ctx, &body.FirebaseUser, potentialCoachee.PlanId, rhKey)
+	if err != nil {
+		response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
+		return
+	}
+
+	//update with values from potential
+	coachee.FirstName = potentialCoachee.FirstName
+	coachee.LastName = potentialCoachee.LastName
+	err = coachee.Update(ctx)
 	if err != nil {
 		response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
 		return

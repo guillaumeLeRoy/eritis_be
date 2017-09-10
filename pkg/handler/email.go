@@ -408,7 +408,8 @@ func sendMeetingCreatedEmailToCoachee(ctx context.Context, coachee *model.Coache
 
 // send an email to all our coachs
 func sendMeetingCreatedEmailToAllCoachs(ctx context.Context, coachs []*model.Coach) error {
-	url, err := utils.GetCoachListOfAvailableMeetingsUrl(ctx)
+	//url, err := utils.GetCoachListOfAvailableMeetingsUrl(ctx)
+	url, err := utils.GetSiteUrl(ctx)
 	if err != nil {
 		log.Errorf(ctx, "Couldn't send email: %v", err)
 		return err
@@ -425,6 +426,7 @@ func sendMeetingCreatedEmailToAllCoachs(ctx context.Context, coachs []*model.Coa
 	// send emails to Theo, Etienne, Elaine
 	err = utils.SendEmailToGivenEmail(ctx, "theo@eritis.co.uk", MEETING_CREATED_FOR_ALL_COACHS_TITLE, fmt.Sprintf(MEETING_CREATED_FOR_ALL_COACHS_MSG, url, url))
 	err = utils.SendEmailToGivenEmail(ctx, "eroy@eritis.co.uk", MEETING_CREATED_FOR_ALL_COACHS_TITLE, fmt.Sprintf(MEETING_CREATED_FOR_ALL_COACHS_MSG, url, url))
+	err = utils.SendEmailToGivenEmail(ctx, "guillaumey@eritis.co.uk", MEETING_CREATED_FOR_ALL_COACHS_TITLE, fmt.Sprintf(MEETING_CREATED_FOR_ALL_COACHS_MSG, url, url))
 	err = utils.SendEmailToGivenEmail(ctx, "elaine.lecoeur@eritis.co.uk", MEETING_CREATED_FOR_ALL_COACHS_TITLE, fmt.Sprintf(MEETING_CREATED_FOR_ALL_COACHS_MSG, url, url))
 	if err != nil {
 		log.Errorf(ctx, "Couldn't send email: %v", err)
