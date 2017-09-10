@@ -142,11 +142,14 @@ func handleGetPotentialCoachForToken(w http.ResponseWriter, r *http.Request, tok
 
 func handleCreatePotentialCoachee(w http.ResponseWriter, r *http.Request) {
 	ctx := appengine.NewContext(r)
+	log.Debugf(ctx, "handleCreatePotentialCoachee")
 
 	var body struct {
-		RhId   string `json:"rh_id"`
-		Email  string `json:"email"`
-		PlanId model.PlanInt `json:"plan_id"`
+		RhId      string `json:"rh_id"`
+		Email     string `json:"email"`
+		PlanId    model.PlanInt `json:"plan_id"`
+		FirstName string `json:"first_name"`
+		LastName  string `json:"last_name"`
 	}
 
 	err := response.Decode(r, &body)
@@ -167,7 +170,7 @@ func handleCreatePotentialCoachee(w http.ResponseWriter, r *http.Request) {
 	_, err = model.GetPotentialCoacheeForEmail(ctx, body.Email)
 	if err == nil || err != model.ErrNoPotentialCoachee {
 		//it means there is already a Potential
-		response.RespondErr(ctx, w, r, errors.New("There is already a Potential Coachee for this email"), http.StatusInternalServerError)
+		response.RespondErr(ctx, w, r, errors.New("EMAIL_ALREADY_USED"), http.StatusInternalServerError)
 		return
 	}
 
@@ -177,14 +180,14 @@ func handleCreatePotentialCoachee(w http.ResponseWriter, r *http.Request) {
 	coachees, err := model.GetCoacheeForEmail(ctx, body.Email)
 	if err != nil || len(coachees) > 0 {
 		//it means there is already a Coachee with this email
-		response.RespondErr(ctx, w, r, errors.New("There is already a Coachee for this email"), http.StatusInternalServerError)
+		response.RespondErr(ctx, w, r, errors.New("EMAIL_ALREADY_USED"), http.StatusInternalServerError)
 		return
 	}
 
 	log.Debugf(ctx, "handleCreatePotentialCoachee, no Coachee with this email")
 
 	//create potential
-	pot, err := model.CreatePotentialCoachee(ctx, rhKey, body.Email, body.PlanId)
+	pot, err := model.CreatePotentialCoachee(ctx, rhKey, body.Email, body.PlanId, body.FirstName, body.LastName)
 	if err != nil {
 		response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
 		return
