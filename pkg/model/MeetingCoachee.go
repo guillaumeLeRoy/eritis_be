@@ -23,24 +23,11 @@ type MeetingCoachee struct {
  */
 type ApiMeetingCoachee struct {
 	Key         *datastore.Key `json:"id" datastore:"-"`
-	AgreedTime  *MeetingTime `json:"agreed_date"`
+	AgreedTime  *APIMeetingTime `json:"agreed_date"`
 	Coach       *CoachAPI `json:"coach"`
 	Coachee     *CoacheeAPI `json:"coachee"`
 	IsOpen      bool `json:"isOpen"`
 	CreatedDate time.Time `json:"created_date"`
-}
-
-func toAPIMeetingCoachee(meeting MeetingCoachee, agreedTime *MeetingTime, coach *CoachAPI, coachee *CoacheeAPI) ApiMeetingCoachee {
-	var apiMeetingCoachee ApiMeetingCoachee
-	apiMeetingCoachee.Key = meeting.Key
-	apiMeetingCoachee.IsOpen = meeting.IsOpen
-	apiMeetingCoachee.CreatedDate = meeting.CreatedDate
-
-	apiMeetingCoachee.AgreedTime = agreedTime
-	apiMeetingCoachee.Coach = coach
-	apiMeetingCoachee.Coachee = coachee
-
-	return apiMeetingCoachee
 }
 
 func CreateMeetingCoachee(ctx context.Context, coacheeKey *datastore.Key) (*MeetingCoachee, error) {
@@ -111,7 +98,7 @@ func (m *MeetingCoachee) ConvertToAPIMeeting(ctx context.Context) (*ApiMeetingCo
 		if err != nil {
 			return nil, err
 		}
-		apiMeetingCoachee.AgreedTime = time
+		apiMeetingCoachee.AgreedTime = time.convertToAPI()
 	}
 
 	//get coach if any
