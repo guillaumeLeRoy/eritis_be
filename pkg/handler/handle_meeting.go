@@ -84,7 +84,7 @@ func HandleMeeting(w http.ResponseWriter, r *http.Request) {
 			meetingId, ok := params[":meetingId"]
 			potId, ok := params[":potId"]
 			if ok {
-				setTimeForMeeting(w, r, meetingId, potId)
+				handleReqSetTimeForMeeting(w, r, meetingId, potId)
 				return
 			}
 		}
@@ -649,7 +649,10 @@ func handleReqCreateMeetingPotentialTime(w http.ResponseWriter, r *http.Request,
 	if err != nil {
 		response.RespondErr(ctx, w, r, err, http.StatusBadRequest)
 	}
-	response.Respond(ctx, w, r, potentialTime, http.StatusOK)
+
+	apiMeetingTime := potentialTime.ConvertToAPI()
+
+	response.Respond(ctx, w, r, apiMeetingTime, http.StatusOK)
 }
 
 // create a potential time for the given meeting
@@ -702,9 +705,9 @@ func handleRequestGETPotentialsTimeForAMeeting(w http.ResponseWriter, r *http.Re
 }
 
 // set this potentialMeetingTime as this meeting MeetingTime
-func setTimeForMeeting(w http.ResponseWriter, r *http.Request, meetingId string, potentialId string) {
+func handleReqSetTimeForMeeting(w http.ResponseWriter, r *http.Request, meetingId string, potentialId string) {
 	ctx := appengine.NewContext(r)
-	log.Debugf(ctx, "setTimeForMeeting, meetingId %s", meetingId)
+	log.Debugf(ctx, "handleReqSetTimeForMeeting, meetingId %s", meetingId)
 
 	meetingKey, err := datastore.DecodeKey(meetingId)
 	if err != nil {
@@ -916,7 +919,7 @@ func handleCoacheeCancelMeeting(w http.ResponseWriter, r *http.Request, meetingI
 				return err
 			}
 
-			//TODO send email
+			//TODO send email to inform coach the meeting was removed
 
 			//add notification to coach
 			model.CreateNotification(ctx, model.TO_COACH_MEETING_CANCELED_BY_COACHEE, meetingCoachee.MeetingCoachKey.Parent())

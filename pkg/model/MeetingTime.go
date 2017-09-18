@@ -22,7 +22,7 @@ type APIMeetingTime struct {
 	EndDate   int64 `json:"end_date"`
 }
 
-func (m *MeetingTime) convertToAPI() *APIMeetingTime {
+func (m *MeetingTime) ConvertToAPI() *APIMeetingTime {
 	var api = new(APIMeetingTime)
 	api.Key = m.Key
 	api.StartDate = m.StartDate.Unix()
@@ -80,7 +80,7 @@ func GetMeetingPotentialTimes(ctx context.Context, meetingKey *datastore.Key) ([
 	var apiMeetingTimes = make([]*APIMeetingTime, len(times))
 	for i, time := range times {
 		time.Key = keys[i]
-		apiMeetingTimes[i] = time.convertToAPI()
+		apiMeetingTimes[i] = time.ConvertToAPI()
 	}
 	return apiMeetingTimes, nil
 }
@@ -107,11 +107,11 @@ func ClearAllMeetingTimesForAMeeting(ctx context.Context, meetingKey *datastore.
 }
 
 // update potential time
-func (p *MeetingTime) UpdateMeetingPotentialTime(ctx context.Context) (error) {
-	log.Debugf(ctx, "updateeMeetingPotentialTime, potential key %s", p.Key)
+func (m *MeetingTime) UpdateMeetingPotentialTime(ctx context.Context) (error) {
+	log.Debugf(ctx, "updateeMeetingPotentialTime, potential key %s", m.Key)
 
-	key, err := datastore.Put(ctx, p.Key, p)
-	p.Key = key
+	key, err := datastore.Put(ctx, m.Key, m)
+	m.Key = key
 
 	return err
 
