@@ -23,6 +23,17 @@ handlers:
     mime_type: text/plain
     upload: acme_www_eritis_fr.txt
 
+
+  - url: /.well-known/acme-challenge/oWII-_WSgKGPZr987jYPjHCdK6eicSg0twZiLvZZGWk
+    static_files: acme_eritis_fr_18_09_17.txt
+    mime_type: text/plain
+    upload: acme_eritis_fr_18_09_17.txt
+
+  - url: /.well-known/acme-challenge/R4McqgwBAuc-K-ouMoQh2sPkxJcQvbAfmtnjbwJ2e1s
+    static_files: acme_www.eritis_fr_18_09_17.txt
+    mime_type: text/plain
+    upload: acme_www.eritis_fr_18_09_17.txt
+
   - url: /admin(.*)
     script: _go_app
 

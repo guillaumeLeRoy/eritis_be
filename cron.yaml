@@ -1,7 +1,7 @@
 cron:
-- description: daily job to refresh available sessions count
-  url: /api/v1/crons/refresh_available_sessions
-  schedule: every day 00:00
+#- description: daily job to refresh available sessions count
+#  url: /api/v1/crons/refresh_available_sessions
+#  schedule: every day 00:00
 - description: task to notify users of imminent sessions
   url: /api/v1/crons/notif_imminent_sessions
   schedule: every 10 minutes
