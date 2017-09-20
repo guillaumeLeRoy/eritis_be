@@ -11,9 +11,23 @@ const MEETING_TIME_ENTITY string = "MeetingTime"
 
 // ancestor : a Meeting
 type MeetingTime struct {
-	Key       *datastore.Key `json:"id" datastore:"-"`
-	StartDate time.Time `json:"start_date"`
-	EndDate   time.Time `json:"end_date"`
+	Key       *datastore.Key `datastore:"-"`
+	StartDate time.Time
+	EndDate   time.Time
+}
+
+type APIMeetingTime struct {
+	Key       *datastore.Key `json:"id"`
+	StartDate int64 `json:"start_date"`
+	EndDate   int64 `json:"end_date"`
+}
+
+func (m *MeetingTime) ConvertToAPI() *APIMeetingTime {
+	var api = new(APIMeetingTime)
+	api.Key = m.Key
+	api.StartDate = m.StartDate.Unix()
+	api.EndDate = m.EndDate.Unix()
+	return api
 }
 
 func Constructor(start time.Time, end time.Time) *MeetingTime {
@@ -52,7 +66,7 @@ func GetMeetingTime(ctx context.Context, key *datastore.Key) (*MeetingTime, erro
 }
 
 //get all potential times for the given meeting
-func GetMeetingPotentialTimes(ctx context.Context, meetingKey *datastore.Key) ([]*MeetingTime, error) {
+func GetMeetingPotentialTimes(ctx context.Context, meetingKey *datastore.Key) ([]*APIMeetingTime, error) {
 	log.Debugf(ctx, "GetMeetingPotentialTimes, meeting key %s", meetingKey)
 
 	var times []*MeetingTime
@@ -63,10 +77,12 @@ func GetMeetingPotentialTimes(ctx context.Context, meetingKey *datastore.Key) ([
 
 	log.Debugf(ctx, "GetMeetingPotentialTimes, potentials count %s", len(times))
 
+	var apiMeetingTimes = make([]*APIMeetingTime, len(times))
 	for i, time := range times {
 		time.Key = keys[i]
+		apiMeetingTimes[i] = time.ConvertToAPI()
 	}
-	return times, nil
+	return apiMeetingTimes, nil
 }
 
 //remove all the meetingTimes associated with this meeting
@@ -91,11 +107,11 @@ func ClearAllMeetingTimesForAMeeting(ctx context.Context, meetingKey *datastore.
 }
 
 // update potential time
-func (p *MeetingTime) UpdateMeetingPotentialTime(ctx context.Context) (error) {
-	log.Debugf(ctx, "updateeMeetingPotentialTime, potential key %s", p.Key)
+func (m *MeetingTime) UpdateMeetingPotentialTime(ctx context.Context) (error) {
+	log.Debugf(ctx, "updateeMeetingPotentialTime, potential key %s", m.Key)
 
-	key, err := datastore.Put(ctx, p.Key, p)
-	p.Key = key
+	key, err := datastore.Put(ctx, m.Key, m)
+	m.Key = key
 
 	return err
 

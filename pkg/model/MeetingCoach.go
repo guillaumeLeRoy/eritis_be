@@ -11,9 +11,15 @@ const MEETING_COACH_ENTITY string = "MeetingCoach"
 
 //ancestor is a Coach
 type MeetingCoach struct {
+	Key               *datastore.Key `datastore:"-"`
+	MeetingCoacheeKey *datastore.Key
+	CreatedDate       time.Time
+}
+
+type MeetingCoachAPI struct {
 	Key               *datastore.Key `json:"id" datastore:"-"`
 	MeetingCoacheeKey *datastore.Key `json:"-"`
-	CreatedDate       time.Time `json:"created_date"`
+	CreatedDate       int64 `json:"created_date"`
 }
 
 func create(ctx context.Context, coachKey *datastore.Key, meetingCoacheeKey *datastore.Key) (*MeetingCoach, error) {
@@ -63,7 +69,7 @@ func (m *MeetingCoach) Delete(ctx context.Context) error {
 	return err
 }
 
-//convert given MeetingCoach into a APImeeting
+//convert given MeetingCoach into a ApiMeetingCoachee
 func (m *MeetingCoach) GetAPIMeeting(ctx context.Context) (*ApiMeetingCoachee, error) {
 	log.Debugf(ctx, "GetAPIMeeting", m)
 
