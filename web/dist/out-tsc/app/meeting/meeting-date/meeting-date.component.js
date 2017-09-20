@@ -78,7 +78,7 @@ var MeetingDateComponent = (function () {
         this.months = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
         this.days = ['Dimanche', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'];
         this.now = new Date();
-        this.dateModel = { year: this.now.getFullYear(), month: this.now.getMonth() + 1, day: this.now.getDate() };
+        this.dateModel = null;
         this.timeRange = [10, 18];
         this.displayErrorBookingDate = false;
         this.isEditingPotentialDate = false;
@@ -270,7 +270,12 @@ var MeetingDateComponent = (function () {
         var newDate = new Date(date.year, date.month - 1, date.day);
         // TODO add this to block next month days
         // TODO date.month !== current.month ||
-        return (newDate.getDay() === 6 || newDate.getDay() === 0 || date.year < now.getFullYear() || (date.month < now.getMonth() + 1 && date.year <= now.getFullYear()) || (date.year <= now.getFullYear() && date.month == now.getMonth() + 1 && date.day < now.getDate()));
+        return (newDate.getDay() === 6
+            || newDate.getDay() === 0
+            || date.year < now.getFullYear()
+            || (date.month < now.getMonth() + 1 && date.year <= now.getFullYear())
+            || (date.year <= now.getFullYear() && date.month === now.getMonth() + 1 && date.day < now.getDate())
+            || (date.year === now.getFullYear() && date.month === now.getMonth() + 1 && date.day < now.getDate() + 3));
     };
     /**
      * Fetch from API potential times for the given meeting id.
@@ -301,7 +306,9 @@ var MeetingDateComponent = (function () {
     };
     /* Call this method to check if all required params are correctly set. */
     MeetingDateComponent.prototype.canFinish = function () {
-        var canFinish = this.meetingGoal != null && this.meetingContext != null && this.potentialDatesArray.length > 0;
+        var canFinish = this.meetingGoal != null
+            && this.meetingContext != null
+            && this.potentialDatesArray.length > 2;
         return canFinish;
     };
     /* Save the different dates and set goal and context.
@@ -323,9 +330,9 @@ var MeetingDateComponent = (function () {
                 return _this.addMeetingDatesToMeeting(meetingId, _this.potentialDatesArray);
             });
         }).subscribe(function (res) {
-            window.scrollTo(0, 0);
             _this.router.navigate(['/meetings']);
             Materialize.toast('Vos disponibilités on été enregitrées !', 3000, 'rounded');
+            window.location.reload();
         }, function (error) {
             console.log('getOrCreateMeeting error', error);
             Materialize.toast("Impossible d'enregistrer vos disponibilités", 3000, 'rounded');

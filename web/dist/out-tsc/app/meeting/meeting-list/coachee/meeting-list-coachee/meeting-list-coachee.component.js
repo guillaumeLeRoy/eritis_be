@@ -43,6 +43,7 @@ var MeetingListCoacheeComponent = (function () {
             this.connectedUserSubscription = this.authService.getConnectedUserObservable().subscribe(function (user) {
                 console.log('onRefreshRequested, getConnectedUser');
                 _this.onUserObtained(user);
+                _this.cd.detectChanges();
             });
         }
         else {
@@ -56,6 +57,7 @@ var MeetingListCoacheeComponent = (function () {
                 // coachee
                 console.log('get a coachee');
                 this.getAllMeetingsForCoachee(user.id);
+                this.cd.detectChanges();
             }
             this.user = Observable.of(user);
             this.cd.detectChanges();
@@ -180,6 +182,7 @@ var MeetingListCoacheeComponent = (function () {
             console.log('confirmCancelMeeting, res', response);
             // this.onMeetingCancelled.emit();
             _this.onRefreshRequested();
+            window.location.reload();
             Materialize.toast('Meeting supprimé !', 3000, 'rounded');
         }, function (error) {
             console.log('confirmCancelMeeting, error', error);
