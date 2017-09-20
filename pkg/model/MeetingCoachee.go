@@ -11,11 +11,11 @@ const MEETING_COACHEE_ENTITY string = "MeetingCoachee"
 
 //read ancestor to have access to Coachee key
 type MeetingCoachee struct {
-	Key             *datastore.Key `json:"id" datastore:"-"`
-	MeetingCoachKey *datastore.Key `json:"-"`
-	AgreedTime      *datastore.Key `json:"agreed_date"`
-	IsOpen          bool `json:"isOpen"`
-	CreatedDate     time.Time `json:"created_date"`
+	Key             *datastore.Key `datastore:"-"`
+	MeetingCoachKey *datastore.Key
+	AgreedTime      *datastore.Key
+	IsOpen          bool
+	CreatedDate     time.Time
 }
 
 /**
@@ -23,27 +23,14 @@ type MeetingCoachee struct {
  */
 type ApiMeetingCoachee struct {
 	Key         *datastore.Key `json:"id" datastore:"-"`
-	AgreedTime  *MeetingTime `json:"agreed_date"`
+	AgreedTime  *APIMeetingTime `json:"agreed_date"`
 	Coach       *CoachAPI `json:"coach"`
 	Coachee     *CoacheeAPI `json:"coachee"`
 	IsOpen      bool `json:"isOpen"`
-	CreatedDate time.Time `json:"created_date"`
+	CreatedDate int64 `json:"created_date"`
 }
 
-func toAPIMeetingCoachee(meeting MeetingCoachee, agreedTime *MeetingTime, coach *CoachAPI, coachee *CoacheeAPI) ApiMeetingCoachee {
-	var apiMeetingCoachee ApiMeetingCoachee
-	apiMeetingCoachee.Key = meeting.Key
-	apiMeetingCoachee.IsOpen = meeting.IsOpen
-	apiMeetingCoachee.CreatedDate = meeting.CreatedDate
-
-	apiMeetingCoachee.AgreedTime = agreedTime
-	apiMeetingCoachee.Coach = coach
-	apiMeetingCoachee.Coachee = coachee
-
-	return apiMeetingCoachee
-}
-
-func CreateMeetingCoachee(ctx context.Context, coacheeKey *datastore.Key) (*MeetingCoachee, error) {
+func CreateMeetingCoachee(ctx context.Context, coacheeKey *datastore.Key) (*ApiMeetingCoachee, error) {
 	log.Debugf(ctx, "Create meeting")
 
 	var meeting MeetingCoachee
@@ -58,7 +45,12 @@ func CreateMeetingCoachee(ctx context.Context, coacheeKey *datastore.Key) (*Meet
 		return nil, err
 	}
 
-	return &meeting, nil
+	apiMeeting,err := meeting.ConvertToAPIMeeting(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return apiMeeting, nil
 }
 
 func (m *MeetingCoachee) Update(ctx context.Context) error {
@@ -103,7 +95,7 @@ func (m *MeetingCoachee) ConvertToAPIMeeting(ctx context.Context) (*ApiMeetingCo
 	var apiMeetingCoachee ApiMeetingCoachee
 	apiMeetingCoachee.Key = m.Key
 	apiMeetingCoachee.IsOpen = m.IsOpen
-	apiMeetingCoachee.CreatedDate = m.CreatedDate
+	apiMeetingCoachee.CreatedDate = m.CreatedDate.Unix()
 
 	//get agreed meeting time
 	if m.AgreedTime != nil {
@@ -111,7 +103,7 @@ func (m *MeetingCoachee) ConvertToAPIMeeting(ctx context.Context) (*ApiMeetingCo
 		if err != nil {
 			return nil, err
 		}
-		apiMeetingCoachee.AgreedTime = time
+		apiMeetingCoachee.AgreedTime = time.ConvertToAPI()
 	}
 
 	//get coach if any
