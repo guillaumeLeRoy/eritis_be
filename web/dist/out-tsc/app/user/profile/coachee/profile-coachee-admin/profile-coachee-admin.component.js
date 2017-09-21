@@ -7,7 +7,7 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
-import { ChangeDetectorRef, Component } from '@angular/core';
+import { ChangeDetectorRef, Component } from "@angular/core";
 import { Observable } from "rxjs/Observable";
 import { ActivatedRoute, Router } from "@angular/router";
 import { AdminAPIService } from "../../../../service/adminAPI.service";
@@ -23,6 +23,14 @@ var ProfileCoacheeAdminComponent = (function () {
         window.scrollTo(0, 0);
         this.loading = true;
         this.getCoachee();
+    };
+    ProfileCoacheeAdminComponent.prototype.ngAfterViewInit = function () {
+    };
+    ProfileCoacheeAdminComponent.prototype.ngOnDestroy = function () {
+        if (this.subscriptionGetCoachee) {
+            console.log("Unsubscribe coach");
+            this.subscriptionGetCoachee.unsubscribe();
+        }
     };
     ProfileCoacheeAdminComponent.prototype.getCoachee = function () {
         var _this = this;
@@ -43,14 +51,6 @@ var ProfileCoacheeAdminComponent = (function () {
     };
     ProfileCoacheeAdminComponent.prototype.goToRhProfile = function () {
         this.router.navigate(['admin/profile/rh', this.rhId]);
-    };
-    ProfileCoacheeAdminComponent.prototype.ngAfterViewInit = function () {
-    };
-    ProfileCoacheeAdminComponent.prototype.ngOnDestroy = function () {
-        if (this.subscriptionGetCoachee) {
-            console.log("Unsubscribe coach");
-            this.subscriptionGetCoachee.unsubscribe();
-        }
     };
     ProfileCoacheeAdminComponent = __decorate([
         Component({

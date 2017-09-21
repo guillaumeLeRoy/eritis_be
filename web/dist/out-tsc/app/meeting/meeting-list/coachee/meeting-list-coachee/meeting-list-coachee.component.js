@@ -7,21 +7,18 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
-import { ChangeDetectorRef, Component } from "@angular/core";
+import { ChangeDetectorRef, Component, Input } from "@angular/core";
 import { MeetingsService } from "../../../../service/meetings.service";
-import { CoachCoacheeService } from "../../../../service/coach_coachee.service";
-import { AuthService } from "../../../../service/auth.service";
-import { Router } from "@angular/router";
 import { Observable } from "rxjs/Observable";
 import { Coachee } from "../../../../model/Coachee";
+import { AdminAPIService } from "../../../../service/adminAPI.service";
 var MeetingListCoacheeComponent = (function () {
-    function MeetingListCoacheeComponent(router, meetingsService, coachCoacheeService, authService, cd) {
-        this.router = router;
+    function MeetingListCoacheeComponent(meetingsService, adminAPIservice, cd) {
         this.meetingsService = meetingsService;
-        this.coachCoacheeService = coachCoacheeService;
-        this.authService = authService;
+        this.adminAPIservice = adminAPIservice;
         this.cd = cd;
         this.loading = true;
+        this.isAdmin = false;
         this.hasOpenedMeeting = false;
         this.hasClosedMeeting = false;
         this.sessionRate = '0';
@@ -30,25 +27,14 @@ var MeetingListCoacheeComponent = (function () {
     MeetingListCoacheeComponent.prototype.ngOnInit = function () {
         console.log('ngOnInit');
         this.loading = true;
+        this.user = Observable.of(this.mUser);
     };
     MeetingListCoacheeComponent.prototype.ngAfterViewInit = function () {
         console.log('ngAfterViewInit');
         this.onRefreshRequested();
     };
     MeetingListCoacheeComponent.prototype.onRefreshRequested = function () {
-        var _this = this;
-        var user = this.authService.getConnectedUser();
-        console.log('onRefreshRequested, user : ', user);
-        if (user == null) {
-            this.connectedUserSubscription = this.authService.getConnectedUserObservable().subscribe(function (user) {
-                console.log('onRefreshRequested, getConnectedUser');
-                _this.onUserObtained(user);
-                _this.cd.detectChanges();
-            });
-        }
-        else {
-            this.onUserObtained(user);
-        }
+        this.onUserObtained(this.mUser);
     };
     MeetingListCoacheeComponent.prototype.onUserObtained = function (user) {
         console.log('onUserObtained, user : ', user);
@@ -57,58 +43,41 @@ var MeetingListCoacheeComponent = (function () {
                 // coachee
                 console.log('get a coachee');
                 this.getAllMeetingsForCoachee(user.id);
+                this.user = Observable.of(user);
                 this.cd.detectChanges();
             }
-            this.user = Observable.of(user);
-            this.cd.detectChanges();
+            else {
+                console.log('get a coachee, not instance of coachee');
+            }
         }
     };
     MeetingListCoacheeComponent.prototype.getAllMeetingsForCoachee = function (coacheeId) {
         var _this = this;
-        this.subscription = this.meetingsService.getAllMeetingsForCoacheeId(coacheeId).subscribe(function (meetings) {
-            console.log('got meetings for coachee', meetings);
-            _this.meetingsArray = meetings;
-            _this.meetings = Observable.of(meetings);
-            _this.getOpenedMeetings();
-            _this.getClosedMeetings();
-            _this.cd.detectChanges();
-            _this.loading = false;
-        });
+        if (this.isAdmin) {
+            this.subscription = this.adminAPIservice.getMeetingsForCoacheeId(coacheeId).subscribe(function (meetings) {
+                _this.onMeetingsObtained(meetings);
+            }, function (error) {
+                console.log('got meetings for coachee ERROR', error);
+                _this.loading = false;
+            });
+        }
+        else {
+            this.subscription = this.meetingsService.getAllMeetingsForCoacheeId(coacheeId).subscribe(function (meetings) {
+                _this.onMeetingsObtained(meetings);
+            }, function (error) {
+                console.log('got meetings for coachee ERROR', error);
+                _this.loading = false;
+            });
+        }
     };
-    MeetingListCoacheeComponent.prototype.goToDate = function () {
-        var _this = this;
-        console.log('goToDate');
-        this.user.take(1).subscribe(function (user) {
-            if (user == null) {
-                console.log('no connected user');
-                return;
-            }
-            // this.router.navigate(['/date', meeting.id]);
-            _this.router.navigate(['/date']);
-            // // 1) create a new meeting
-            // // 2) refresh our user to have a correct number of available sessions
-            // // 3) redirect to our MeetingDateComponent
-            // this.meetingsService.createMeeting(user.id).flatMap(
-            //   (meeting: Meeting) => {
-            //     console.log('goToDate, meeting created');
-            //
-            //     //meeting created, now fetch user
-            //     return this.authService.refreshConnectedUser().flatMap(
-            //       (user: Coach | Coachee) => {
-            //         console.log('goToDate, user refreshed');
-            //         return Observable.of(meeting);
-            //       }
-            //     );
-            //   }
-            // ).subscribe(
-            //   (meeting: Meeting) => {
-            //     // TODO display a loader
-            //     console.log('goToDate, go to setup dates');
-            //     window.scrollTo(0, 0);
-            //     this.router.navigate(['/date', meeting.id]);
-            //   }
-            // );
-        });
+    MeetingListCoacheeComponent.prototype.onMeetingsObtained = function (meetings) {
+        console.log('got meetings for coachee', meetings);
+        this.meetingsArray = meetings;
+        this.meetings = Observable.of(meetings);
+        this.getOpenedMeetings();
+        this.getClosedMeetings();
+        this.cd.detectChanges();
+        this.loading = false;
     };
     MeetingListCoacheeComponent.prototype.getOpenedMeetings = function () {
         console.log('getOpenedMeetings');
@@ -138,19 +107,9 @@ var MeetingListCoacheeComponent = (function () {
             this.meetingsClosed = Observable.of(closed_1);
         }
     };
-    MeetingListCoacheeComponent.prototype.getUsageRate = function (rhId) {
-        var _this = this;
-        this.coachCoacheeService.getUsageRate(rhId).subscribe(function (rate) {
-            console.log("getUsageRate, rate : ", rate);
-            _this.rhUsageRate = Observable.of(rate);
-        });
-    };
     MeetingListCoacheeComponent.prototype.ngOnDestroy = function () {
         if (this.subscription) {
             this.subscription.unsubscribe();
-        }
-        if (this.connectedUserSubscription) {
-            this.connectedUserSubscription.unsubscribe();
         }
     };
     /*************************************
@@ -229,13 +188,21 @@ var MeetingListCoacheeComponent = (function () {
             Materialize.toast('Impossible de noter votre coach', 3000, 'rounded');
         });
     };
+    __decorate([
+        Input(),
+        __metadata("design:type", Coachee)
+    ], MeetingListCoacheeComponent.prototype, "mUser", void 0);
+    __decorate([
+        Input(),
+        __metadata("design:type", Boolean)
+    ], MeetingListCoacheeComponent.prototype, "isAdmin", void 0);
     MeetingListCoacheeComponent = __decorate([
         Component({
             selector: 'rb-meeting-list-coachee',
             templateUrl: './meeting-list-coachee.component.html',
             styleUrls: ['./meeting-list-coachee.component.scss']
         }),
-        __metadata("design:paramtypes", [Router, MeetingsService, CoachCoacheeService, AuthService, ChangeDetectorRef])
+        __metadata("design:paramtypes", [MeetingsService, AdminAPIService, ChangeDetectorRef])
     ], MeetingListCoacheeComponent);
     return MeetingListCoacheeComponent;
 }());

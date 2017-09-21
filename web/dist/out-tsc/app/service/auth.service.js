@@ -571,6 +571,8 @@ var AuthService = (function () {
     AuthService.ADMIN_GET_POSSIBLE_COACHS = "/v1/admins/possible_coachs";
     AuthService.ADMIN_GET_POSSIBLE_COACH = "/v1/admins/possible_coachs/:id";
     AuthService.ADMIN_PUT_COACH_PROFILE_PICT = "/v1/admins/coachs/:id/profile_picture";
+    AuthService.ADMIN_GET_MEETINGS_FOR_COACHEE_ID = "/v1/admins/meetings/coachees/:coacheeId";
+    AuthService.ADMIN_GET_MEETINGS_FOR_COACH_ID = "/v1/admins/meetings/coachs/:coachId";
     /* Meeting */
     AuthService.POST_MEETING = "/v1/meetings";
     AuthService.DELETE_MEETING = "/v1/meetings/:meetingId";

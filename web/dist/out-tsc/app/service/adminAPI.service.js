@@ -8,15 +8,16 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 import { Injectable } from "@angular/core";
-import { Http } from "@angular/http";
+import { Headers, Http } from "@angular/http";
 import { environment } from "../../environments/environment";
 import { Coach } from "../model/Coach";
+import { Coachee } from "../model/Coachee";
 import { AuthService } from "./auth.service";
-import { Headers } from "@angular/http";
+import { HR } from "../model/HR";
+import { Meeting } from "../model/Meeting";
 var AdminAPIService = (function () {
-    function AdminAPIService(httpService, authService) {
+    function AdminAPIService(httpService) {
         this.httpService = httpService;
-        this.authService = authService;
         console.log("ctr done");
     }
     AdminAPIService.prototype.createPotentialCoach = function (email) {
@@ -42,7 +43,12 @@ var AdminAPIService = (function () {
     };
     AdminAPIService.prototype.getCoachs = function () {
         return this.get(AuthService.ADMIN_GET_COACHS, null).map(function (res) {
-            var coachs = res.json();
+            var resArray = res.json();
+            var coachs = new Array();
+            for (var _i = 0, resArray_1 = resArray; _i < resArray_1.length; _i++) {
+                var c = resArray_1[_i];
+                coachs.push(Coach.parseCoach(c));
+            }
             return coachs;
         });
     };
@@ -56,34 +62,42 @@ var AdminAPIService = (function () {
     };
     AdminAPIService.prototype.getCoachees = function () {
         return this.get(AuthService.ADMIN_GET_COACHEES, null).map(function (res) {
-            var Coachees = res.json();
-            return Coachees;
+            var resArray = res.json();
+            var coachees = new Array();
+            for (var _i = 0, resArray_2 = resArray; _i < resArray_2.length; _i++) {
+                var c = resArray_2[_i];
+                coachees.push(Coachee.parseCoachee(c));
+            }
+            return coachees;
         });
     };
     AdminAPIService.prototype.getCoachee = function (id) {
         var params = [id];
         return this.get(AuthService.ADMIN_GET_COACHEE, params).map(function (res) {
-            var coachee = res.json();
-            return coachee;
+            return Coachee.parseCoachee(res.json());
         });
     };
     AdminAPIService.prototype.getRhs = function () {
         return this.get(AuthService.ADMIN_GET_RHS, null).map(function (res) {
-            var HRs = res.json();
-            return HRs;
+            var resArray = res.json();
+            var hrs = new Array();
+            for (var _i = 0, resArray_3 = resArray; _i < resArray_3.length; _i++) {
+                var c = resArray_3[_i];
+                hrs.push(HR.parseRh(c));
+            }
+            return hrs;
         });
     };
     AdminAPIService.prototype.getRh = function (id) {
         var params = [id];
         return this.get(AuthService.ADMIN_GET_RH, params).map(function (res) {
-            var rh = res.json();
-            return rh;
+            return HR.parseRh(res.json());
         });
     };
     AdminAPIService.prototype.getPossibleCoachs = function () {
         return this.get(AuthService.ADMIN_GET_POSSIBLE_COACHS, null).map(function (res) {
-            var coachs = res.json();
-            return coachs;
+            var possibleCoachs = res.json();
+            return possibleCoachs;
         });
     };
     AdminAPIService.prototype.getPossibleCoach = function (id) {
@@ -101,6 +115,36 @@ var AdminAPIService = (function () {
         headers.append('Accept', 'application/json');
         return this.put(AuthService.ADMIN_PUT_COACH_PROFILE_PICT, params, formData, { headers: headers })
             .map(function (res) { return res.json(); });
+    };
+    AdminAPIService.prototype.getMeetingsForCoacheeId = function (coacheeId) {
+        var param = [coacheeId];
+        return this.get(AuthService.ADMIN_GET_MEETINGS_FOR_COACHEE_ID, param).map(function (response) {
+            var json = response.json();
+            console.log("getAllMeetingsForCoacheeId, response json : ", json);
+            var res = response.json();
+            var meetings = new Array();
+            for (var _i = 0, res_1 = res; _i < res_1.length; _i++) {
+                var meeting = res_1[_i];
+                meetings.push(Meeting.parseFromBE(meeting));
+            }
+            return meetings;
+        });
+    };
+    AdminAPIService.prototype.getMeetingsForCoachId = function (coachId) {
+        var param = [coachId];
+        return this.get(AuthService.ADMIN_GET_MEETINGS_FOR_COACH_ID, param)
+            .map(function (response) {
+            console.log("getAllMeetingsForCoachId, response : ", response);
+            var res = response.json();
+            var meetings = new Array();
+            for (var _i = 0, res_2 = res; _i < res_2.length; _i++) {
+                var meeting = res_2[_i];
+                if (meeting != null) {
+                    meetings.push(Meeting.parseFromBE(meeting));
+                }
+            }
+            return meetings;
+        });
     };
     AdminAPIService.prototype.post = function (path, params, body) {
         return this.httpService.post(this.generatePath(path, params), body);
@@ -144,7 +188,7 @@ var AdminAPIService = (function () {
     };
     AdminAPIService = __decorate([
         Injectable(),
-        __metadata("design:paramtypes", [Http, AuthService])
+        __metadata("design:paramtypes", [Http])
     ], AdminAPIService);
     return AdminAPIService;
 }());
