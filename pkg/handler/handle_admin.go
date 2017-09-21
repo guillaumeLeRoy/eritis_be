@@ -30,7 +30,7 @@ func HandleAdmin(w http.ResponseWriter, r *http.Request) {
 			}
 			// return all possible coachs
 			getAllPossibleCoachs(w, r) // GET /api/v1/admins/possible_coachs
-		} else if strings.Contains(r.URL.Path, "coachs") {
+		} else if strings.Contains(r.URL.Path, "admins/coachs") {
 
 			params := response.PathParams(ctx, r, "/api/v1/admins/coachs/:id")
 			userId, ok := params[":id"]
@@ -40,7 +40,7 @@ func HandleAdmin(w http.ResponseWriter, r *http.Request) {
 			}
 
 			handleAdminGetCoachs(w, r) // GET /api/v1/admins/coachs
-		} else if strings.Contains(r.URL.Path, "coachees") {
+		} else if strings.Contains(r.URL.Path, "admins/coachees") {
 
 			/**
 		 		GET a specific coachee
@@ -54,7 +54,7 @@ func HandleAdmin(w http.ResponseWriter, r *http.Request) {
 
 			// get ALL coachees
 			handleAdminGetCoachees(w, r) // GET /api/v1/admins/coachees
-		} else if strings.Contains(r.URL.Path, "rhs") {
+		} else if strings.Contains(r.URL.Path, "admins/rhs") {
 
 			/**
 			* Get HR for uid
@@ -67,7 +67,32 @@ func HandleAdmin(w http.ResponseWriter, r *http.Request) {
 			}
 
 			handleAdminGetRhs(w, r) // GET /api/v1/admins/rhs
+		} else if strings.Contains(r.URL.Path, "admins/meetings/coachees") {
+
+			/**
+			* Get meetings for specific Coachee
+			 */
+			params := response.PathParams(ctx, r, "/api/v1/admins/meetings/coachees/:uid")
+			//get uid param
+			uid, ok := params[":uid"]
+			if ok {
+				getAllMeetingsForCoachee(w, r, uid) // GET /api/v1/admins/meetings/coachees/:uid
+				return
+			}
+		}else if strings.Contains(r.URL.Path, "admins/meetings/coachs") {
+
+			/**
+			* Get meetings for specific Coachee
+			 */
+			params := response.PathParams(ctx, r, "/api/v1/admins/meetings/coachs/:uid")
+			//get uid param
+			uid, ok := params[":uid"]
+			if ok {
+				getAllMeetingsForCoach(w, r, uid) // GET /api/v1/admins/meetings/coachs/:uid
+				return
+			}
 		}
+
 
 	case "PUT":
 
