@@ -15,7 +15,7 @@ import (
 
 func HandlePotential(w http.ResponseWriter, r *http.Request) {
 	ctx := appengine.NewContext(r)
-	log.Debugf(ctx, "handle login")
+	log.Debugf(ctx, "handle potential")
 
 	switch r.Method {
 	case "POST":

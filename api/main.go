@@ -76,8 +76,6 @@ https://eritis-be-glr.appspot.com/api/queue_tasks
 clean datastore :
 dev_appserver.py -A eritis-be-glr --clear_datastore=yes dispatch.yaml default/app.yaml api/app.yaml web/app.yaml firebase/app.yaml --enable_sendmail
 
-
-
 */
 
 // keep a ref to init the app only once
@@ -86,38 +84,6 @@ var firebaseApp *firebase.App
 func init() {
 
 	http.HandleFunc("/api/", redirectToHandler)
-
-	//http.HandleFunc("/api/v1/login/", authHandler(handler.HandleLogin))
-
-	//admin
-	//http.HandleFunc("/api/admins/v1/", authHandler(handler.HandleAdmin))
-
-	//meetings
-	//http.HandleFunc("/api/v1/meetings/", authHandler(handler.HandleMeeting))
-
-	//coach
-	//http.HandleFunc("/api/v1/coachs/", authHandler(handler.HandleCoachs))
-
-	// possible coach
-	//http.HandleFunc("/api/v1/possible_coachs/", nonAuthHandler(handler.HandlePossibleCoach))
-
-	//coachee
-	//http.HandleFunc("/api/v1/coachees/", authHandler(handler.HandleCoachees))
-
-	//rh
-	//http.HandleFunc("/api/v1/rhs/", authHandler(handler.HandlerRH))
-
-	//contact, no need to be authenticated to send a contact request
-	//http.HandleFunc("/api/v1/contact/", nonAuthHandler(handler.HandleContact))
-
-	//get contract plan
-	//http.HandleFunc("/api/v1/plans/", nonAuthHandler(handler.HandleContractPlan))
-
-	//cron
-	//http.HandleFunc("/api/v1/crons/", nonAuthHandler(handler.HandleCron))
-
-	//potentials
-	//http.HandleFunc("/api/v1/potentials/", nonAuthHandler(handler.HandlePotential))
 
 	//test email
 	http.HandleFunc("/api/email/", handler.HandlerTestEmail)
@@ -141,13 +107,18 @@ func redirectToHandler(w http.ResponseWriter, r *http.Request) {
 
 	// strip /api from Url
 	originUrl = strings.TrimPrefix(originUrl, "/api")
+	r.URL.Path = originUrl
 	log.Debugf(ctx, "redirectToHandler, trimmed %s", originUrl)
 
 	if strings.HasPrefix(originUrl, "/admins") {
 		log.Debugf(ctx, "redirectToHandler, admin request")
 		originUrl = strings.TrimPrefix(originUrl, "/admins")
 		r.URL.Path = originUrl
-		redirectToHandler(w, r)
+		if strings.Contains(originUrl, "user") {
+			authHandler(handler.HandleAdmin)(w, r)
+		} else {
+			redirectToHandler(w, r)
+		}
 	} else if strings.HasPrefix(originUrl, "/v1/login") {
 		nonAuthHandler(handler.HandleLogin)(w, r)
 	} else if strings.HasPrefix(originUrl, "/v1/meetings") {
@@ -167,7 +138,7 @@ func redirectToHandler(w http.ResponseWriter, r *http.Request) {
 	} else if strings.HasPrefix(originUrl, "/v1/crons") {
 		nonAuthHandler(handler.HandleCron)(w, r)
 	} else if strings.HasPrefix(originUrl, "/v1/potentials") {
-		nonAuthHandler(handler.HandlePotential)(w, r)
+		authHandler(handler.HandlePotential)(w, r)
 	}
 
 }
