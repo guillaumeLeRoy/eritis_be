@@ -11,11 +11,9 @@ import { ChangeDetectorRef, Component, Input } from "@angular/core";
 import { MeetingsService } from "../../../../service/meetings.service";
 import { Observable } from "rxjs/Observable";
 import { Coachee } from "../../../../model/Coachee";
-import { AdminAPIService } from "../../../../service/adminAPI.service";
 var MeetingListCoacheeComponent = (function () {
-    function MeetingListCoacheeComponent(meetingsService, adminAPIservice, cd) {
+    function MeetingListCoacheeComponent(meetingsService, cd) {
         this.meetingsService = meetingsService;
-        this.adminAPIservice = adminAPIservice;
         this.cd = cd;
         this.loading = true;
         this.isAdmin = false;
@@ -38,37 +36,20 @@ var MeetingListCoacheeComponent = (function () {
     };
     MeetingListCoacheeComponent.prototype.onUserObtained = function (user) {
         console.log('onUserObtained, user : ', user);
-        if (user) {
-            if (user instanceof Coachee) {
-                // coachee
-                console.log('get a coachee');
-                this.getAllMeetingsForCoachee(user.id);
-                this.user = Observable.of(user);
-                this.cd.detectChanges();
-            }
-            else {
-                console.log('get a coachee, not instance of coachee');
-            }
-        }
+        this.getAllMeetingsForCoachee(user.id);
+        this.user = Observable.of(user);
+        this.cd.detectChanges();
     };
     MeetingListCoacheeComponent.prototype.getAllMeetingsForCoachee = function (coacheeId) {
         var _this = this;
-        if (this.isAdmin) {
-            this.subscription = this.adminAPIservice.getMeetingsForCoacheeId(coacheeId).subscribe(function (meetings) {
-                _this.onMeetingsObtained(meetings);
-            }, function (error) {
-                console.log('got meetings for coachee ERROR', error);
-                _this.loading = false;
-            });
-        }
-        else {
-            this.subscription = this.meetingsService.getAllMeetingsForCoacheeId(coacheeId).subscribe(function (meetings) {
-                _this.onMeetingsObtained(meetings);
-            }, function (error) {
-                console.log('got meetings for coachee ERROR', error);
-                _this.loading = false;
-            });
-        }
+        this.subscription = this.meetingsService.getAllMeetingsForCoacheeId(coacheeId, this.isAdmin)
+            .subscribe(function (meetings) {
+            console.log('got meetings for coachee', meetings);
+            _this.onMeetingsObtained(meetings);
+        }, function (error) {
+            console.log('got meetings for coachee ERROR', error);
+            _this.loading = false;
+        });
     };
     MeetingListCoacheeComponent.prototype.onMeetingsObtained = function (meetings) {
         console.log('got meetings for coachee', meetings);
@@ -76,16 +57,18 @@ var MeetingListCoacheeComponent = (function () {
         this.meetings = Observable.of(meetings);
         this.getOpenedMeetings();
         this.getClosedMeetings();
-        this.cd.detectChanges();
         this.loading = false;
+        console.log('got meetings, loading', this.loading);
+        this.cd.detectChanges();
     };
     MeetingListCoacheeComponent.prototype.getOpenedMeetings = function () {
         console.log('getOpenedMeetings');
         if (this.meetingsArray != null) {
-            var opened = [];
+            var opened = new Array();
             for (var _i = 0, _a = this.meetingsArray; _i < _a.length; _i++) {
                 var meeting = _a[_i];
                 if (meeting.isOpen) {
+                    console.log('getOpenedMeetings, add open meeting');
                     opened.push(meeting);
                     this.hasOpenedMeeting = true;
                 }
@@ -100,6 +83,7 @@ var MeetingListCoacheeComponent = (function () {
             for (var _i = 0, _a = this.meetingsArray; _i < _a.length; _i++) {
                 var meeting = _a[_i];
                 if (!meeting.isOpen) {
+                    console.log('getClosedMeetings, add close meeting');
                     closed_1.push(meeting);
                     this.hasClosedMeeting = true;
                 }
@@ -202,7 +186,7 @@ var MeetingListCoacheeComponent = (function () {
             templateUrl: './meeting-list-coachee.component.html',
             styleUrls: ['./meeting-list-coachee.component.scss']
         }),
-        __metadata("design:paramtypes", [MeetingsService, AdminAPIService, ChangeDetectorRef])
+        __metadata("design:paramtypes", [MeetingsService, ChangeDetectorRef])
     ], MeetingListCoacheeComponent);
     return MeetingListCoacheeComponent;
 }());

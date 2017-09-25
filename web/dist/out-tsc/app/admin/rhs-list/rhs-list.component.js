@@ -9,7 +9,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 import { ChangeDetectorRef, Component } from "@angular/core";
 import { Observable } from "rxjs/Observable";
-import { AdminAPIService } from "../../service/adminAPI.service";
+import { CoachCoacheeService } from "../../service/coach_coachee.service";
 var RhsListComponent = (function () {
     function RhsListComponent(apiService, cd) {
         this.apiService = apiService;
@@ -31,7 +31,7 @@ var RhsListComponent = (function () {
     };
     RhsListComponent.prototype.fetchData = function () {
         var _this = this;
-        this.getAllrhsSub = this.apiService.getRhs().subscribe(function (rhs) {
+        this.getAllrhsSub = this.apiService.getRhs(true).subscribe(function (rhs) {
             console.log('getAllrhsSub subscribe, rhs : ', rhs);
             _this.rhs = Observable.of(rhs);
             _this.cd.detectChanges();
@@ -44,7 +44,7 @@ var RhsListComponent = (function () {
             templateUrl: './rhs-list.component.html',
             styleUrls: ['./rhs-list.component.scss']
         }),
-        __metadata("design:paramtypes", [AdminAPIService, ChangeDetectorRef])
+        __metadata("design:paramtypes", [CoachCoacheeService, ChangeDetectorRef])
     ], RhsListComponent);
     return RhsListComponent;
 }());

@@ -7,10 +7,10 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
-import { ChangeDetectorRef, Component } from '@angular/core';
+import { ChangeDetectorRef, Component } from "@angular/core";
 import { Observable } from "rxjs/Observable";
 import { ActivatedRoute, Router } from "@angular/router";
-import { AdminAPIService } from "../../../../service/adminAPI.service";
+import { CoachCoacheeService } from "../../../../service/coach_coachee.service";
 var ProfileRhAdminComponent = (function () {
     function ProfileRhAdminComponent(cd, route, apiService, router) {
         this.cd = cd;
@@ -33,7 +33,7 @@ var ProfileRhAdminComponent = (function () {
         console.log("getRh");
         this.subscriptionGetRh = this.route.params.subscribe(function (params) {
             var rhId = params['id'];
-            _this.apiService.getRh(rhId).subscribe(function (rh) {
+            _this.apiService.getRhForId(rhId, true).subscribe(function (rh) {
                 console.log("gotRh", rh);
                 _this.mrh = rh;
                 _this.rh = Observable.of(rh);
@@ -60,7 +60,7 @@ var ProfileRhAdminComponent = (function () {
             templateUrl: './profile-rh-admin.component.html',
             styleUrls: ['./profile-rh-admin.component.scss']
         }),
-        __metadata("design:paramtypes", [ChangeDetectorRef, ActivatedRoute, AdminAPIService, Router])
+        __metadata("design:paramtypes", [ChangeDetectorRef, ActivatedRoute, CoachCoacheeService, Router])
     ], ProfileRhAdminComponent);
     return ProfileRhAdminComponent;
 }());

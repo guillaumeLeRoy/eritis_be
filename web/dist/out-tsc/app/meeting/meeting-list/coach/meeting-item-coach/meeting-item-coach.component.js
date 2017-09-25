@@ -20,6 +20,7 @@ var MeetingItemCoachComponent = (function () {
         this.meetingService = meetingService;
         this.cd = cd;
         this.router = router;
+        this.isAdmin = false;
         this.onValidateDateBtnClick = new EventEmitter();
         // @Output()
         // dateRemoved = new EventEmitter();
@@ -71,7 +72,7 @@ var MeetingItemCoachComponent = (function () {
     };
     MeetingItemCoachComponent.prototype.loadMeetingPotentialTimes = function () {
         var _this = this;
-        this.meetingService.getMeetingPotentialTimes(this.meeting.id).subscribe(function (dates) {
+        this.meetingService.getMeetingPotentialTimes(this.meeting.id, this.isAdmin).subscribe(function (dates) {
             console.log("potential dates obtained, ", dates);
             if (dates != null) {
                 dates.sort(function (a, b) {
@@ -101,7 +102,7 @@ var MeetingItemCoachComponent = (function () {
     MeetingItemCoachComponent.prototype.getGoal = function () {
         var _this = this;
         this.loading = true;
-        this.meetingService.getMeetingGoal(this.meeting.id).subscribe(function (reviews) {
+        this.meetingService.getMeetingGoal(this.meeting.id, this.isAdmin).subscribe(function (reviews) {
             console.log("getMeetingGoal, got goal : ", reviews);
             if (reviews != null)
                 _this.goal = Observable.of(reviews[0].value);
@@ -118,7 +119,7 @@ var MeetingItemCoachComponent = (function () {
     MeetingItemCoachComponent.prototype.getContext = function () {
         var _this = this;
         this.loading = true;
-        this.meetingService.getMeetingContext(this.meeting.id).subscribe(function (reviews) {
+        this.meetingService.getMeetingContext(this.meeting.id, this.isAdmin).subscribe(function (reviews) {
             console.log("getMeetingContext, got context : ", reviews);
             if (reviews != null)
                 _this.context = Observable.of(reviews[0].value);
@@ -134,7 +135,7 @@ var MeetingItemCoachComponent = (function () {
     MeetingItemCoachComponent.prototype.getReviewValue = function () {
         var _this = this;
         this.loading = true;
-        this.meetingService.getSessionReviewUtility(this.meeting.id).subscribe(function (reviews) {
+        this.meetingService.getSessionReviewUtility(this.meeting.id, this.isAdmin).subscribe(function (reviews) {
             console.log("getMeetingValue, got goal : ", reviews);
             if (reviews != null)
                 _this.reviewValue = reviews[0].value;
@@ -151,7 +152,7 @@ var MeetingItemCoachComponent = (function () {
     MeetingItemCoachComponent.prototype.getReviewNextStep = function () {
         var _this = this;
         this.loading = true;
-        this.meetingService.getSessionReviewResult(this.meeting.id).subscribe(function (reviews) {
+        this.meetingService.getSessionReviewResult(this.meeting.id, this.isAdmin).subscribe(function (reviews) {
             console.log("getMeetingNextStep, : ", reviews);
             if (reviews != null)
                 _this.reviewNextStep = reviews[0].value;
@@ -168,7 +169,7 @@ var MeetingItemCoachComponent = (function () {
     MeetingItemCoachComponent.prototype.getSessionReviewTypeRate = function () {
         var _this = this;
         this.loading = true;
-        this.meetingService.getSessionReviewRate(this.meeting.id).subscribe(function (reviews) {
+        this.meetingService.getSessionReviewRate(this.meeting.id, this.isAdmin).subscribe(function (reviews) {
             console.log("getSessionReviewTypeRate, got rate : ", reviews);
             if (reviews != null)
                 _this.sessionRate = reviews[0].value;
@@ -240,6 +241,10 @@ var MeetingItemCoachComponent = (function () {
         Input(),
         __metadata("design:type", Meeting)
     ], MeetingItemCoachComponent.prototype, "meeting", void 0);
+    __decorate([
+        Input(),
+        __metadata("design:type", Boolean)
+    ], MeetingItemCoachComponent.prototype, "isAdmin", void 0);
     __decorate([
         Output(),
         __metadata("design:type", Object)

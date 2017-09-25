@@ -10,6 +10,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 ///<reference path="auth.service.ts"/>
 import { Injectable } from "@angular/core";
 import { Coach } from "../model/Coach";
+import { Headers } from "@angular/http";
 import { AuthService } from "./auth.service";
 import { Coachee } from "../model/Coachee";
 import { HR } from "../model/HR";
@@ -17,40 +18,76 @@ var CoachCoacheeService = (function () {
     function CoachCoacheeService(apiService) {
         this.apiService = apiService;
     }
-    CoachCoacheeService.prototype.getAllCoachs = function () {
+    /* Coach endpoints */
+    CoachCoacheeService.prototype.getAllCoachs = function (isAdmin) {
         console.log("getAllCoachs, start request");
-        return this.apiService.get(AuthService.GET_COACHS, null).map(function (response) {
-            var json = response.json();
-            console.log("getAllCoachs, response json : ", json);
-            return json;
+        return this.apiService.get(AuthService.GET_COACHS, null, isAdmin).map(function (res) {
+            var resArray = res.json();
+            var coachs = new Array();
+            for (var _i = 0, resArray_1 = resArray; _i < resArray_1.length; _i++) {
+                var c = resArray_1[_i];
+                coachs.push(Coach.parseCoach(c));
+            }
+            return coachs;
         });
     };
-    CoachCoacheeService.prototype.getCoachForId = function (coachId) {
+    CoachCoacheeService.prototype.getCoachForId = function (coachId, isAdmin) {
         console.log("getCoachForId, start request");
         var params = [coachId];
-        return this.apiService.get(AuthService.GET_COACH_FOR_ID, params).map(function (response) {
+        return this.apiService.get(AuthService.GET_COACH_FOR_ID, params, isAdmin).map(function (response) {
             console.log("getCoachForId, got coach", response);
-            var coach = Coach.parseCoach(response.json());
-            return coach;
+            return Coach.parseCoach(response.json());
         }, function (error) {
             console.log("getCoachForId, error", error);
         });
     };
-    CoachCoacheeService.prototype.getCoacheeForId = function (coacheeId) {
+    CoachCoacheeService.prototype.updateCoachProfilePicture = function (coachId, avatarFile) {
+        var params = [coachId];
+        var formData = new FormData();
+        formData.append('uploadFile', avatarFile, avatarFile.name);
+        var headers = new Headers();
+        headers.append('Accept', 'application/json');
+        return this.apiService.put(AuthService.PUT_COACH_PROFILE_PICT, params, formData, { headers: headers }, true)
+            .map(function (res) { return res.json(); });
+    };
+    /* Coachee endpoints */
+    CoachCoacheeService.prototype.getCoachees = function (isAdmin) {
+        return this.apiService.get(AuthService.GET_COACHEES, null, isAdmin).map(function (res) {
+            var resArray = res.json();
+            var coachees = new Array();
+            for (var _i = 0, resArray_2 = resArray; _i < resArray_2.length; _i++) {
+                var c = resArray_2[_i];
+                coachees.push(Coachee.parseCoachee(c));
+            }
+            return coachees;
+        });
+    };
+    CoachCoacheeService.prototype.getCoacheeForId = function (coacheeId, isAdmin) {
         console.log("getCoacheeForId, start request");
         var params = [coacheeId];
-        return this.apiService.get(AuthService.GET_COACHEE_FOR_ID, params).map(function (response) {
+        return this.apiService.get(AuthService.GET_COACHEE_FOR_ID, params, isAdmin).map(function (response) {
             console.log("getCoacheeForId, got coachee", response);
-            var coachee = response.json();
-            return coachee;
+            return Coachee.parseCoachee(response.json());
         }, function (error) {
             console.log("getCoacheeForId, error", error);
         });
     };
-    CoachCoacheeService.prototype.getRhForId = function (rhId) {
+    /* HR endpoints */
+    CoachCoacheeService.prototype.getRhs = function (isAdmin) {
+        return this.apiService.get(AuthService.GET_RHS, null, isAdmin).map(function (res) {
+            var resArray = res.json();
+            var hrs = new Array();
+            for (var _i = 0, resArray_3 = resArray; _i < resArray_3.length; _i++) {
+                var c = resArray_3[_i];
+                hrs.push(HR.parseRh(c));
+            }
+            return hrs;
+        });
+    };
+    CoachCoacheeService.prototype.getRhForId = function (rhId, isAdmin) {
         console.log("getRhForId, start request");
         var params = [rhId];
-        return this.apiService.get(AuthService.GET_RH_FOR_ID, params).map(function (response) {
+        return this.apiService.get(AuthService.GET_RH_FOR_ID, params, isAdmin).map(function (response) {
             console.log("getRhForId, got rh", response);
             var rh = HR.parseRh(response.json());
             return rh;
@@ -81,6 +118,33 @@ var CoachCoacheeService = (function () {
             return json;
         });
     };
+    CoachCoacheeService.prototype.getUsageRate = function (rhId) {
+        console.log("getUsageRate, start request");
+        var param = [rhId];
+        return this.apiService.get(AuthService.GET_USAGE_RATE_FOR_RH, param).map(function (response) {
+            var json = response.json();
+            console.log("getUsageRate, response json : ", json);
+            return json;
+        });
+    };
+    /**
+     * Add a new objective to this coachee.
+     * @param coacheeId
+     * @param rhId
+     * @param objective
+     */
+    CoachCoacheeService.prototype.addObjectiveToCoachee = function (rhId, coacheeId, objective) {
+        var param = [rhId, coacheeId];
+        var body = {
+            "objective": objective
+        };
+        return this.apiService.post(AuthService.POST_COACHEE_OBJECTIVE, param, body).map(function (response) {
+            var json = response.json();
+            console.log("POST coachee new objective, response json : ", json);
+            return json;
+        });
+    };
+    /* Potentials endpoints */
     CoachCoacheeService.prototype.getPotentialCoachee = function (token) {
         console.log("getPotentialCoachee, start request");
         var param = [token];
@@ -95,15 +159,6 @@ var CoachCoacheeService = (function () {
         console.log("getPotentialRh, start request");
         var param = [token];
         return this.apiService.getPotentialRh(AuthService.GET_POTENTIAL_RH_FOR_TOKEN, param);
-    };
-    CoachCoacheeService.prototype.getUsageRate = function (rhId) {
-        console.log("getUsageRate, start request");
-        var param = [rhId];
-        return this.apiService.get(AuthService.GET_USAGE_RATE_FOR_RH, param).map(function (response) {
-            var json = response.json();
-            console.log("getUsageRate, response json : ", json);
-            return json;
-        });
     };
     CoachCoacheeService.prototype.postPotentialCoachee = function (body) {
         console.log("postPotentialCoachee, start request");
@@ -143,23 +198,6 @@ var CoachCoacheeService = (function () {
             console.log("readAllNotifications done");
         }, function (error) {
             console.log('readAllNotifications error', error);
-        });
-    };
-    /**
-     * Add a new objective to this coachee.
-     * @param coacheeId
-     * @param rhId
-     * @param objective
-     */
-    CoachCoacheeService.prototype.addObjectiveToCoachee = function (rhId, coacheeId, objective) {
-        var param = [rhId, coacheeId];
-        var body = {
-            "objective": objective
-        };
-        return this.apiService.post(AuthService.POST_COACHEE_OBJECTIVE, param, body).map(function (response) {
-            var json = response.json();
-            console.log("POST coachee new objective, response json : ", json);
-            return json;
         });
     };
     CoachCoacheeService = __decorate([

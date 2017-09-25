@@ -10,7 +10,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 import { ChangeDetectorRef, Component } from "@angular/core";
 import { Observable } from "rxjs/Observable";
 import { ActivatedRoute, Router } from "@angular/router";
-import { AdminAPIService } from "../../../../service/adminAPI.service";
+import { CoachCoacheeService } from "../../../../service/coach_coachee.service";
 var ProfileCoacheeAdminComponent = (function () {
     function ProfileCoacheeAdminComponent(router, cd, apiService, route) {
         this.router = router;
@@ -36,7 +36,7 @@ var ProfileCoacheeAdminComponent = (function () {
         var _this = this;
         this.subscriptionGetCoachee = this.route.params.subscribe(function (params) {
             var coacheeId = params['id'];
-            _this.apiService.getCoachee(coacheeId).subscribe(function (coachee) {
+            _this.apiService.getCoacheeForId(coacheeId, true).subscribe(function (coachee) {
                 console.log("gotCoachee", coachee);
                 _this.coachee = Observable.of(coachee);
                 _this.rhId = coachee.associatedRh.id;
@@ -58,7 +58,7 @@ var ProfileCoacheeAdminComponent = (function () {
             templateUrl: './profile-coachee-admin.component.html',
             styleUrls: ['./profile-coachee-admin.component.scss']
         }),
-        __metadata("design:paramtypes", [Router, ChangeDetectorRef, AdminAPIService, ActivatedRoute])
+        __metadata("design:paramtypes", [Router, ChangeDetectorRef, CoachCoacheeService, ActivatedRoute])
     ], ProfileCoacheeAdminComponent);
     return ProfileCoacheeAdminComponent;
 }());

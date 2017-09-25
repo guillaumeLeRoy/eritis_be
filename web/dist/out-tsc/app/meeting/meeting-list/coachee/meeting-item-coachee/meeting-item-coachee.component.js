@@ -32,19 +32,10 @@ var MeetingItemCoacheeComponent = (function () {
         this.getContext();
         this.getSessionCoachReview();
     };
-    // onPreMeetingReviewPosted(meeting: Meeting) {
-    //   console.log("onPreMeetingReviewPosted");
-    //   this.getReview();
-    // }
-    //
-    // onPotentialDatePosted(date: MeetingDate) {
-    //   console.log("onPotentialDatePosted");
-    //   this.potentialDatePosted.emit(date);
-    // }
     MeetingItemCoacheeComponent.prototype.loadMeetingPotentialTimes = function () {
         var _this = this;
         this.loading = true;
-        this.meetingService.getMeetingPotentialTimes(this.meeting.id).subscribe(function (dates) {
+        this.meetingService.getMeetingPotentialTimes(this.meeting.id, this.isAdmin).subscribe(function (dates) {
             console.log("potential dates obtained, ", dates);
             _this.potentialDates = Observable.of(dates);
             _this.cd.detectChanges();
@@ -70,7 +61,7 @@ var MeetingItemCoacheeComponent = (function () {
     MeetingItemCoacheeComponent.prototype.getGoal = function () {
         var _this = this;
         this.loading = true;
-        this.meetingService.getMeetingGoal(this.meeting.id).subscribe(function (reviews) {
+        this.meetingService.getMeetingGoal(this.meeting.id, this.isAdmin).subscribe(function (reviews) {
             console.log("getMeetingGoal, got goal : ", reviews);
             if (reviews != null) {
                 _this.hasGoal = true;
@@ -90,7 +81,7 @@ var MeetingItemCoacheeComponent = (function () {
     MeetingItemCoacheeComponent.prototype.getContext = function () {
         var _this = this;
         this.loading = true;
-        this.meetingService.getMeetingContext(this.meeting.id).subscribe(function (reviews) {
+        this.meetingService.getMeetingContext(this.meeting.id, this.isAdmin).subscribe(function (reviews) {
             console.log("getMeetingContext, got context : ", reviews);
             if (reviews != null) {
                 _this.hasContext = true;
@@ -110,12 +101,14 @@ var MeetingItemCoacheeComponent = (function () {
     MeetingItemCoacheeComponent.prototype.getSessionReviewTypeResult = function () {
         var _this = this;
         this.loading = true;
-        this.meetingService.getSessionReviewResult(this.meeting.id).subscribe(function (reviews) {
+        this.meetingService.getSessionReviewResult(this.meeting.id, this.isAdmin).subscribe(function (reviews) {
             console.log("getSessionReviewTypeResult, got result : ", reviews);
-            if (reviews != null)
+            if (reviews != null) {
                 _this.sessionResult = reviews[0].value;
-            else
+            }
+            else {
                 _this.sessionResult = null;
+            }
             _this.cd.detectChanges();
             _this.hasSessionResult = (_this.sessionResult != null);
             _this.loading = false;
@@ -127,12 +120,14 @@ var MeetingItemCoacheeComponent = (function () {
     MeetingItemCoacheeComponent.prototype.getSessionReviewTypeUtility = function () {
         var _this = this;
         this.loading = true;
-        this.meetingService.getSessionReviewUtility(this.meeting.id).subscribe(function (reviews) {
+        this.meetingService.getSessionReviewUtility(this.meeting.id, this.isAdmin).subscribe(function (reviews) {
             console.log("getSessionReviewTypeUtility, got goal : ", reviews);
-            if (reviews != null)
+            if (reviews != null) {
                 _this.sessionUtility = reviews[0].value;
-            else
+            }
+            else {
                 _this.sessionUtility = null;
+            }
             _this.cd.detectChanges();
             _this.hasSessionUtility = (_this.sessionUtility != null);
             _this.loading = false;
@@ -144,12 +139,14 @@ var MeetingItemCoacheeComponent = (function () {
     MeetingItemCoacheeComponent.prototype.getSessionReviewTypeRate = function () {
         var _this = this;
         this.loading = true;
-        this.meetingService.getSessionReviewRate(this.meeting.id).subscribe(function (reviews) {
+        this.meetingService.getSessionReviewRate(this.meeting.id, this.isAdmin).subscribe(function (reviews) {
             console.log("getSessionReviewTypeRate, got rate : ", reviews);
-            if (reviews != null)
+            if (reviews != null) {
                 _this.sessionRate = reviews[0].value;
-            else
+            }
+            else {
                 _this.sessionRate = null;
+            }
             _this.cd.detectChanges();
             _this.hasRate = (_this.sessionRate != null);
             _this.loading = false;
@@ -182,6 +179,10 @@ var MeetingItemCoacheeComponent = (function () {
         Input(),
         __metadata("design:type", Meeting)
     ], MeetingItemCoacheeComponent.prototype, "meeting", void 0);
+    __decorate([
+        Input(),
+        __metadata("design:type", Boolean)
+    ], MeetingItemCoacheeComponent.prototype, "isAdmin", void 0);
     __decorate([
         Output(),
         __metadata("design:type", Object)

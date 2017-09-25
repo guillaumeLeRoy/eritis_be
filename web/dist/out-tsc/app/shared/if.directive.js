@@ -17,6 +17,7 @@ var IfDirective = (function () {
     }
     Object.defineProperty(IfDirective.prototype, "ifLoader", {
         set: function (loading) {
+            console.log('ifLoader, loading : ', loading);
             if (loading) {
                 // create and attach a loader to our viewContainer
                 var factory = this.cfResolver.resolveComponentFactory(LoaderSpinnerComponent);

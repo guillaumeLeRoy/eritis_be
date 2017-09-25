@@ -19,6 +19,7 @@ var MeetingItemRhComponent = (function () {
         this.meetingsService = meetingsService;
         this.cd = cd;
         this.router = router;
+        this.isAdmin = false;
         /**
          * Event emitted when user clicks on the "Objective" btn.
          * @type {EventEmitter<string>} the coacheeId
@@ -55,7 +56,7 @@ var MeetingItemRhComponent = (function () {
     MeetingItemRhComponent.prototype.getAllMeetingsForCoachee = function (coacheeId) {
         var _this = this;
         this.loading = true;
-        this.meetingsService.getAllMeetingsForCoacheeId(coacheeId).subscribe(function (meetings) {
+        this.meetingsService.getAllMeetingsForCoacheeId(coacheeId, this.isAdmin).subscribe(function (meetings) {
             console.log('got meetings for coachee', meetings);
             var bookedMeetings = [];
             for (var _i = 0, meetings_1 = meetings; _i < meetings_1.length; _i++) {
@@ -76,7 +77,7 @@ var MeetingItemRhComponent = (function () {
     };
     MeetingItemRhComponent.prototype.getGoal = function (meetingId) {
         var _this = this;
-        return this.meetingsService.getMeetingGoal(meetingId).subscribe(function (reviews) {
+        return this.meetingsService.getMeetingGoal(meetingId, this.isAdmin).subscribe(function (reviews) {
             console.log("getMeetingGoal, got goal : ", reviews);
             if (reviews != null)
                 _this.goals[meetingId] = reviews[0].value;
@@ -89,12 +90,12 @@ var MeetingItemRhComponent = (function () {
     };
     MeetingItemRhComponent.prototype.getSessionReviewTypeRate = function (meetingId) {
         var _this = this;
-        this.meetingsService.getSessionReviewRate(meetingId).subscribe(function (reviews) {
+        this.meetingsService.getSessionReviewRate(meetingId, this.isAdmin).subscribe(function (reviews) {
             console.log("getSessionReviewTypeRate, got rate : ", reviews);
             if (reviews != null)
                 _this.sessionRates[meetingId] = reviews[0].value;
             else
-                _this.sessionRates = 'Inconnu';
+                _this.sessionRates[meetingId] = "Inconnu";
         }, function (error) {
             console.log('getSessionReviewTypeRate error', error);
             //this.displayErrorPostingReview = true;
@@ -114,6 +115,10 @@ var MeetingItemRhComponent = (function () {
         Input(),
         __metadata("design:type", PotentialCoachee)
     ], MeetingItemRhComponent.prototype, "potentialCoachee", void 0);
+    __decorate([
+        Input(),
+        __metadata("design:type", Boolean)
+    ], MeetingItemRhComponent.prototype, "isAdmin", void 0);
     __decorate([
         Output(),
         __metadata("design:type", Object)

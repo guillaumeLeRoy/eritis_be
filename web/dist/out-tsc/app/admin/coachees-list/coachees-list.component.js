@@ -7,9 +7,9 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
-import { ChangeDetectorRef, Component } from '@angular/core';
+import { ChangeDetectorRef, Component } from "@angular/core";
 import { Observable } from "rxjs/Observable";
-import { AdminAPIService } from "../../service/adminAPI.service";
+import { CoachCoacheeService } from "../../service/coach_coachee.service";
 var CoacheesListComponent = (function () {
     function CoacheesListComponent(apiService, cd) {
         this.apiService = apiService;
@@ -31,7 +31,7 @@ var CoacheesListComponent = (function () {
     };
     CoacheesListComponent.prototype.fetchData = function () {
         var _this = this;
-        this.getAllCoacheesSub = this.apiService.getCoachees().subscribe(function (coachees) {
+        this.getAllCoacheesSub = this.apiService.getCoachees(true).subscribe(function (coachees) {
             console.log('getAllCoachees subscribe, coachees : ', coachees);
             //filter coachee with NO selected coachs
             var notAssociatedCoachees = new Array();
@@ -52,7 +52,7 @@ var CoacheesListComponent = (function () {
             templateUrl: './coachees-list.component.html',
             styleUrls: ['./coachees-list.component.scss']
         }),
-        __metadata("design:paramtypes", [AdminAPIService, ChangeDetectorRef])
+        __metadata("design:paramtypes", [CoachCoacheeService, ChangeDetectorRef])
     ], CoacheesListComponent);
     return CoacheesListComponent;
 }());

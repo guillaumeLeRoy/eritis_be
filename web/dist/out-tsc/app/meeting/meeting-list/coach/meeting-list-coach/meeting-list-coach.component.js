@@ -7,10 +7,9 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
-import { ChangeDetectorRef, Component } from "@angular/core";
+import { ChangeDetectorRef, Component, Input } from "@angular/core";
 import { MeetingsService } from "../../../../service/meetings.service";
 import { CoachCoacheeService } from "../../../../service/coach_coachee.service";
-import { AuthService } from "../../../../service/auth.service";
 import { Observable } from "rxjs/Observable";
 import { Coach } from "../../../../model/Coach";
 var MeetingListCoachComponent = (function () {
@@ -21,12 +20,12 @@ var MeetingListCoachComponent = (function () {
      * @param authService
      * @param cd
      */
-    function MeetingListCoachComponent(meetingsService, coachCoacheeService, authService, cd) {
-        this.meetingsService = meetingsService;
+    function MeetingListCoachComponent(coachCoacheeService, meetingsService, cd) {
         this.coachCoacheeService = coachCoacheeService;
-        this.authService = authService;
+        this.meetingsService = meetingsService;
         this.cd = cd;
         this.loading = true;
+        this.isAdmin = false;
         this.hasOpenedMeeting = false;
         this.hasClosedMeeting = false;
         this.hasUnbookedMeeting = false;
@@ -34,6 +33,7 @@ var MeetingListCoachComponent = (function () {
     MeetingListCoachComponent.prototype.ngOnInit = function () {
         console.log('ngOnInit');
         this.loading = true;
+        this.user = Observable.of(this.mUser);
     };
     MeetingListCoachComponent.prototype.ngAfterViewInit = function () {
         console.log('ngAfterViewInit');
@@ -44,49 +44,37 @@ var MeetingListCoachComponent = (function () {
         if (this.subscription) {
             this.subscription.unsubscribe();
         }
-        if (this.connectedUserSubscription) {
-            this.connectedUserSubscription.unsubscribe();
-        }
     };
     MeetingListCoachComponent.prototype.onRefreshRequested = function () {
-        var _this = this;
-        var user = this.authService.getConnectedUser();
-        console.log('onRefreshRequested, user : ', user);
-        if (user == null) {
-            this.connectedUserSubscription = this.authService.getConnectedUserObservable().subscribe(function (user) {
-                console.log('onRefreshRequested, getConnectedUser');
-                _this.onUserObtained(user);
-            });
-        }
-        else {
-            this.onUserObtained(user);
-        }
+        this.onUserObtained(this.mUser);
     };
     MeetingListCoachComponent.prototype.onUserObtained = function (user) {
         console.log('onUserObtained, user : ', user);
-        if (user) {
-            if (user instanceof Coach) {
-                // coach
-                console.log('get a coach');
-                this.getAllMeetingsForCoach(user.id);
-            }
-            this.user = Observable.of(user);
-            this.cd.detectChanges();
-        }
+        this.getAllMeetingsForCoach(user.id);
+        this.user = Observable.of(user);
+        this.cd.detectChanges();
     };
     MeetingListCoachComponent.prototype.getAllMeetingsForCoach = function (coachId) {
         var _this = this;
-        this.subscription = this.meetingsService.getAllMeetingsForCoachId(coachId)
+        this.subscription = this.meetingsService.getAllMeetingsForCoachId(coachId, this.isAdmin)
             .subscribe(function (meetings) {
             console.log('got meetings for coach', meetings);
-            _this.meetingsArray = meetings;
-            _this.meetings = Observable.of(meetings);
-            _this.getBookedMeetings();
-            _this.getClosedMeetings();
-            _this.getUnbookedMeetings();
-            _this.cd.detectChanges();
+            _this.onMeetingsObtained(meetings);
+        }, function (error) {
+            console.log('got meetings for coach ERROR', error);
             _this.loading = false;
         });
+    };
+    MeetingListCoachComponent.prototype.onMeetingsObtained = function (meetings) {
+        console.log('got meetings for coach', meetings);
+        this.meetingsArray = meetings;
+        this.meetings = Observable.of(meetings);
+        this.getBookedMeetings();
+        this.getUnbookedMeetings();
+        this.getClosedMeetings();
+        this.loading = false;
+        console.log('got meetings, loading', this.loading);
+        this.cd.detectChanges();
     };
     MeetingListCoachComponent.prototype.getClosedMeetings = function () {
         console.log('getClosedMeetings');
@@ -229,13 +217,21 @@ var MeetingListCoachComponent = (function () {
             Materialize.toast('Impossible de clore la séance', 3000, 'rounded');
         });
     };
+    __decorate([
+        Input(),
+        __metadata("design:type", Coach)
+    ], MeetingListCoachComponent.prototype, "mUser", void 0);
+    __decorate([
+        Input(),
+        __metadata("design:type", Boolean)
+    ], MeetingListCoachComponent.prototype, "isAdmin", void 0);
     MeetingListCoachComponent = __decorate([
         Component({
             selector: 'rb-meeting-list-coach',
             templateUrl: './meeting-list-coach.component.html',
             styleUrls: ['./meeting-list-coach.component.scss']
         }),
-        __metadata("design:paramtypes", [MeetingsService, CoachCoacheeService, AuthService, ChangeDetectorRef])
+        __metadata("design:paramtypes", [CoachCoacheeService, MeetingsService, ChangeDetectorRef])
     ], MeetingListCoachComponent);
     return MeetingListCoachComponent;
 }());

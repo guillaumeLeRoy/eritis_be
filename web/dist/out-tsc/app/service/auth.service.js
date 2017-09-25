@@ -116,86 +116,129 @@ var AuthService = (function () {
     AuthService.prototype.isAuthenticated = function () {
         return this.isUserAuth.asObservable();
     };
-    AuthService.prototype.post = function (path, params, body, options) {
+    /*
+     *
+     * define POST methods
+     * */
+    AuthService.prototype.post = function (path, params, body, options, isAdmin) {
         var _this = this;
-        var method = this.getConnectedApiUser().flatMap(function (firebaseUser) {
-            return _this.getHeader(firebaseUser).flatMap(function (headers) {
-                if (options != undefined) {
-                    for (var _i = 0, _a = options.headers.keys(); _i < _a.length; _i++) {
-                        var headerKey = _a[_i];
-                        console.log('post, options headerKey : ', headerKey);
-                        console.log('post, options value : ', options.headers.get(headerKey));
-                        headers.append(headerKey, options.headers.get(headerKey));
+        if (isAdmin) {
+            return this.internal_post(path, params, body, options, true);
+        }
+        else {
+            return this.getConnectedApiUser().flatMap(function (firebaseUser) {
+                return _this.getHeader(firebaseUser).flatMap(function (headers) {
+                    //todo to change
+                    if (options != undefined) {
+                        for (var _i = 0, _a = options.headers.keys(); _i < _a.length; _i++) {
+                            var headerKey = _a[_i];
+                            headers.append(headerKey, options.headers.get(headerKey));
+                        }
                     }
-                }
-                return _this.httpService.post(_this.generatePath(path, params), body, { headers: headers });
+                    return _this.internal_post(path, params, body, { headers: headers });
+                });
             });
-        });
-        return method;
+        }
     };
     AuthService.prototype.postNotAuth = function (path, params, body) {
-        return this.httpService.post(this.generatePath(path, params), body);
+        return this.internal_post(path, params, body);
     };
-    AuthService.prototype.put = function (path, params, body, options) {
+    AuthService.prototype.internal_post = function (path, params, body, options, isAdmin) {
+        return this.httpService.post(this.generatePath(path, params, isAdmin), body, options);
+    };
+    /*
+     *
+     * define PUT
+     * */
+    AuthService.prototype.put = function (path, params, body, options, isAdmin) {
         var _this = this;
-        var method = this.getConnectedApiUser().flatMap(function (firebaseUser) {
-            return _this.getHeader(firebaseUser).flatMap(function (headers) {
-                if (options != null)
-                    for (var _i = 0, _a = options.headers.keys(); _i < _a.length; _i++) {
-                        var headerKey = _a[_i];
-                        console.log('put, options headerKey : ', headerKey);
-                        console.log('put, options value : ', options.headers.get(headerKey));
-                        headers.append(headerKey, options.headers.get(headerKey));
+        if (isAdmin) {
+            return this.internal_put(path, params, body, options, true);
+        }
+        else {
+            return this.getConnectedApiUser().flatMap(function (firebaseUser) {
+                return _this.getHeader(firebaseUser).flatMap(function (headers) {
+                    // add params headers to received ones
+                    if (options != null) {
+                        for (var _i = 0, _a = headers.keys(); _i < _a.length; _i++) {
+                            var headerKey = _a[_i];
+                            options.headers.append(headerKey, headers.get(headerKey));
+                        }
                     }
-                return _this.httpService.put(_this.generatePath(path, params), body, { headers: headers });
+                    // for (let headerKey of options.headers.keys()) {
+                    //   headers.append(headerKey, options.headers.get(headerKey));
+                    // }
+                    // return this.httpService.put(this.generatePath(path, params), body, {headers: headers})
+                    return _this.internal_put(path, params, body, options);
+                });
             });
-        });
-        return method;
+        }
     };
     AuthService.prototype.putNotAuth = function (path, params, body, options) {
-        var headers = new Headers();
-        if (options != null)
-            for (var _i = 0, _a = options.headers.keys(); _i < _a.length; _i++) {
-                var headerKey = _a[_i];
-                console.log('put, options headerKey : ', headerKey);
-                console.log('put, options value : ', options.headers.get(headerKey));
-                headers.append(headerKey, options.headers.get(headerKey));
-            }
-        return this.httpService.put(this.generatePath(path, params), body, { headers: headers });
+        // let headers = new Headers();
+        // if (options != null)
+        //   for (let headerKey of options.headers.keys()) {
+        //     headers.append(headerKey, options.headers.get(headerKey));
+        //   }
+        // return this.httpService.put(this.generatePath(path, params), body, {headers: headers})
+        return this.internal_put(path, params, body, options);
     };
-    AuthService.prototype.get = function (path, params) {
-        return this.getWithSearchParams(path, params, null);
+    AuthService.prototype.internal_put = function (path, params, body, options, isAdmin) {
+        // let headers = new Headers();
+        // if (options != null)
+        //   for (let headerKey of options.headers.keys()) {
+        //     headers.append(headerKey, options.headers.get(headerKey));
+        //   }
+        return this.httpService.put(this.generatePath(path, params, isAdmin), body, options);
     };
-    AuthService.prototype.getWithSearchParams = function (path, params, searchParams) {
+    /*
+     *
+     * define GET
+     * */
+    AuthService.prototype.get = function (path, params, isAdmin) {
+        return this.getWithSearchParams(path, params, null, isAdmin);
+    };
+    AuthService.prototype.getWithSearchParams = function (path, params, searchParams, isAdmin) {
         var _this = this;
-        console.log("1. get");
-        var method = this.getConnectedApiUser().flatMap(function (firebaseUser) {
-            return _this.getHeader(firebaseUser).flatMap(function (headers) {
-                console.log("4. start request");
-                return _this.httpService.get(_this.generatePath(path, params), { headers: headers, search: searchParams });
+        if (isAdmin) {
+            return this.internal_get(path, params, { search: searchParams }, true);
+        }
+        else {
+            return this.getConnectedApiUser().flatMap(function (firebaseUser) {
+                return _this.getHeader(firebaseUser).flatMap(function (headers) {
+                    return _this.internal_get(path, params, { headers: headers, search: searchParams });
+                });
             });
-        });
-        return method;
-    };
-    AuthService.prototype.delete = function (path, params) {
-        var _this = this;
-        var method = this.getConnectedApiUser().flatMap(function (firebaseUser) {
-            return _this.getHeader(firebaseUser).flatMap(function (headers) {
-                console.log("4. start request");
-                return _this.httpService.delete(_this.generatePath(path, params), { headers: headers });
-            });
-        });
-        return method;
+        }
     };
     AuthService.prototype.getNotAuth = function (path, params) {
-        console.log("getNotAuth, start request");
-        return this.httpService.get(this.generatePath(path, params)).map(function (res) {
-            console.log("getNotAuth, got user", res);
+        return this.internal_get(path, params).map(function (res) {
             return res;
         }, function (error) {
             console.log("getNotAuth, error", error);
         });
     };
+    AuthService.prototype.internal_get = function (path, params, options, isAdmin) {
+        return this.httpService.get(this.generatePath(path, params, isAdmin), options);
+    };
+    /*
+     *
+     * define DELETE
+     * */
+    AuthService.prototype.delete = function (path, params, isAdmin) {
+        var _this = this;
+        var method = this.getConnectedApiUser().flatMap(function (firebaseUser) {
+            return _this.getHeader(firebaseUser).flatMap(function (headers) {
+                console.log("4. start request");
+                return _this.httpService.delete(_this.generatePath(path, params, isAdmin), { headers: headers });
+            });
+        });
+        return method;
+    };
+    /*
+     *
+     * OPEN api
+     * */
     AuthService.prototype.getPotentialCoachee = function (path, params) {
         return this.httpService.get(this.generatePath(path, params)).map(function (res) {
             return PotentialCoachee.parsePotentialCoachee(res.json());
@@ -257,10 +300,14 @@ var AuthService = (function () {
             return Observable.throw('No current user');
         }
     };
-    AuthService.prototype.generatePath = function (path, params) {
+    AuthService.prototype.generatePath = function (path, params, isAdmin) {
         // console.log("generatePath, path : ", path);
         // console.log("generatePath, params : ", params);
         var completedPath = "";
+        //add a "admin" if necessary
+        if (isAdmin) {
+            completedPath += "/admins";
+        }
         var segs = path.split("/");
         var paramIndex = 0;
         for (var _i = 0, segs_1 = segs; _i < segs_1.length; _i++) {
@@ -381,7 +428,7 @@ var AuthService = (function () {
             var headers = new Headers();
             headers.append('Authorization', 'Bearer ' + token);
             // start sign up request
-            return _this.httpService.post(_this.generatePath(path, params), body, { headers: headers })
+            return _this.internal_post(path, params, body, { headers: headers })
                 .map(function (response) {
                 var loginResponse = response.json();
                 console.log("signUp, loginResponse : ", loginResponse);
@@ -522,10 +569,10 @@ var AuthService = (function () {
     };
     /* contract plan*/
     AuthService.GET_CONTRACT_PLANS = "/v1/plans/";
+    AuthService.LOGIN = "/v1/login/:firebaseId";
     AuthService.POST_POTENTIAL_COACHEE = "/v1/potentials/coachees";
     AuthService.POST_POTENTIAL_COACH = "/v1/potentials/coachs";
     AuthService.POST_POTENTIAL_RH = "/v1/potentials/rhs";
-    AuthService.LOGIN = "/login/:firebaseId";
     AuthService.GET_POTENTIAL_COACHEE_FOR_TOKEN = "/v1/potentials/coachees/:token";
     AuthService.GET_POTENTIAL_COACH_FOR_TOKEN = "/v1/potentials/coachs/:token";
     AuthService.GET_POTENTIAL_RH_FOR_TOKEN = "/v1/potentials/rhs/:token";
@@ -550,6 +597,7 @@ var AuthService = (function () {
     AuthService.PUT_COACH_NOTIFICATIONS_READ = "/v1/coachs/:id/notifications/read";
     AuthService.PUT_COACH_PROFILE_PICT = "/v1/coachs/:id/profile_picture";
     /* HR */
+    AuthService.GET_RHS = "/v1/rhs";
     AuthService.UPDATE_RH = "/v1/rhs/:id";
     AuthService.POST_SIGN_UP_RH = "/v1/rhs";
     AuthService.GET_COACHEES_FOR_RH = "/v1/rhs/:uid/coachees";
@@ -561,18 +609,9 @@ var AuthService = (function () {
     AuthService.POST_COACHEE_OBJECTIVE = "/v1/rhs/:uidRH/coachees/:uidCoachee/objective"; //create new objective for this coachee
     AuthService.PUT_RH_PROFILE_PICT = "/v1/rhs/:id/profile_picture";
     /* admin */
-    AuthService.GET_ADMIN = "/v1/admins/user";
-    AuthService.ADMIN_GET_COACHS = "/v1/admins/coachs";
-    AuthService.ADMIN_GET_COACH = "/v1/admins/coachs/:id";
-    AuthService.ADMIN_GET_COACHEES = "/v1/admins/coachees";
-    AuthService.ADMIN_GET_COACHEE = "/v1/admins/coachees/:id";
-    AuthService.ADMIN_GET_RHS = "/v1/admins/rhs";
-    AuthService.ADMIN_GET_RH = "/v1/admins/rhs/:id";
-    AuthService.ADMIN_GET_POSSIBLE_COACHS = "/v1/admins/possible_coachs";
-    AuthService.ADMIN_GET_POSSIBLE_COACH = "/v1/admins/possible_coachs/:id";
-    AuthService.ADMIN_PUT_COACH_PROFILE_PICT = "/v1/admins/coachs/:id/profile_picture";
-    AuthService.ADMIN_GET_MEETINGS_FOR_COACHEE_ID = "/v1/admins/meetings/coachees/:coacheeId";
-    AuthService.ADMIN_GET_MEETINGS_FOR_COACH_ID = "/v1/admins/meetings/coachs/:coachId";
+    AuthService.GET_ADMIN = "/v1/user";
+    AuthService.ADMIN_GET_POSSIBLE_COACHS = "/v1/possible_coachs";
+    AuthService.ADMIN_GET_POSSIBLE_COACH = "/v1/possible_coachs/:id";
     /* Meeting */
     AuthService.POST_MEETING = "/v1/meetings";
     AuthService.DELETE_MEETING = "/v1/meetings/:meetingId";

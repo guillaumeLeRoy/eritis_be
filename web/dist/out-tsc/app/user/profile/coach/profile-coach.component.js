@@ -102,6 +102,7 @@ var ProfileCoachComponent = (function () {
                 formData.append('uploadFile', _this.avatarUrl, _this.avatarUrl.name);
                 var headers = new Headers();
                 headers.append('Accept', 'application/json');
+                //todo call coachCoacheeAPIservice
                 return _this.authService.put(AuthService.PUT_COACH_PROFILE_PICT, params, formData, { headers: headers })
                     .map(function (res) { return res.json(); })
                     .catch(function (error) { return Observable.throw(error); });

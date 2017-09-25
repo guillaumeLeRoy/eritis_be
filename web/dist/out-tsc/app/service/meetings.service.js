@@ -17,9 +17,9 @@ var MeetingsService = (function () {
     function MeetingsService(apiService) {
         this.apiService = apiService;
     }
-    MeetingsService.prototype.getAllMeetingsForCoacheeId = function (coacheeId) {
+    MeetingsService.prototype.getAllMeetingsForCoacheeId = function (coacheeId, isAdmin) {
         var param = [coacheeId];
-        return this.apiService.get(AuthService.GET_MEETINGS_FOR_COACHEE_ID, param).map(function (response) {
+        return this.apiService.get(AuthService.GET_MEETINGS_FOR_COACHEE_ID, param, isAdmin).map(function (response) {
             var json = response.json();
             console.log("getAllMeetingsForCoacheeId, response json : ", json);
             var res = response.json();
@@ -31,9 +31,9 @@ var MeetingsService = (function () {
             return meetings;
         });
     };
-    MeetingsService.prototype.getAllMeetingsForCoachId = function (coachId) {
+    MeetingsService.prototype.getAllMeetingsForCoachId = function (coachId, isAdmin) {
         var param = [coachId];
-        return this.apiService.get(AuthService.GET_MEETINGS_FOR_COACH_ID, param)
+        return this.apiService.get(AuthService.GET_MEETINGS_FOR_COACH_ID, param, isAdmin)
             .map(function (response) {
             console.log("getAllMeetingsForCoachId, response : ", response);
             var res = response.json();
@@ -145,10 +145,10 @@ var MeetingsService = (function () {
      * @param meetingId
      * @returns {Observable<R>}
      */
-    MeetingsService.prototype.getMeetingPotentialTimes = function (meetingId) {
+    MeetingsService.prototype.getMeetingPotentialTimes = function (meetingId, isAdmin) {
         console.log("getMeetingPotentialTimes, meetingId : ", meetingId);
         var param = [meetingId];
-        return this.apiService.get(AuthService.GET_MEETING_POTENTIAL_DATES, param).map(function (response) {
+        return this.apiService.get(AuthService.GET_MEETING_POTENTIAL_DATES, param, isAdmin).map(function (response) {
             var dates = response.json();
             console.log("getMeetingPotentialTimes, response json : ", dates);
             var datesMilli = new Array();
@@ -161,60 +161,60 @@ var MeetingsService = (function () {
         });
     };
     //get all MeetingReview for context == SESSION_CONTEXT
-    MeetingsService.prototype.getMeetingContext = function (meetingId) {
+    MeetingsService.prototype.getMeetingContext = function (meetingId, isAdmin) {
         console.log("getMeetingContext");
         var searchParams = new URLSearchParams();
         searchParams.set('type', MEETING_REVIEW_TYPE_SESSION_CONTEXT);
         var param = [meetingId];
-        return this.apiService.getWithSearchParams(AuthService.GET_MEETING_REVIEWS, param, searchParams).map(function (response) {
+        return this.apiService.getWithSearchParams(AuthService.GET_MEETING_REVIEWS, param, searchParams, isAdmin).map(function (response) {
             var json = response.json();
             console.log("getMeetingContext, response json : ", json);
             return json;
         });
     };
     //get all MeetingReview for context == SESSION_GOAL
-    MeetingsService.prototype.getMeetingGoal = function (meetingId) {
+    MeetingsService.prototype.getMeetingGoal = function (meetingId, isAdmin) {
         console.log("getMeetingGoal");
         var searchParams = new URLSearchParams();
         searchParams.set('type', MEETING_REVIEW_TYPE_SESSION_GOAL);
         var param = [meetingId];
-        return this.apiService.getWithSearchParams(AuthService.GET_MEETING_REVIEWS, param, searchParams).map(function (response) {
+        return this.apiService.getWithSearchParams(AuthService.GET_MEETING_REVIEWS, param, searchParams, isAdmin).map(function (response) {
             var json = response.json();
             console.log("getMeetingGoal, response json : ", json);
             return json;
         });
     };
     //get all MeetingReview for context == MEETING_REVIEW_TYPE_SESSION_RESULT
-    MeetingsService.prototype.getSessionReviewResult = function (meetingId) {
+    MeetingsService.prototype.getSessionReviewResult = function (meetingId, isAdmin) {
         console.log("getSessionReviewResult");
         var searchParams = new URLSearchParams();
         searchParams.set('type', MEETING_REVIEW_TYPE_SESSION_RESULT);
         var param = [meetingId];
-        return this.apiService.getWithSearchParams(AuthService.GET_MEETING_REVIEWS, param, searchParams).map(function (response) {
+        return this.apiService.getWithSearchParams(AuthService.GET_MEETING_REVIEWS, param, searchParams, isAdmin).map(function (response) {
             var json = response.json();
             console.log("getSessionReviewResult, response json : ", json);
             return json;
         });
     };
     //get all MeetingReview for context == MEETING_REVIEW_TYPE_SESSION_UTILITY
-    MeetingsService.prototype.getSessionReviewUtility = function (meetingId) {
+    MeetingsService.prototype.getSessionReviewUtility = function (meetingId, isAdmin) {
         console.log("getSessionReviewUtility");
         var searchParams = new URLSearchParams();
         searchParams.set('type', MEETING_REVIEW_TYPE_SESSION_UTILITY);
         var param = [meetingId];
-        return this.apiService.getWithSearchParams(AuthService.GET_MEETING_REVIEWS, param, searchParams).map(function (response) {
+        return this.apiService.getWithSearchParams(AuthService.GET_MEETING_REVIEWS, param, searchParams, isAdmin).map(function (response) {
             var json = response.json();
             console.log("getSessionReviewUtility, response json : ", json);
             return json;
         });
     };
     //get all MeetingReview for context == MEETING_REVIEW_TYPE_SESSION_RATE
-    MeetingsService.prototype.getSessionReviewRate = function (meetingId) {
+    MeetingsService.prototype.getSessionReviewRate = function (meetingId, isAdmin) {
         console.log("getSessionReviewRate");
         var searchParams = new URLSearchParams();
         searchParams.set('type', MEETING_REVIEW_TYPE_SESSION_RATE);
         var param = [meetingId];
-        return this.apiService.getWithSearchParams(AuthService.GET_MEETING_REVIEWS, param, searchParams).map(function (response) {
+        return this.apiService.getWithSearchParams(AuthService.GET_MEETING_REVIEWS, param, searchParams, isAdmin).map(function (response) {
             var json = response.json();
             console.log("getSessionReviewRate, response json : ", json);
             return json;

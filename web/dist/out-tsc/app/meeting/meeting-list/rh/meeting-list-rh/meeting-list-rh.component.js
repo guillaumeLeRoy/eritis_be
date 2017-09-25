@@ -7,7 +7,7 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
-import { ChangeDetectorRef, Component } from "@angular/core";
+import { ChangeDetectorRef, Component, Input } from "@angular/core";
 import { CoachCoacheeService } from "../../../../service/coach_coachee.service";
 import { AuthService } from "../../../../service/auth.service";
 import { Observable } from "rxjs/Observable";
@@ -16,13 +16,14 @@ import { HR } from "../../../../model/HR";
 import { FormBuilder, Validators } from "@angular/forms";
 import { Utils } from "../../../../utils/Utils";
 var MeetingListRhComponent = (function () {
-    function MeetingListRhComponent(coachCoacheeService, authService, cd, formBuilder) {
-        this.coachCoacheeService = coachCoacheeService;
+    function MeetingListRhComponent(authService, coachCoacheeService, cd, formBuilder) {
         this.authService = authService;
+        this.coachCoacheeService = coachCoacheeService;
         this.cd = cd;
         this.formBuilder = formBuilder;
         this.loading1 = true;
         this.loading2 = true;
+        this.isAdmin = false;
         this.hasCollaborators = false;
         this.hasPotentialCollaborators = false;
         this.selectedPlan = new ContractPlan(-1);
@@ -42,30 +43,17 @@ var MeetingListRhComponent = (function () {
         this.onRefreshRequested();
     };
     MeetingListRhComponent.prototype.onRefreshRequested = function () {
-        var _this = this;
-        var user = this.authService.getConnectedUser();
-        console.log('onRefreshRequested, user : ', user);
-        if (user == null) {
-            this.connectedUserSubscription = this.authService.getConnectedUserObservable().subscribe(function (user) {
-                console.log('onRefreshRequested, getConnectedUser');
-                _this.onUserObtained(user);
-            });
-        }
-        else {
-            this.onUserObtained(user);
-        }
+        console.log('onRefreshRequested, getConnectedUser');
+        this.onUserObtained(this.mUser);
     };
     MeetingListRhComponent.prototype.onUserObtained = function (user) {
         console.log('onUserObtained, user : ', user);
         if (user) {
-            if (user instanceof HR) {
-                // rh
-                console.log('get a rh');
-                this.getAllCoacheesForRh(user.id);
-                this.getAllPotentialCoacheesForRh(user.id);
-                this.getAllContractPlans();
-                this.getUsageRate(user.id);
-            }
+            // rh
+            console.log('get a rh');
+            this.getAllCoacheesForRh(user.id);
+            this.getAllPotentialCoacheesForRh(user.id);
+            this.getAllContractPlans();
             this.user = Observable.of(user);
             this.cd.detectChanges();
         }
@@ -101,22 +89,9 @@ var MeetingListRhComponent = (function () {
             // this.cd.detectChanges();
         });
     };
-    MeetingListRhComponent.prototype.getUsageRate = function (rhId) {
-        var _this = this;
-        this.coachCoacheeService.getUsageRate(rhId).subscribe(function (rate) {
-            console.log("getUsageRate, rate : ", rate);
-            _this.HrUsageRate = Observable.of(rate);
-        });
-    };
-    MeetingListRhComponent.prototype.refreshDashboard = function () {
-        location.reload();
-    };
     MeetingListRhComponent.prototype.ngOnDestroy = function () {
         if (this.subscription) {
             this.subscription.unsubscribe();
-        }
-        if (this.connectedUserSubscription) {
-            this.connectedUserSubscription.unsubscribe();
         }
     };
     /*************************************
@@ -228,13 +203,21 @@ var MeetingListRhComponent = (function () {
             this.makeAPICallToAddNewObjective(user);
         }
     };
+    __decorate([
+        Input(),
+        __metadata("design:type", HR)
+    ], MeetingListRhComponent.prototype, "mUser", void 0);
+    __decorate([
+        Input(),
+        __metadata("design:type", Boolean)
+    ], MeetingListRhComponent.prototype, "isAdmin", void 0);
     MeetingListRhComponent = __decorate([
         Component({
             selector: 'rb-meeting-list-rh',
             templateUrl: './meeting-list-rh.component.html',
             styleUrls: ['./meeting-list-rh.component.scss']
         }),
-        __metadata("design:paramtypes", [CoachCoacheeService, AuthService, ChangeDetectorRef, FormBuilder])
+        __metadata("design:paramtypes", [AuthService, CoachCoacheeService, ChangeDetectorRef, FormBuilder])
     ], MeetingListRhComponent);
     return MeetingListRhComponent;
 }());

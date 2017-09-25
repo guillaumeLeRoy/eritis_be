@@ -9,7 +9,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 import { ChangeDetectorRef, Component } from "@angular/core";
 import { Observable } from "rxjs/Observable";
-import { AdminAPIService } from "../../service/adminAPI.service";
+import { CoachCoacheeService } from "../../service/coach_coachee.service";
 var AdminCoachsListComponent = (function () {
     function AdminCoachsListComponent(apiService, cd) {
         this.apiService = apiService;
@@ -31,7 +31,7 @@ var AdminCoachsListComponent = (function () {
     };
     AdminCoachsListComponent.prototype.fetchData = function () {
         var _this = this;
-        this.getAllCoachsSub = this.apiService.getCoachs().subscribe(function (coachs) {
+        this.getAllCoachsSub = this.apiService.getAllCoachs(true).subscribe(function (coachs) {
             console.log('getAllCoachs subscribe, coachs : ', coachs);
             _this.coachs = Observable.of(coachs);
             _this.cd.detectChanges();
@@ -44,7 +44,7 @@ var AdminCoachsListComponent = (function () {
             templateUrl: './admin-coachs-list.component.html',
             styleUrls: ['./admin-coachs-list.component.scss'],
         }),
-        __metadata("design:paramtypes", [AdminAPIService, ChangeDetectorRef])
+        __metadata("design:paramtypes", [CoachCoacheeService, ChangeDetectorRef])
     ], AdminCoachsListComponent);
     return AdminCoachsListComponent;
 }());

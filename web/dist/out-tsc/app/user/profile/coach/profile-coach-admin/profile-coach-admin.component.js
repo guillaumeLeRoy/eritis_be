@@ -9,15 +9,16 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 import { ChangeDetectorRef, Component } from "@angular/core";
 import { ActivatedRoute, Router } from "@angular/router";
-import { AdminAPIService } from "../../../../service/adminAPI.service";
 import { Observable } from "rxjs/Observable";
+import { CoachCoacheeService } from "../../../../service/coach_coachee.service";
+import { AdminAPIService } from "../../../../service/adminAPI.service";
 var ProfileCoachAdminComponent = (function () {
-    function ProfileCoachAdminComponent(apiService, router, cd, route, adminAPIService) {
+    function ProfileCoachAdminComponent(apiService, apiAdminService, router, cd, route) {
         this.apiService = apiService;
+        this.apiAdminService = apiAdminService;
         this.router = router;
         this.cd = cd;
         this.route = route;
-        this.adminAPIService = adminAPIService;
         this.loading = true;
         this.avatarLoading = false;
     }
@@ -30,7 +31,7 @@ var ProfileCoachAdminComponent = (function () {
         var _this = this;
         this.subscriptionGetCoach = this.route.params.subscribe(function (params) {
             var coachId = params['id'];
-            _this.apiService.getCoach(coachId).subscribe(function (coach) {
+            _this.apiService.getCoachForId(coachId, true).subscribe(function (coach) {
                 console.log("gotCoach", coach);
                 _this.coach = Observable.of(coach);
                 _this.cd.detectChanges();
@@ -45,7 +46,7 @@ var ProfileCoachAdminComponent = (function () {
     ProfileCoachAdminComponent.prototype.sendInvite = function (email) {
         var _this = this;
         console.log('sendInvite, email', email);
-        this.apiService.createPotentialCoach(email).subscribe(function (res) {
+        this.apiAdminService.createPotentialCoach(email).subscribe(function (res) {
             console.log('createPotentialCoach, res', res);
             _this.getCoach();
             Materialize.toast('Invitation envoyée au Coach !', 3000, 'rounded');
@@ -80,7 +81,7 @@ var ProfileCoachAdminComponent = (function () {
             console.log("Upload avatar");
             this.avatarLoading = true;
             this.coach.last().flatMap(function (coach) {
-                return _this.adminAPIService.updateCoachProfilePicture(coach.id, _this.avatarFile);
+                return _this.apiService.updateCoachProfilePicture(coach.id, _this.avatarFile);
             }).subscribe(function (res) {
                 // refresh page
                 console.log("Upload avatar, DONE, res : " + res);
@@ -98,7 +99,7 @@ var ProfileCoachAdminComponent = (function () {
             templateUrl: './profile-coach-admin.component.html',
             styleUrls: ['./profile-coach-admin.component.scss']
         }),
-        __metadata("design:paramtypes", [AdminAPIService, Router, ChangeDetectorRef, ActivatedRoute, AdminAPIService])
+        __metadata("design:paramtypes", [CoachCoacheeService, AdminAPIService, Router, ChangeDetectorRef, ActivatedRoute])
     ], ProfileCoachAdminComponent);
     return ProfileCoachAdminComponent;
 }());
