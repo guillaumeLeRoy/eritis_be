@@ -45,10 +45,10 @@ func HandlePossibleCoach(w http.ResponseWriter, r *http.Request) {
 
 		// try to detect a possible_coachs key work
 		if ok := strings.Contains(r.URL.Path, "possible_coachs"); ok {
-			params := response.PathParams(ctx, r, "/api/v1/possible_coachs/:id")
+			params := response.PathParams(ctx, r, "/v1/possible_coachs/:id")
 			userId, ok := params[":id"]
 			if ok {
-				getPossibleCoach(w, r, userId) // GET /api/v1/possible_coachs/:id
+				getPossibleCoach(w, r, userId) // GET /v1/possible_coachs/:id
 				return
 			}
 			getAllPossibleCoachs(w, r)

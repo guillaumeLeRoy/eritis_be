@@ -15,7 +15,7 @@ import (
 
 func HandlePotential(w http.ResponseWriter, r *http.Request) {
 	ctx := appengine.NewContext(r)
-	log.Debugf(ctx, "handle login")
+	log.Debugf(ctx, "handle potential")
 
 	switch r.Method {
 	case "POST":
@@ -37,30 +37,30 @@ func HandlePotential(w http.ResponseWriter, r *http.Request) {
 	case "GET":
 		if ok := strings.Contains(r.URL.Path, "coachees"); ok {
 			//get potential Coachee for this token
-			params := response.PathParams(ctx, r, "/api/v1/potentials/coachees/:token")
+			params := response.PathParams(ctx, r, "/v1/potentials/coachees/:token")
 			token, ok := params[":token"]
 			if ok {
-				handleGetPotentialCoacheeForToken(w, r, token) // GET /api/v1/potentials/coachees/:token
+				handleGetPotentialCoacheeForToken(w, r, token) // GET /v1/potentials/coachees/:token
 				return
 			}
 		}
 
 		if ok := strings.Contains(r.URL.Path, "rhs"); ok {
 			//get potential Rh for this token
-			params := response.PathParams(ctx, r, "/api/v1/potentials/rhs/:token")
+			params := response.PathParams(ctx, r, "/v1/potentials/rhs/:token")
 			token, ok := params[":token"]
 			if ok {
-				handleGetPotentialRhForToken(w, r, token) // GET /api/v1/potentials/rhs/:token
+				handleGetPotentialRhForToken(w, r, token) // GET /v1/potentials/rhs/:token
 				return
 			}
 		}
 
 		if ok := strings.Contains(r.URL.Path, "coachs"); ok {
 			//get potential Rh for this token
-			params := response.PathParams(ctx, r, "/api/v1/potentials/coachs/:token")
+			params := response.PathParams(ctx, r, "/v1/potentials/coachs/:token")
 			token, ok := params[":token"]
 			if ok {
-				handleGetPotentialCoachForToken(w, r, token) // GET /api/v1/potentials/coachs/:token
+				handleGetPotentialCoachForToken(w, r, token) // GET /v1/potentials/coachs/:token
 				return
 			}
 		}

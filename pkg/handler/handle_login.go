@@ -14,7 +14,7 @@ func HandleLogin(w http.ResponseWriter, r *http.Request) {
 
 	switch r.Method {
 	case "GET":
-		params := response.PathParams(ctx, r, "/api/login/:firebaseId")
+		params := response.PathParams(ctx, r, "/v1/login/:firebaseId")
 		uid, ok := params[":firebaseId"]
 		if ok {
 			handleGetUser(w, r, uid)// GET /api/login/:firebaseId
