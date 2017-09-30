@@ -76,8 +76,6 @@ https://eritis-be-glr.appspot.com/api/queue_tasks
 clean datastore :
 dev_appserver.py -A eritis-be-glr --clear_datastore=yes dispatch.yaml default/app.yaml api/app.yaml web/app.yaml firebase/app.yaml --enable_sendmail
 
-
-
 */
 
 // keep a ref to init the app only once
@@ -85,40 +83,7 @@ var firebaseApp *firebase.App
 
 func init() {
 
-	http.HandleFunc("/api/login/", authHandler(handler.HandleLogin))
-
-	//admin
-	//http.HandleFunc("/api/v1/admins/", adminHandler(nonAuthHandler(handler.HandleAdmin)))
-	http.HandleFunc("/api/v1/admins/", nonAuthHandler(handler.HandleAdmin))
-
-	//meetings
-	http.HandleFunc("/api/v1/meetings/", authHandler(handler.HandleMeeting))
-
-	//coach
-	http.HandleFunc("/api/coachs/", authHandler(handler.HandleCoachs))
-	http.HandleFunc("/api/v1/coachs/", authHandler(handler.HandleCoachs))
-
-	// possible coach
-	http.HandleFunc("/api/v1/possible_coachs/", nonAuthHandler(handler.HandlePossibleCoach))
-
-	//coachee
-	http.HandleFunc("/api/coachees/", authHandler(handler.HandleCoachees))
-	http.HandleFunc("/api/v1/coachees/", authHandler(handler.HandleCoachees))
-
-	//rh
-	http.HandleFunc("/api/v1/rhs/", authHandler(handler.HandlerRH))
-
-	//contact, no need to be authenticated to send a contact request
-	http.HandleFunc("/api/v1/contact/", nonAuthHandler(handler.HandleContact))
-
-	//get contract plan
-	http.HandleFunc("/api/v1/plans/", nonAuthHandler(handler.HandleContractPlan))
-
-	//cron
-	http.HandleFunc("/api/v1/crons/", nonAuthHandler(handler.HandleCron))
-
-	//potentials
-	http.HandleFunc("/api/v1/potentials/", nonAuthHandler(handler.HandlePotential))
+	http.HandleFunc("/api/", redirectToHandler)
 
 	//test email
 	http.HandleFunc("/api/email/", handler.HandlerTestEmail)
@@ -131,6 +96,85 @@ func init() {
 	// worker
 	http.HandleFunc("/api/queue_tasks", defaultHandler)
 	http.HandleFunc("/api/worker", worker)
+}
+
+func redirectToHandler(w http.ResponseWriter, r *http.Request) {
+	ctx := appengine.NewContext(r)
+
+	originUrl := r.URL.Path
+
+	log.Debugf(ctx, "redirectToHandler, originUrl %s", originUrl)
+
+	// strip /api from Url
+	originUrl = strings.TrimPrefix(originUrl, "/api")
+	r.URL.Path = originUrl
+	log.Debugf(ctx, "redirectToHandler, trimmed %s", originUrl)
+
+	if strings.HasPrefix(originUrl, "/admins") {
+		log.Debugf(ctx, "redirectToHandler, admin request")
+		originUrl = strings.TrimPrefix(originUrl, "/admins")
+		r.URL.Path = originUrl
+
+		//if !appengine.IsDevAppServer() {
+		//	u := user.Current(ctx)
+		//
+		//	if u != nil {
+		//		log.Debugf(ctx, "adminHandler, is admin ? %s, email %s", u.Admin, u.Email)
+		//
+		//		if !u.Admin {
+		//			log.Debugf(ctx, "adminHandler, restricted access")
+		//			response.RespondErr(ctx, w, r, errors.New("restricted access"), http.StatusUnauthorized)
+		//			return
+		//		}
+		//
+		//	} else {
+		//		log.Debugf(ctx, "adminHandler, no user")
+		//		url, _ := user.LoginURL(ctx, "admin")
+		//		log.Debugf(ctx, "adminHandler, redirect to %s", url)
+		//
+		//		response.RespondErr(ctx, w, r, errors.New(url), http.StatusTemporaryRedirect)
+		//		//response.RespondErr(ctx, w, r, err, http.StatusTemporaryRedirect)
+		//		return
+		//	}
+		//}
+
+		log.Debugf(ctx, "redirectToHandler, admin request authorised")
+
+		//auth ok, continue
+		if strings.Contains(originUrl, "user") {
+			handler.HandleAdmin(w, r)
+		} else {
+			handleAPI(w, r, true)
+		}
+	} else {
+		handleAPI(w, r, false)
+	}
+}
+
+func handleAPI(w http.ResponseWriter, r *http.Request, isAdmin bool) {
+	originUrl := r.URL.Path
+
+	if strings.HasPrefix(originUrl, "/v1/login") {
+		nonAuthHandler(handler.HandleLogin)(w, r)
+	} else if strings.HasPrefix(originUrl, "/v1/meetings") {
+		authHandler(handler.HandleMeeting, isAdmin)(w, r, )
+	} else if strings.HasPrefix(originUrl, "/v1/coachs") {
+		authHandler(handler.HandleCoachs, isAdmin)(w, r)
+	} else if strings.HasPrefix(originUrl, "/v1/possible_coachs") {
+		nonAuthHandler(handler.HandlePossibleCoach)(w, r)
+	} else if strings.HasPrefix(originUrl, "/v1/coachees") {
+		authHandler(handler.HandleCoachees, isAdmin)(w, r)
+	} else if strings.HasPrefix(originUrl, "/v1/rhs") {
+		authHandler(handler.HandlerRH, isAdmin)(w, r)
+	} else if strings.HasPrefix(originUrl, "/v1/contact") {
+		nonAuthHandler(handler.HandleContact)(w, r)
+	} else if strings.HasPrefix(originUrl, "/v1/plans") {
+		nonAuthHandler(handler.HandleContractPlan)(w, r)
+	} else if strings.HasPrefix(originUrl, "/v1/crons") {
+		nonAuthHandler(handler.HandleCron)(w, r)
+	} else if strings.HasPrefix(originUrl, "/v1/potentials") {
+		authHandler(handler.HandlePotential, isAdmin)(w, r)
+	}
 }
 
 func defaultHandler(w http.ResponseWriter, r *http.Request) {
@@ -244,7 +288,7 @@ func getFirebaseJsonReader(ctx context.Context) (*storage.Reader, error) {
 	return rdr, nil
 }
 
-func authHandler(handler func(w http.ResponseWriter, r *http.Request)) http.HandlerFunc {
+func authHandler(handler func(w http.ResponseWriter, r *http.Request), isAdmin bool) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := appengine.NewContext(r)
 
@@ -266,29 +310,28 @@ func authHandler(handler func(w http.ResponseWriter, r *http.Request)) http.Hand
 
 			log.Debugf(ctx, "IsDevAppServer: %v", appengine.IsDevAppServer())
 
-			u := user.Current(ctx)
-			log.Debugf(ctx, "authHandler, user %s", u)
-			if u != nil {
-				log.Debugf(ctx, "authHandler, is admin ? %s, email %s", u.Admin, u.Email)
-				if u.Admin {
-					//no auth needed
-					handler(w, r)
-					return
-				} else {
-					response.RespondErr(ctx, w, r, errors.New("Need to be an admin"), http.StatusUnauthorized)
-					return
-				}
-			}
+			//u := user.Current(ctx)
+			//log.Debugf(ctx, "authHandler, user %s", u)
+			//if u != nil {
+			//	log.Debugf(ctx, "authHandler, is admin ? %s, email %s", u.Admin, u.Email)
+			//	if u.Admin {
+			//		//no auth needed
+			//		handler(w, r)
+			//		return
+			//	} else {
+			//		response.RespondErr(ctx, w, r, errors.New("Need to be an admin"), http.StatusUnauthorized)
+			//		return
+			//	}
+			//}
 
 			//only very Firebase Token if we are on a server and NOT an admin
-			if !appengine.IsDevAppServer() {
+			if !isAdmin && !appengine.IsDevAppServer() {
 				err := verifyFirebaseAuth(ctx, w, r)
 				if err != nil {
 					response.RespondErr(ctx, w, r, err, http.StatusUnauthorized)
 					return
 				}
 			}
-
 			//auth ok, continue
 			handler(w, r)
 		}
@@ -404,11 +447,15 @@ func adminHandler(handler func(w http.ResponseWriter, r *http.Request)) http.Han
 		} else {
 			log.Debugf(ctx, "adminHandler, no user")
 			//url, _ := user.LoginURL(ctx, "dist/index.html")
-			url, _ := user.LoginURL(ctx, "admin")
+			url, err := user.LoginURL(ctx, "admin")
 			//fmt.Fprintf(w, `<a href="%s">Sign in or register</a>`, url)
 
 			//fmt.Fprint("sign in %s",url)
-			response.RespondErr(ctx, w, r, errors.New(url), http.StatusOK)
+
+			log.Debugf(ctx, "adminHandler, redirect to %s", url)
+
+			//response.RespondErr(ctx, w, r, errors.New(url), http.StatusTemporaryRedirect)
+			response.RespondErr(ctx, w, r, err, http.StatusTemporaryRedirect)
 
 			return
 		}

@@ -35,25 +35,25 @@ func HandleCoachs(w http.ResponseWriter, r *http.Request) {
 		if contains {
 			log.Debugf(ctx, "handle coachs, notifications")
 
-			params := response.PathParams(ctx, r, "/api/v1/coachs/:uid/notifications")
+			params := response.PathParams(ctx, r, "/v1/coachs/:uid/notifications")
 			//verify url contains coach
 			if _, ok := params[":uid"]; ok {
 				//get uid param
 				uid, ok := params[":uid"]
 				if ok {
-					getAllNotificationsForCoach(w, r, uid) // GET /api/v1/coachs/:uid/notifications
+					getAllNotificationsForCoach(w, r, uid) // GET /v1/coachs/:uid/notifications
 					return
 				}
 			}
 		}
 
-		params := response.PathParams(ctx, r, "/api/v1/coachs/:id")
+		params := response.PathParams(ctx, r, "/v1/coachs/:id")
 		userId, ok := params[":id"]
 		if ok {
-			handleGetCoachForId(w, r, userId) // GET /api/v1/coachs/ID
+			handleGetCoachForId(w, r, userId) // GET /v1/coachs/ID
 			return
 		}
-		handleGetAllCoachs(w, r) // GET /api/v1/coachs/
+		handleGetAllCoachs(w, r) // GET /v1/coachs/
 		return
 
 	case "PUT":
@@ -61,7 +61,7 @@ func HandleCoachs(w http.ResponseWriter, r *http.Request) {
 		//update "read" status for all Notifications
 		contains := strings.Contains(r.URL.Path, "notifications/read")
 		if contains {
-			params := response.PathParams(ctx, r, "/api/v1/coachs/:uid/notifications/read")
+			params := response.PathParams(ctx, r, "/v1/coachs/:uid/notifications/read")
 			uid, ok := params[":uid"]
 			if ok {
 				updateAllNotificationToRead(w, r, uid)
@@ -72,7 +72,7 @@ func HandleCoachs(w http.ResponseWriter, r *http.Request) {
 		// upload picture
 		contains = strings.Contains(r.URL.Path, "profile_picture")
 		if contains {
-			params := response.PathParams(ctx, r, "/api/v1/coachs/:uid/profile_picture")
+			params := response.PathParams(ctx, r, "/v1/coachs/:uid/profile_picture")
 			uid, ok := params[":uid"]
 			if ok {
 				uploadCoachProfilePicture(w, r, uid)
@@ -80,7 +80,7 @@ func HandleCoachs(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 
-		params := response.PathParams(ctx, r, "/api/v1/coachs/:id")
+		params := response.PathParams(ctx, r, "/v1/coachs/:id")
 		userId, ok := params[":id"]
 		if ok {
 			handleUpdateCoachForId(w, r, userId)

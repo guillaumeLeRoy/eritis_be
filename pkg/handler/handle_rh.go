@@ -14,7 +14,7 @@ import (
 
 func HandlerRH(w http.ResponseWriter, r *http.Request) {
 	ctx := appengine.NewContext(r)
-	log.Debugf(ctx, "handle meeting")
+	log.Debugf(ctx, "HandlerRH")
 
 	switch r.Method {
 	case "POST":
@@ -24,12 +24,12 @@ func HandlerRH(w http.ResponseWriter, r *http.Request) {
 		 */
 		if ok := strings.Contains(r.URL.Path, "objective"); ok {
 			// update coachee's objective set by an HR
-			params := response.PathParams(ctx, r, "/api/v1/rhs/:uidRH/coachees/:uidCoachee/objective")
+			params := response.PathParams(ctx, r, "/v1/rhs/:uidRH/coachees/:uidCoachee/objective")
 			//get uid param
 			uidRH, ok := params[":uidRH"]
 			uidCoachee, ok := params[":uidCoachee"]
 			if ok {
-				handleAddObjectiveToCoachee(w, r, uidRH, uidCoachee) // PUT /api/v1/rhs/:uidRH/coachees/:uidCoachee/objective
+				handleAddObjectiveToCoachee(w, r, uidRH, uidCoachee) // PUT /v1/rhs/:uidRH/coachees/:uidCoachee/objective
 				return
 			}
 		}
@@ -49,7 +49,7 @@ func HandlerRH(w http.ResponseWriter, r *http.Request) {
 		//update "read" status for all Notifications
 		contains := strings.Contains(r.URL.Path, "notifications/read")
 		if contains {
-			params := response.PathParams(ctx, r, "/api/v1/rhs/:uid/notifications/read")
+			params := response.PathParams(ctx, r, "/v1/rhs/:uid/notifications/read")
 			uid, ok := params[":uid"]
 			if ok {
 				updateAllNotificationToRead(w, r, uid)
@@ -60,19 +60,19 @@ func HandlerRH(w http.ResponseWriter, r *http.Request) {
 		// upload picture
 		contains = strings.Contains(r.URL.Path, "profile_picture")
 		if contains {
-			params := response.PathParams(ctx, r, "/api/v1/rhs/:uid/profile_picture")
+			params := response.PathParams(ctx, r, "/v1/rhs/:uid/profile_picture")
 			uid, ok := params[":uid"]
 			if ok {
-				uploadHrProfilePicture(w, r, uid) //PUT /api/v1/rhs/:uid/profile_picture
+				uploadHrProfilePicture(w, r, uid) //PUT /v1/rhs/:uid/profile_picture
 				return
 			}
 		}
 
 		// update HR
-		params := response.PathParams(ctx, r, "/api/v1/rhs/:id")
+		params := response.PathParams(ctx, r, "/v1/rhs/:id")
 		userId, ok := params[":id"]
 		if ok {
-			handleUpdateHrForId(w, r, userId) //PUT /api/v1/rhs/:id
+			handleUpdateHrForId(w, r, userId) //PUT /v1/rhs/:id
 			return
 		}
 
@@ -87,13 +87,13 @@ func HandlerRH(w http.ResponseWriter, r *http.Request) {
 		if contains {
 			log.Debugf(ctx, "handle rhs, notifications")
 
-			params := response.PathParams(ctx, r, "/api/v1/rhs/:uid/notifications")
+			params := response.PathParams(ctx, r, "/v1/rhs/:uid/notifications")
 			//verify url contains coach
 			if _, ok := params[":uid"]; ok {
 				//get uid param
 				uid, ok := params[":uid"]
 				if ok {
-					getAllNotificationsForRhs(w, r, uid) // GET /api/v1/rhs/:uid/notifications
+					getAllNotificationsForRhs(w, r, uid) // GET /v1/rhs/:uid/notifications
 					return
 				}
 			}
@@ -104,11 +104,11 @@ func HandlerRH(w http.ResponseWriter, r *http.Request) {
 		 */
 		contains = strings.Contains(r.URL.Path, "coachees")
 		if contains {
-			params := response.PathParams(ctx, r, "/api/v1/rhs/:uid/coachees")
+			params := response.PathParams(ctx, r, "/v1/rhs/:uid/coachees")
 			//get uid param
 			uid, ok := params[":uid"]
 			if ok {
-				handleGetAllCoacheesForRH(w, r, uid) // GET /api/v1/rhs/:uid/coachees
+				handleGetAllCoacheesForRH(w, r, uid) // GET /v1/rhs/:uid/coachees
 				return
 			}
 		}
@@ -118,11 +118,11 @@ func HandlerRH(w http.ResponseWriter, r *http.Request) {
 		 */
 		contains = strings.Contains(r.URL.Path, "potentials")
 		if contains {
-			params := response.PathParams(ctx, r, "/api/v1/rhs/:uid/potentials")
+			params := response.PathParams(ctx, r, "/v1/rhs/:uid/potentials")
 			//get uid param
 			uid, ok := params[":uid"]
 			if ok {
-				handleGetAllPotentialsForRH(w, r, uid) // GET /api/v1/rhs/:uid/potentials
+				handleGetAllPotentialsForRH(w, r, uid) // GET /v1/rhs/:uid/potentials
 				return
 			}
 		}
@@ -132,11 +132,11 @@ func HandlerRH(w http.ResponseWriter, r *http.Request) {
 		 */
 		contains = strings.Contains(r.URL.Path, "usage")
 		if contains {
-			params := response.PathParams(ctx, r, "/api/v1/rhs/:uid/usage")
+			params := response.PathParams(ctx, r, "/v1/rhs/:uid/usage")
 			//get uid param
 			uid, ok := params[":uid"]
 			if ok {
-				handleGetHRusageRate(w, r, uid) // GET /api/v1/rhs/:uid/usage
+				handleGetHRusageRate(w, r, uid) // GET /v1/rhs/:uid/usage
 				return
 			}
 		}
@@ -144,10 +144,19 @@ func HandlerRH(w http.ResponseWriter, r *http.Request) {
 		/**
 		* Get HR for uid
 		 */
-		params := response.PathParams(ctx, r, "/api/v1/rhs/:id")
+		params := response.PathParams(ctx, r, "/v1/rhs/:id")
 		userId, ok := params[":id"]
 		if ok {
-			handleGetHrForId(w, r, userId) // GET /api/v1/rhs/ID
+			handleGetHrForId(w, r, userId) // GET /v1/rhs/ID
+			return
+		}
+
+		/**
+		* Get all HRs
+		*/
+		contains = strings.Contains(r.URL.Path, "rhs")
+		if contains {
+			handleGetAllRHs(w, r)
 			return
 		}
 
