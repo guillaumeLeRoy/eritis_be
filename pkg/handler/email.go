@@ -236,6 +236,54 @@ const MEETING_CREATED_MSG = `
 </html>
 `
 
+const MEETING_UPDATED_TITLE = `Rendez-vous modifié !`
+const MEETING_UPDATED_MSG = `
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html style="color:black;">
+
+	</head>
+	<body>
+		<p>Bonjour,</p>
+		<p>Nous vous informons que vous avez bien modifié votre séance. Pour y accéder, connectez-vous sur <a href="%s">%s</a>,</p>
+		<p>A très bientôt sur notre plateforme,</p>
+		<p>L’équipe Eritis</p>
+	</body>
+</html>
+`
+
+const MEETING_CREATED_FOR_ALL_COACHS_TITLE = `Nouvelle demande!`
+const MEETING_CREATED_FOR_ALL_COACHS_MSG = `
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html style="color:black;">
+
+	</head>
+	<body>
+		<p>Bonjour,</p>
+		<p>Nous vous informons qu'une nouvelle demande vient d'être créée. Pour y accéder, connectez-vous sur <a href="%s">%s</a>,</p>
+		<p>A très bientôt sur notre plateforme,</p>
+		<p>L’équipe Eritis</p>
+	</body>
+</html>
+`
+
+const MEETING_UPDATED_FOR_ALL_COACHS_TITLE = `Demande modifiée!`
+const MEETING_UPDATED_FOR_ALL_COACHS_MSG = `
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html style="color:black;">
+
+	</head>
+	<body>
+		<p>Bonjour,</p>
+		<p>Nous vous informons qu'une demande vient d'être modifiée'. Pour y accéder, connectez-vous sur <a href="%s">%s</a>,</p>
+		<p>A très bientôt sur notre plateforme,</p>
+		<p>L’équipe Eritis</p>
+	</body>
+</html>
+`
+
 func HandleContact(w http.ResponseWriter, r *http.Request) {
 	ctx := appengine.NewContext(r)
 	log.Debugf(ctx, "handle contact")
@@ -387,6 +435,100 @@ func sendMeetingCreatedEmailToCoachee(ctx context.Context, coachee *model.Coache
 		log.Errorf(ctx, "Couldn't send email: %v", err)
 		return err
 	}
+	return nil
+}
+
+func sendMeetingUpdatedEmailToCoachee(ctx context.Context, coachee *model.Coachee) error {
+	baseUrl, err := utils.GetSiteUrl(ctx)
+	if err != nil {
+		log.Errorf(ctx, "Couldn't send email: %v", err)
+		return err
+	}
+	err = utils.SendEmailToGivenEmail(ctx, coachee.Email, MEETING_UPDATED_TITLE, fmt.Sprintf(MEETING_UPDATED_MSG, baseUrl, baseUrl))
+	if err != nil {
+		log.Errorf(ctx, "Couldn't send email: %v", err)
+		return err
+	}
+	return nil
+}
+
+func sendMeetingUpdatedEmailToCoach(ctx context.Context, coach *model.Coach) error {
+	baseUrl, err := utils.GetSiteUrl(ctx)
+	if err != nil {
+		log.Errorf(ctx, "Couldn't send email: %v", err)
+		return err
+	}
+	err = utils.SendEmailToGivenEmail(ctx, coach.Email, MEETING_UPDATED_TITLE, fmt.Sprintf(MEETING_UPDATED_MSG, baseUrl, baseUrl))
+	if err != nil {
+		log.Errorf(ctx, "Couldn't send email: %v", err)
+		return err
+	}
+	return nil
+}
+
+// send an email to all our coachs
+func sendMeetingCreatedEmailToAllCoachs(ctx context.Context, coachs []*model.Coach) error {
+	//url, err := utils.GetCoachListOfAvailableMeetingsUrl(ctx)
+	url, err := utils.GetSiteUrl(ctx)
+	if err != nil {
+		log.Errorf(ctx, "Couldn't send email: %v", err)
+		return err
+	}
+
+	for _, coach := range coachs {
+		err = utils.SendEmailToGivenEmail(ctx, coach.Email, MEETING_CREATED_FOR_ALL_COACHS_TITLE, fmt.Sprintf(MEETING_CREATED_FOR_ALL_COACHS_MSG, url, url))
+		if err != nil {
+			log.Errorf(ctx, "Couldn't send email: %v", err)
+			return err
+		}
+	}
+
+	if utils.IsLiveEnvironment(ctx) {
+		// send emails to Theo, Etienne, Elaine
+		err = utils.SendEmailToGivenEmail(ctx, "theo@eritis.co.uk", MEETING_CREATED_FOR_ALL_COACHS_TITLE, fmt.Sprintf(MEETING_CREATED_FOR_ALL_COACHS_MSG, url, url))
+		err = utils.SendEmailToGivenEmail(ctx, "eroy@eritis.co.uk", MEETING_CREATED_FOR_ALL_COACHS_TITLE, fmt.Sprintf(MEETING_CREATED_FOR_ALL_COACHS_MSG, url, url))
+		err = utils.SendEmailToGivenEmail(ctx, "guillaume@eritis.co.uk", MEETING_CREATED_FOR_ALL_COACHS_TITLE, fmt.Sprintf(MEETING_CREATED_FOR_ALL_COACHS_MSG, url, url))
+		err = utils.SendEmailToGivenEmail(ctx, "elaine.lecoeur@eritis.co.uk", MEETING_CREATED_FOR_ALL_COACHS_TITLE, fmt.Sprintf(MEETING_CREATED_FOR_ALL_COACHS_MSG, url, url))
+	}
+
+	if err != nil {
+		log.Errorf(ctx, "Couldn't send email: %v", err)
+		return err
+	}
+
+	return nil
+}
+
+// send an email to all our coachs
+func sendMeetingUpdatedEmailToAllCoachs(ctx context.Context, coachs []*model.Coach) error {
+	//url, err := utils.GetCoachListOfAvailableMeetingsUrl(ctx)
+	url, err := utils.GetSiteUrl(ctx)
+	if err != nil {
+		log.Errorf(ctx, "Couldn't send email: %v", err)
+		return err
+	}
+
+	for _, coach := range coachs {
+		err = utils.SendEmailToGivenEmail(ctx, coach.Email, MEETING_UPDATED_FOR_ALL_COACHS_TITLE, fmt.Sprintf(MEETING_UPDATED_FOR_ALL_COACHS_MSG, url, url))
+		if err != nil {
+			log.Errorf(ctx, "Couldn't send email: %v", err)
+			return err
+		}
+	}
+
+	if utils.IsLiveEnvironment(ctx) {
+		// send emails to Theo, Etienne, Elaine
+		err = utils.SendEmailToGivenEmail(ctx, "theo@eritis.co.uk", MEETING_UPDATED_FOR_ALL_COACHS_TITLE, fmt.Sprintf(MEETING_UPDATED_FOR_ALL_COACHS_MSG, url, url))
+		err = utils.SendEmailToGivenEmail(ctx, "eroy@eritis.co.uk", MEETING_UPDATED_FOR_ALL_COACHS_TITLE, fmt.Sprintf(MEETING_UPDATED_FOR_ALL_COACHS_MSG, url, url))
+		err = utils.SendEmailToGivenEmail(ctx, "guillaume@eritis.co.uk", MEETING_UPDATED_FOR_ALL_COACHS_TITLE, fmt.Sprintf(MEETING_UPDATED_FOR_ALL_COACHS_MSG, url, url))
+		err = utils.SendEmailToGivenEmail(ctx, "elaine.lecoeur@eritis.co.uk", MEETING_UPDATED_FOR_ALL_COACHS_TITLE, fmt.Sprintf(MEETING_UPDATED_FOR_ALL_COACHS_MSG, url, url))
+	}
+
+	if err != nil {
+		log.Errorf(ctx, "Couldn't send email: %v", err)
+		return err
+	}
+
 	return nil
 }
 

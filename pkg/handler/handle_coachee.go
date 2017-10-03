@@ -20,7 +20,7 @@ func HandleCoachees(w http.ResponseWriter, r *http.Request) {
 
 	case "POST":
 		//try to detect a coachee
-		///api/coachees
+		///coachees
 		if ok := strings.Contains(r.URL.Path, "coachee"); ok {
 			handleCreateCoachee(w, r)
 			return
@@ -36,13 +36,13 @@ func HandleCoachees(w http.ResponseWriter, r *http.Request) {
 		if contains {
 			log.Debugf(ctx, "handle coachees, notifications")
 
-			params := response.PathParams(ctx, r, "/api/v1/coachees/:uid/notifications")
+			params := response.PathParams(ctx, r, "/v1/coachees/:uid/notifications")
 			//verify url contains coachee
 			if _, ok := params[":uid"]; ok {
 				//get uid param
 				uid, ok := params[":uid"]
 				if ok {
-					getAllNotificationsForCoachee(w, r, uid) // GET /api/v1/coachees/:uid/notifications
+					getAllNotificationsForCoachee(w, r, uid) // GET /v1/coachees/:uid/notifications
 					return
 				}
 			}
@@ -55,17 +55,17 @@ func HandleCoachees(w http.ResponseWriter, r *http.Request) {
 			/**
 		 	GET a specific coachee
 		 	*/
-			params := response.PathParams(ctx, r, "/api/v1/coachees/:uid")
+			params := response.PathParams(ctx, r, "/v1/coachees/:uid")
 			userId, ok := params[":uid"]
 			if ok {
-				handleGetCoacheeForId(w, r, userId) // GET /api/v1/coachees/:uid
+				handleGetCoacheeForId(w, r, userId) // GET /v1/coachees/:uid
 				return
 			}
 
 			/**
 			 GET all coachees
 			 */
-			handleGetAllCoachees(w, r) // GET /api/v1/coachees
+			handleGetAllCoachees(w, r) // GET /v1/coachees
 			return
 		}
 		http.NotFound(w, r)
@@ -74,7 +74,7 @@ func HandleCoachees(w http.ResponseWriter, r *http.Request) {
 		//update "read" status for all Notifications
 		contains := strings.Contains(r.URL.Path, "notifications/read")
 		if contains {
-			params := response.PathParams(ctx, r, "/api/v1/coachees/:uid/notifications/read")
+			params := response.PathParams(ctx, r, "/v1/coachees/:uid/notifications/read")
 			uid, ok := params[":uid"]
 			if ok {
 				updateAllNotificationToRead(w, r, uid)
@@ -85,7 +85,7 @@ func HandleCoachees(w http.ResponseWriter, r *http.Request) {
 		// upload picture
 		contains = strings.Contains(r.URL.Path, "profile_picture")
 		if contains {
-			params := response.PathParams(ctx, r, "/api/v1/coachees/:uid/profile_picture")
+			params := response.PathParams(ctx, r, "/v1/coachees/:uid/profile_picture")
 			uid, ok := params[":uid"]
 			if ok {
 				uploadCoacheeProfilePicture(w, r, uid)
@@ -94,10 +94,10 @@ func HandleCoachees(w http.ResponseWriter, r *http.Request) {
 		}
 
 		//update selected coachee
-		params := response.PathParams(ctx, r, "/api/v1/coachees/:coacheeId")
+		params := response.PathParams(ctx, r, "/v1/coachees/:coacheeId")
 		coacheeId, ok := params[":coacheeId"]
 		if ok {
-			handleUpdateCoacheeForId(w, r, coacheeId) // PUT /api/v1/coachees/ID
+			handleUpdateCoacheeForId(w, r, coacheeId) // PUT /v1/coachees/ID
 			return
 		}
 
@@ -199,7 +199,7 @@ func handleCreateCoachee(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	//get potential coachee : email must mach
+	//get potential coachee : email must match
 	potentialCoachee, err := model.GetPotentialCoacheeForEmail(ctx, body.Email)
 	if err != nil {
 		response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
@@ -210,6 +210,15 @@ func handleCreateCoachee(w http.ResponseWriter, r *http.Request) {
 
 	//we have 1 potential Coachee
 	coachee, err := model.CreateCoachee(ctx, &body.FirebaseUser, potentialCoachee.PlanId, rhKey)
+	if err != nil {
+		response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
+		return
+	}
+
+	//update with values from potential
+	coachee.FirstName = potentialCoachee.FirstName
+	coachee.LastName = potentialCoachee.LastName
+	err = coachee.Update(ctx)
 	if err != nil {
 		response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
 		return
