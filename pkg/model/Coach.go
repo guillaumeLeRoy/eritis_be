@@ -18,9 +18,9 @@ type Coach struct {
 	Key        *datastore.Key `json:"id" datastore:"-"`
 	FirebaseId string
 
-	ChatRoomURL   string `json:"chat_room_url"`
-	Score         int `json:"score"`
-	SessionsCount int `json:"sessions_count"`
+	ChatRoomURL   string    `json:"chat_room_url"`
+	Score         int       `json:"score"`
+	SessionsCount int       `json:"sessions_count"`
 	StartDate     time.Time `json:"start_date"`
 
 	Email             string `json:"email"`
@@ -93,19 +93,33 @@ func GetCoach(ctx context.Context, key *datastore.Key) (*Coach, error) {
 	return &coach, nil
 }
 
-type queryResponse struct {
-	Total      int
-	NextCursor *datastore.Cursor
-	//Result     interface{}
-	Result []*Coach
+//type DataResponse struct {
+//	Data       QueryResponse `json:"data"`
+//	Total      int
+//	NextCursor *datastore.Cursor
+//}
+
+type QueryResponse struct {
+	Data       []*Coach          `json:"data"`
+	Total      int               `json:"total"`
+	NextCursor *datastore.Cursor `json:"next"`
 }
 
-func GetAllCoach(ctx context.Context, next *datastore.Cursor) (*queryResponse, error) {
+func GetAllCoach(ctx context.Context) (*QueryResponse, error) {
+	return GetAllCoachWithParams(ctx, nil, -1)
+}
+
+func GetAllCoachWithParams(ctx context.Context, next *datastore.Cursor, count int) (*QueryResponse, error) {
 	var coachs []*Coach = make([]*Coach, 0)
 
 	count, err := datastore.NewQuery(COACH_ENTITY).Count(ctx)
 
-	query := datastore.NewQuery(COACH_ENTITY).Limit(1)
+	query := datastore.NewQuery(COACH_ENTITY)
+
+	if count > 0 {
+		query.Limit(count)
+	}
+
 	if next != nil {
 		query.Start(*next)
 	}
@@ -128,28 +142,27 @@ func GetAllCoach(ctx context.Context, next *datastore.Cursor) (*queryResponse, e
 		return nil, err
 	}
 
-	res := queryResponse{Total: count, NextCursor: &cursor, Result: coachs}
+	res := QueryResponse{Total: count, NextCursor: &cursor, Data: coachs}
 
 	return &res, nil
 }
 
 type APIqueryResponse struct {
-	Total      int
-	NextCursor *datastore.Cursor
-	//Result     interface{}
-	Result []*CoachAPI
+	Result     []*CoachAPI       `json:"data"`
+	Total      int               `json:"total"`
+	NextCursor *datastore.Cursor `json:"next"`
 }
 
-func GetAllAPICoachs(ctx context.Context, next *datastore.Cursor) (*APIqueryResponse, error) {
+func GetAllAPICoachs(ctx context.Context, next *datastore.Cursor, count int) (*APIqueryResponse, error) {
 	log.Debugf(ctx, "GetAllAPICoachs")
 
-	queryRes, err := GetAllCoach(ctx, next)
+	queryRes, err := GetAllCoachWithParams(ctx, next, count)
 	if err != nil {
 		return nil, err
 	}
 
-	var coachsAPI []*CoachAPI = make([]*CoachAPI, len(queryRes.Result))
-	for i, coach := range queryRes.Result {
+	var coachsAPI []*CoachAPI = make([]*CoachAPI, len(queryRes.Data))
+	for i, coach := range queryRes.Data {
 		log.Debugf(ctx, "GetAllAPICoach, coach %s, index %s", coach, i)
 		coachsAPI[i] = coach.ToCoachAPI()
 	}

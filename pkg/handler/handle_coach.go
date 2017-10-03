@@ -96,6 +96,7 @@ func handleGetAllCoachs(w http.ResponseWriter, r *http.Request) {
 
 	var body struct {
 		StartCursor string `json:"start_cursor"`
+		Count       int    `json:"count"`
 	}
 	err := response.Decode(r, &body)
 
@@ -109,7 +110,7 @@ func handleGetAllCoachs(w http.ResponseWriter, r *http.Request) {
 		startCursor = &cur
 	}
 
-	APIresponse, err := model.GetAllAPICoachs(ctx, startCursor)
+	APIresponse, err := model.GetAllAPICoachs(ctx, startCursor, body.Count)
 	if err != nil {
 		response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
 		return
@@ -117,8 +118,8 @@ func handleGetAllCoachs(w http.ResponseWriter, r *http.Request) {
 
 	var res struct {
 		Coachs []*model.CoachAPI `json:"coachs"`
-		Cursor string `json:"next_cursor"`
-		Total  int `json:"total"`
+		Cursor string            `json:"next_cursor"`
+		Total  int               `json:"total"`
 	}
 
 	res.Cursor = APIresponse.NextCursor.String()

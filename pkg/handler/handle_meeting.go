@@ -268,12 +268,12 @@ func handleRequestUpdateMeeting(w http.ResponseWriter, r *http.Request, meetingI
 	// send email to associated coach or all coachs
 	if meeting.MeetingCoachKey == nil {
 		// send emails to all our coachs
-		coachs, err := model.GetAllCoach(ctx)
+		coachsRes, err := model.GetAllCoach(ctx)
 		if err != nil {
 			response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
 			return
 		}
-		err = sendMeetingUpdatedEmailToAllCoachs(ctx, coachs) //TODO could be on a thread
+		err = sendMeetingUpdatedEmailToAllCoachs(ctx, coachsRes.Data) //TODO could be on a thread
 		if err != nil {
 			response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
 			return
@@ -362,12 +362,12 @@ func handleRequestCreateMeeting(w http.ResponseWriter, r *http.Request) {
 	model.CreateNotification(ctx, fmt.Sprintf(model.TO_HR_MEETING_CREATED, coachee.Email), coachee.AssociatedRh)
 
 	// send emails to all our coachs
-	coachs, err := model.GetAllCoach(ctx)
+	coachsRes, err := model.GetAllCoach(ctx)
 	if err != nil {
 		response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
 		return
 	}
-	err = sendMeetingCreatedEmailToAllCoachs(ctx, coachs)
+	err = sendMeetingCreatedEmailToAllCoachs(ctx, coachsRes.Data)
 	if err != nil {
 		response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
 		return
