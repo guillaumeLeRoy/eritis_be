@@ -173,7 +173,7 @@ func handleAPI(w http.ResponseWriter, r *http.Request, isAdmin bool) {
 	} else if strings.HasPrefix(originUrl, "/v1/crons") {
 		nonAuthHandler(handler.HandleCron)(w, r)
 	} else if strings.HasPrefix(originUrl, "/v1/potentials") {
-		authHandler(handler.HandlePotential, isAdmin)(w, r)
+		nonAuthHandler(handler.HandlePotential)(w, r)
 	}
 }
 
