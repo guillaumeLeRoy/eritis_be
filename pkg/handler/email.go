@@ -9,6 +9,7 @@ import (
 	"eritis_be/pkg/model"
 	"eritis_be/pkg/response"
 	"eritis_be/pkg/utils"
+	"time"
 )
 
 const INVITE_RH_TITLE = `Accédez à votre espace Eritis`
@@ -204,8 +205,8 @@ const COACH_SELECTED_FOR_SESSION_MSG = `
 </html>
 `
 
-const MEETING_TIME_SELECTED_FOR_SESSION_TITLE = `Votre coach Eritis vient d'ajouter un horaire à votre séance`
-const MEETING_TIME_SELECTED_FOR_SESSION_MSG = `
+const MEETING_TIME_SELECTED_FOR_SESSION_TO_COACHEE_TITLE = `Votre coach Eritis vient de définir un horaire pour votre séance`
+const MEETING_TIME_SELECTED_FOR_SESSION_TO_COACHEE_MSG = `
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
         "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html style="color:black;">
@@ -214,6 +215,22 @@ const MEETING_TIME_SELECTED_FOR_SESSION_MSG = `
 	<body>
 		<p>Bonjour,
 		<p>Le coach %s a accepté votre demande. Votre séance de coaching se tiendra donc le %s. Pour y accéder, connectez-vous à votre espace personnel sur <a href="%s">%s</a></p>
+		<p>A très bientôt sur notre plateforme,</p>
+		<p>L’équipe Eritis</p>
+	</body>
+</html>
+`
+
+const MEETING_TIME_SELECTED_FOR_SESSION_TO_COACH_TITLE = `Vous avez défini un horaire à votre prochaine séance`
+const MEETING_TIME_SELECTED_FOR_SESSION_TO_COACH_MSG = `
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html style="color:black;">
+
+	</head>
+	<body>
+		<p>Bonjour,
+		<p>Vous avez accepté une séance de coaching avec %s le %s. Pour y accéder, connectez-vous à votre espace personnel sur <a href="%s">%s</a></p>
 		<p>A très bientôt sur notre plateforme,</p>
 		<p>L’équipe Eritis</p>
 	</body>
@@ -524,6 +541,62 @@ func sendMeetingUpdatedEmailToAllCoachs(ctx context.Context, coachs []*model.Coa
 		err = utils.SendEmailToGivenEmail(ctx, "elaine.lecoeur@eritis.co.uk", MEETING_UPDATED_FOR_ALL_COACHS_TITLE, fmt.Sprintf(MEETING_UPDATED_FOR_ALL_COACHS_MSG, url, url))
 	}
 
+	if err != nil {
+		log.Errorf(ctx, "Couldn't send email: %v", err)
+		return err
+	}
+
+	return nil
+}
+
+func sendMeetingDateSetEmailToCoachee(ctx context.Context, coachee *model.Coachee, coach *model.Coach, agreedTime *model.MeetingTime) error {
+	baseUrl, err := utils.GetSiteUrl(ctx)
+	if err != nil {
+		log.Errorf(ctx, "Couldn't send email: %v", err)
+		return err
+	}
+	log.Errorf(ctx, "send email, startDate: %s", agreedTime.StartDate)
+	startDateOffset := agreedTime.StartDate.Add(-time.Minute * time.Duration(coachee.TimeZoneOffset))
+	log.Errorf(ctx, "send email, agreedTime.StartDate with offset: %s", startDateOffset)
+
+	minutes := ""
+	if startDateOffset.Minute() < 10 {
+		minutes = fmt.Sprintf("%s%d", "0", startDateOffset.Minute())
+	} else {
+		minutes = fmt.Sprintf("%d", startDateOffset.Minute())
+	}
+
+	date := fmt.Sprintf("le %d-%d-%d à %d:%s", startDateOffset.Day(), int(startDateOffset.Month()), startDateOffset.Year(), startDateOffset.Hour(), minutes)
+	msg := fmt.Sprintf(MEETING_TIME_SELECTED_FOR_SESSION_TO_COACHEE_MSG, coach.GetDisplayName(), date, baseUrl, baseUrl)
+	err = utils.SendEmailToGivenEmail(ctx, coachee.Email, MEETING_TIME_SELECTED_FOR_SESSION_TO_COACHEE_TITLE, msg)
+	if err != nil {
+		log.Errorf(ctx, "Couldn't send email: %v", err)
+		return err
+	}
+
+	return nil
+}
+
+func sendMeetingDateSetEmailToCoach(ctx context.Context, coachee *model.Coachee, coach *model.Coach, agreedTime *model.MeetingTime) error {
+	baseUrl, err := utils.GetSiteUrl(ctx)
+	if err != nil {
+		log.Errorf(ctx, "Couldn't send email: %v", err)
+		return err
+	}
+	log.Errorf(ctx, "send email, startDate: %s", agreedTime.StartDate)
+	startDateOffset := agreedTime.StartDate.Add(-time.Minute * time.Duration(coach.TimeZoneOffset))
+	log.Errorf(ctx, "send email, agreedTime.StartDate with offset: %s", startDateOffset)
+
+	minutes := ""
+	if startDateOffset.Minute() < 10 {
+		minutes = fmt.Sprintf("%s%d", "0", startDateOffset.Minute())
+	} else {
+		minutes = fmt.Sprintf("%d", startDateOffset.Minute())
+	}
+
+	date := fmt.Sprintf("le %d-%d-%d à %d:%s", startDateOffset.Day(), int(startDateOffset.Month()), startDateOffset.Year(), startDateOffset.Hour(), minutes)
+	msg := fmt.Sprintf(MEETING_TIME_SELECTED_FOR_SESSION_TO_COACH_MSG, coachee.GetDisplayName(), date, baseUrl, baseUrl)
+	err = utils.SendEmailToGivenEmail(ctx, coach.Email, MEETING_TIME_SELECTED_FOR_SESSION_TO_COACH_TITLE, msg)
 	if err != nil {
 		log.Errorf(ctx, "Couldn't send email: %v", err)
 		return err

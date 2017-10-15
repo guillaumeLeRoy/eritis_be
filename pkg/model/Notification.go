@@ -19,6 +19,8 @@ const TO_COACH_MEETING_CANCELED_BY_COACHEE = "La séance a été annulée par vo
 const TO_COACH_MEETING_UPDATED_BY_COACHEE = "La séance a été modifiée par votre coaché %s"
 const TO_COACH_MEETING_TIME_REMOVED = "Votre coach a supprimé l'horaire de votre séance"
 const TO_COACH_MEETING_CLOSED = "Vous avez achevé votre séance avec %s"
+const TO_COACH_MEETING_TIME_SELECTED_FOR_SESSION = "Vous avez défini un horaire pour votre séance" //TODO to improve
+
 
 // to HR
 const TO_HR_MEETING_CREATED = "%s a créé une séance"

@@ -17,17 +17,14 @@ func HandleLogin(w http.ResponseWriter, r *http.Request) {
 		params := response.PathParams(ctx, r, "/v1/login/:firebaseId")
 		uid, ok := params[":firebaseId"]
 		if ok {
-			handleGetUser(w, r, uid)// GET /api/login/:firebaseId
+			handleGetUser(w, r, uid) // GET /api/login/:firebaseId
 			return
 		}
-
 		http.NotFound(w, r)
-		return
 	default:
 		http.NotFound(w, r)
 	}
 }
-
 
 func handleGetUser(w http.ResponseWriter, r *http.Request, firebaseId string) {
 	ctx := appengine.NewContext(r)
@@ -35,13 +32,11 @@ func handleGetUser(w http.ResponseWriter, r *http.Request, firebaseId string) {
 
 	var fbUser model.FirebaseUser
 	fbUser.UID = firebaseId
-	res, err := fbUser.GetUser(ctx)
+	user, err := fbUser.GetUser(ctx)
 	if err != nil {
 		response.RespondErr(ctx, w, r, err, http.StatusBadRequest)
 		return
 	}
 
-	response.Respond(ctx, w, r, res, http.StatusOK)
+	response.Respond(ctx, w, r, user, http.StatusOK)
 }
-
-

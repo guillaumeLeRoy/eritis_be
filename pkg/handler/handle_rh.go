@@ -10,6 +10,7 @@ import (
 	"eritis_be/pkg/model"
 	"eritis_be/pkg/utils"
 	"fmt"
+	"strconv"
 )
 
 func HandlerRH(w http.ResponseWriter, r *http.Request) {
@@ -64,6 +65,16 @@ func HandlerRH(w http.ResponseWriter, r *http.Request) {
 			uid, ok := params[":uid"]
 			if ok {
 				uploadHrProfilePicture(w, r, uid) //PUT /v1/rhs/:uid/profile_picture
+				return
+			}
+		}
+
+		// update timezone
+		if contains = strings.Contains(r.URL.Path, "timezone"); contains {
+			params := response.PathParams(ctx, r, "/v1/rhs/:uid/timezone")
+			uid, ok := params[":uid"]
+			if ok {
+				handleUpdateHRTimeZone(w, r, uid)
 				return
 			}
 		}
@@ -466,4 +477,49 @@ func handleUpdateHrForId(w http.ResponseWriter, r *http.Request, id string) {
 	api := hr.ToRhAPI()
 
 	response.Respond(ctx, w, r, api, http.StatusOK)
+}
+
+func handleUpdateHRTimeZone(w http.ResponseWriter, r *http.Request, uid string) {
+	ctx := appengine.NewContext(r)
+	log.Debugf(ctx, "handleUpdateHRTimeZone, uid %s", uid)
+
+	key, err := datastore.DecodeKey(uid)
+	if err != nil {
+		response.RespondErr(ctx, w, r, err, http.StatusBadRequest)
+		return
+	}
+
+	hr, err := model.GetHR(ctx, key)
+	if err != nil {
+		response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
+		return
+	}
+
+	log.Debugf(ctx, "handleUpdateHRTimeZone, HR ok")
+
+	// update last connection date
+	var body struct {
+		LastConnectionTimeZoneOffset string `json:"time_zone_offset"`
+	}
+	err = response.Decode(r, &body)
+	if err != nil {
+		response.RespondErr(ctx, w, r, err, http.StatusBadRequest)
+		return
+	}
+
+	log.Debugf(ctx, "handleUpdateHRTimeZone, body %s", body)
+
+	timeZoneOffset, err := strconv.Atoi(body.LastConnectionTimeZoneOffset)
+	if err != nil {
+		response.RespondErr(ctx, w, r, err, http.StatusBadRequest)
+		return
+	}
+
+	err = hr.UpdateTimeZoneOffset(ctx, timeZoneOffset)
+	if err != nil {
+		response.RespondErr(ctx, w, r, err, http.StatusBadRequest)
+		return
+	}
+
+	response.Respond(ctx, w, r, nil, http.StatusOK)
 }
