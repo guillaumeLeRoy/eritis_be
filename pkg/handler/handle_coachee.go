@@ -10,6 +10,7 @@ import (
 	"strings"
 	"fmt"
 	"eritis_be/pkg/utils"
+	"strconv"
 )
 
 func HandleCoachees(w http.ResponseWriter, r *http.Request) {
@@ -89,6 +90,16 @@ func HandleCoachees(w http.ResponseWriter, r *http.Request) {
 			uid, ok := params[":uid"]
 			if ok {
 				uploadCoacheeProfilePicture(w, r, uid)
+				return
+			}
+		}
+
+		// update timezone
+		if contains = strings.Contains(r.URL.Path, "timezone"); contains {
+			params := response.PathParams(ctx, r, "/v1/coachees/:uid/timezone")
+			uid, ok := params[":uid"]
+			if ok {
+				handleUpdateCoacheeTimeZone(w, r, uid)
 				return
 			}
 		}
@@ -286,5 +297,51 @@ func uploadCoacheeProfilePicture(w http.ResponseWriter, r *http.Request, uid str
 	log.Debugf(ctx, "handle file upload, DONE")
 
 	//client.NewWriter(d.ctx, bucket, fileName)
+	response.Respond(ctx, w, r, nil, http.StatusOK)
+}
+
+
+func handleUpdateCoacheeTimeZone(w http.ResponseWriter, r *http.Request, uid string) {
+	ctx := appengine.NewContext(r)
+	log.Debugf(ctx, "handleUpdateCoacheeTimeZone, uid %s", uid)
+
+	key, err := datastore.DecodeKey(uid)
+	if err != nil {
+		response.RespondErr(ctx, w, r, err, http.StatusBadRequest)
+		return
+	}
+
+	coachee, err := model.GetCoachee(ctx, key)
+	if err != nil {
+		response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
+		return
+	}
+
+	log.Debugf(ctx, "handleUpdateCoacheeTimeZone, coach ok")
+
+	// update last connection date
+	var body struct {
+		LastConnectionTimeZoneOffset string `json:"time_zone_offset"`
+	}
+	err = response.Decode(r, &body)
+	if err != nil {
+		response.RespondErr(ctx, w, r, err, http.StatusBadRequest)
+		return
+	}
+
+	log.Debugf(ctx, "handleUpdateCoacheeTimeZone, body %s", body)
+
+	timeZoneOffset, err := strconv.Atoi(body.LastConnectionTimeZoneOffset)
+	if err != nil {
+		response.RespondErr(ctx, w, r, err, http.StatusBadRequest)
+		return
+	}
+
+	err = coachee.UpdateTimeZoneOffset(ctx, timeZoneOffset)
+	if err != nil {
+		response.RespondErr(ctx, w, r, err, http.StatusBadRequest)
+		return
+	}
+
 	response.Respond(ctx, w, r, nil, http.StatusOK)
 }

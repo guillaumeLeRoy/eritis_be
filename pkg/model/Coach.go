@@ -18,10 +18,12 @@ type Coach struct {
 	Key        *datastore.Key `json:"id" datastore:"-"`
 	FirebaseId string
 
-	ChatRoomURL   string `json:"chat_room_url"`
-	Score         int `json:"score"`
-	SessionsCount int `json:"sessions_count"`
-	StartDate     time.Time `json:"start_date"`
+	ChatRoomURL        string    `json:"chat_room_url"`
+	Score              int       `json:"score"`
+	SessionsCount      int       `json:"sessions_count"`
+	StartDate          time.Time `json:"start_date"`
+	LastConnectionDate time.Time `json:"last_connection_date"`
+	TimeZoneOffset     int       `json:"time_zone_offset"`
 
 	Email             string `json:"email"`
 	FirstName         string `json:"first_name"`
@@ -213,6 +215,14 @@ func (c *CoachAPI) GetDisplayName() string {
 	}
 }
 
+func (c *Coach) GetDisplayName() string {
+	if c.FirstName != "" && c.LastName != "" {
+		return fmt.Sprintf("%s %s", c.FirstName, c.LastName)
+	} else {
+		return c.Email
+	}
+}
+
 func (c *Coach) IncreaseSessionsCount(ctx context.Context) error {
 	c.SessionsCount += c.SessionsCount + 1
 	c.Update(ctx)
@@ -228,3 +238,22 @@ func (c *Coach) AddRate(ctx context.Context, coachRate *CoachRate) error {
 	c.Update(ctx)
 	return nil
 }
+
+func (c *Coach) UpdateTimeZoneOffset(ctx context.Context, timeZoneOffset int) error {
+	c.TimeZoneOffset = timeZoneOffset
+	err := c.Update(ctx)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (c *Coach) UpdateLastConnectionDate(ctx context.Context, date time.Time) error {
+	c.LastConnectionDate = date
+	err := c.Update(ctx)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+

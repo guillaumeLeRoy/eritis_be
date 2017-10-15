@@ -10,6 +10,7 @@ import (
 	"strings"
 	"eritis_be/pkg/utils"
 	"fmt"
+	"strconv"
 )
 
 func HandleCoachs(w http.ResponseWriter, r *http.Request) {
@@ -76,6 +77,16 @@ func HandleCoachs(w http.ResponseWriter, r *http.Request) {
 			uid, ok := params[":uid"]
 			if ok {
 				uploadCoachProfilePicture(w, r, uid)
+				return
+			}
+		}
+
+		// update timezone
+		if contains = strings.Contains(r.URL.Path, "timezone"); contains {
+			params := response.PathParams(ctx, r, "/v1/coachs/:uid/timezone")
+			uid, ok := params[":uid"]
+			if ok {
+				handleUpdateCoachTimeZone(w, r, uid)
 				return
 			}
 		}
@@ -290,6 +301,51 @@ func uploadCoachProfilePicture(w http.ResponseWriter, r *http.Request, uid strin
 	coach.Update(ctx)
 
 	log.Debugf(ctx, "handle file upload, DONE")
+
+	response.Respond(ctx, w, r, nil, http.StatusOK)
+}
+
+func handleUpdateCoachTimeZone(w http.ResponseWriter, r *http.Request, uid string) {
+	ctx := appengine.NewContext(r)
+	log.Debugf(ctx, "handleUpdateCoachTimeZone, uid %s", uid)
+
+	key, err := datastore.DecodeKey(uid)
+	if err != nil {
+		response.RespondErr(ctx, w, r, err, http.StatusBadRequest)
+		return
+	}
+
+	coach, err := model.GetCoach(ctx, key)
+	if err != nil {
+		response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
+		return
+	}
+
+	log.Debugf(ctx, "handleUpdateCoachTimeZone, coach ok")
+
+	// update last connection date
+	var body struct {
+		LastConnectionTimeZoneOffset string `json:"time_zone_offset"`
+	}
+	err = response.Decode(r, &body)
+	if err != nil {
+		response.RespondErr(ctx, w, r, err, http.StatusBadRequest)
+		return
+	}
+
+	log.Debugf(ctx, "handleUpdateCoachTimeZone, body %s", body)
+
+	timeZoneOffset, err := strconv.Atoi(body.LastConnectionTimeZoneOffset)
+	if err != nil {
+		response.RespondErr(ctx, w, r, err, http.StatusBadRequest)
+		return
+	}
+
+	err = coach.UpdateTimeZoneOffset(ctx, timeZoneOffset)
+	if err != nil {
+		response.RespondErr(ctx, w, r, err, http.StatusBadRequest)
+		return
+	}
 
 	response.Respond(ctx, w, r, nil, http.StatusOK)
 }

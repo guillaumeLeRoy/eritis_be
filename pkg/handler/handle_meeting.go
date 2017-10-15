@@ -779,9 +779,48 @@ func handleReqSetTimeForMeeting(w http.ResponseWriter, r *http.Request, meetingI
 	meeting, err := model.GetMeeting(ctx, meetingKey)
 	meeting.SetMeetingTime(ctx, meetingTimeKey)
 	if err != nil {
-		response.RespondErr(ctx, w, r, err, http.StatusBadRequest)
+		response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
 		return
 	}
+
+	coacheeKey := meeting.Key.Parent()
+	coachee, err := model.GetCoachee(ctx, coacheeKey)
+	if err != nil {
+		response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
+		return
+	}
+
+	// a coach should be associated, todo maybe check is MeetingCoachKey not nil
+	coachKey := meeting.MeetingCoachKey.Parent()
+	coach, err := model.GetCoach(ctx, coachKey)
+	if err != nil {
+		response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
+		return
+	}
+
+	meetingTime, err := model.GetMeetingTime(ctx, meetingTimeKey)
+	if err != nil {
+		response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
+		return
+	}
+
+	// send email to coachee
+	err = sendMeetingDateSetEmailToCoachee(ctx, coachee, coach, meetingTime)
+	//add notification to coachee
+	model.CreateNotification(ctx, model.TO_COACHEE_MEETING_TIME_SELECTED_FOR_SESSION, coacheeKey)
+
+	// send email to coach
+	err = sendMeetingDateSetEmailToCoach(ctx, coachee, coach, meetingTime)
+	//add notification to coach
+	model.CreateNotification(ctx, model.TO_COACH_MEETING_TIME_SELECTED_FOR_SESSION, coachKey)
+
+	if err != nil {
+		response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
+		return
+	}
+
+	// TODO add notification to HR
+	// model.CreateNotification(ctx, model.MEETING_TIME_SELECTED_FOR_SESSION, meeting.Key.Parent())
 
 	//get API meeting
 	meetingApi, err := meeting.ConvertToAPIMeeting(ctx)
@@ -789,21 +828,6 @@ func handleReqSetTimeForMeeting(w http.ResponseWriter, r *http.Request, meetingI
 		response.RespondErr(ctx, w, r, err, http.StatusBadRequest)
 		return
 	}
-
-	//send email coachee
-	baseUrl, err := utils.GetSiteUrl(ctx)
-	if err != nil {
-		response.RespondErr(ctx, w, r, err, http.StatusInternalServerError)
-	}
-	// TODO convert date
-	err = utils.SendEmailToGivenEmail(ctx, meetingApi.Coachee.Email,
-		MEETING_TIME_SELECTED_FOR_SESSION_TITLE, fmt.Sprintf(MEETING_TIME_SELECTED_FOR_SESSION_MSG, meetingApi.Coach.GetDisplayName(), meetingApi.AgreedTime.StartDate, baseUrl, baseUrl))
-	// send email to coach
-
-	//add notification to coachee
-	model.CreateNotification(ctx, model.TO_COACHEE_MEETING_TIME_SELECTED_FOR_SESSION, meeting.Key.Parent())
-	// TODO add notification to HR
-	// model.CreateNotification(ctx, model.MEETING_TIME_SELECTED_FOR_SESSION, meeting.Key.Parent())
 
 	response.Respond(ctx, w, r, meetingApi, http.StatusOK)
 
