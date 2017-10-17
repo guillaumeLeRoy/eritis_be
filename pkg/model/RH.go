@@ -10,26 +10,30 @@ import (
 const RH_ENTITY string = "Rh"
 
 type Rh struct {
-	Key         *datastore.Key `json:"id" datastore:"-"`
-	Email       string
-	FirebaseId  string
-	FirstName   string
-	LastName    string
-	Description string
-	StartDate   time.Time
-	AvatarURL   string
-	CompanyName string
+	Key                *datastore.Key `json:"id" datastore:"-"`
+	Email              string
+	FirebaseId         string
+	FirstName          string
+	LastName           string
+	Description        string
+	StartDate          time.Time
+	AvatarURL          string
+	CompanyName        string
+	LastConnectionDate time.Time
+	TimeZoneOffset     int
 }
 
 type RhAPI struct {
-	Id          string `json:"id"`
-	Email       string `json:"email"`
-	FirstName   string `json:"first_name"`
-	LastName    string `json:"last_name"`
-	StartDate   time.Time `json:"start_date"`
-	AvatarURL   string`json:"avatar_url"`
-	Description string  `json:"description"`
-	CompanyName string  `json:"company_name"`
+	Id                 string    `json:"id"`
+	Email              string    `json:"email"`
+	FirstName          string    `json:"first_name"`
+	LastName           string    `json:"last_name"`
+	StartDate          time.Time `json:"start_date"`
+	AvatarURL          string    `json:"avatar_url"`
+	Description        string    `json:"description"`
+	CompanyName        string    `json:"company_name"`
+	LastConnectionDate time.Time `json:"last_connection_date"`
+	TimeZoneOffset     int       `json:"time_zone_offset"`
 }
 
 func (rh *Rh) ToRhAPI() *RhAPI {
@@ -144,4 +148,22 @@ func GetRhForEmail(ctx context.Context, email string) ([]*Rh, error) {
 	}
 
 	return rhs, nil
+}
+
+func (c *Rh) UpdateTimeZoneOffset(ctx context.Context, timeZoneOffset int) error {
+	c.TimeZoneOffset = timeZoneOffset
+	err := c.Update(ctx)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (c *Rh) UpdateLastConnectionDate(ctx context.Context, date time.Time) error {
+	c.LastConnectionDate = date
+	err := c.Update(ctx)
+	if err != nil {
+		return err
+	}
+	return nil
 }

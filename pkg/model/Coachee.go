@@ -28,23 +28,27 @@ type Coachee struct {
 	UpdateSessionsCountDate    time.Time
 	SessionsDoneThisMonthCount int
 	SessionsDoneTotalCount     int
+	LastConnectionDate         time.Time
+	TimeZoneOffset             int
 }
 
 /* API struct */
 type CoacheeAPI struct {
-	Id                         string `json:"id"`
-	Email                      string `json:"email"`
-	FirstName                  string `json:"first_name"`
-	LastName                   string `json:"last_name"`
-	AvatarURL                  string`json:"avatar_url"`
-	StartDate                  time.Time `json:"start_date"`
-	AvailableSessionsCount     int `json:"available_sessions_count"`
-	UpdateSessionsCountDate    time.Time `json:"update_sessions_count_date"`
-	SessionsDoneThisMonthCount int `json:"sessions_done_month_count"`
-	SessionsDoneTotalCount     int `json:"sessions_done_total_count"`
-	AssociatedRh               *RhAPI `json:"associatedRh"`
-	Plan                       *Plan `json:"plan"`
+	Id                         string            `json:"id"`
+	Email                      string            `json:"email"`
+	FirstName                  string            `json:"first_name"`
+	LastName                   string            `json:"last_name"`
+	AvatarURL                  string            `json:"avatar_url"`
+	StartDate                  time.Time         `json:"start_date"`
+	AvailableSessionsCount     int               `json:"available_sessions_count"`
+	UpdateSessionsCountDate    time.Time         `json:"update_sessions_count_date"`
+	SessionsDoneThisMonthCount int               `json:"sessions_done_month_count"`
+	SessionsDoneTotalCount     int               `json:"sessions_done_total_count"`
+	AssociatedRh               *RhAPI            `json:"associatedRh"`
+	Plan                       *Plan             `json:"plan"`
 	CoacheeObjective           *CoacheeObjective `json:"last_objective"`
+	LastConnectionDate         time.Time         `json:"last_connection_date"`
+	TimeZoneOffset             int               `json:"time_zone_offset"`
 }
 
 func (c *Coachee) ToCoacheeAPI(rh *Rh, plan *Plan, coacheeObjective *CoacheeObjective) *CoacheeAPI {
@@ -62,6 +66,8 @@ func (c *Coachee) ToCoacheeAPI(rh *Rh, plan *Plan, coacheeObjective *CoacheeObje
 	res.AssociatedRh = rh.ToRhAPI()
 	res.Plan = plan
 	res.CoacheeObjective = coacheeObjective
+	res.LastConnectionDate = c.LastConnectionDate
+	res.TimeZoneOffset = c.TimeZoneOffset
 	return &res
 }
 
@@ -230,7 +236,7 @@ func createCoacheeFromFirebaseUser(ctx context.Context, fbUser *FirebaseUser, pl
 	return &coachee, nil
 }
 
-func GetCoacheeFromFirebaseId(ctx context.Context, fbId string) (*CoacheeAPI, error) {
+func GetCoacheeFromFirebaseId(ctx context.Context, fbId string) (*Coachee, error) {
 	log.Debugf(ctx, "getCoacheeFromFirebaseId id : %s", fbId)
 
 	var coachees []*Coachee
@@ -248,14 +254,7 @@ func GetCoacheeFromFirebaseId(ctx context.Context, fbId string) (*CoacheeAPI, er
 	var coachee = coachees[0]
 	var key = keys[0]
 	coachee.Key = key
-
-	//convert to API object
-	apiCoachee, err := coachee.GetAPICoachee(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	return apiCoachee, nil
+	return coachee, nil
 }
 
 func (c *Coachee) Update(ctx context.Context) (error) {
@@ -359,10 +358,36 @@ func (c *Coachee) IncreaseSessionsDoneCount(ctx context.Context) error {
 	return nil
 }
 
+func (c *Coachee) GetDisplayName() string {
+	if c.FirstName != "" && c.LastName != "" {
+		return fmt.Sprintf("%s %s", c.FirstName, c.LastName)
+	} else {
+		return c.Email
+	}
+}
+
 func (c *CoacheeAPI) GetDisplayName() string {
 	if c.FirstName != "" && c.LastName != "" {
 		return fmt.Sprintf("%s %s", c.FirstName, c.LastName)
 	} else {
 		return c.Email
 	}
+}
+
+func (c *Coachee) UpdateTimeZoneOffset(ctx context.Context, timeZoneOffset int) error {
+	c.TimeZoneOffset = timeZoneOffset
+	err := c.Update(ctx)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (c *Coachee) UpdateLastConnectionDate(ctx context.Context, date time.Time) error {
+	c.LastConnectionDate = date
+	err := c.Update(ctx)
+	if err != nil {
+		return err
+	}
+	return nil
 }

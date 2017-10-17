@@ -135,7 +135,7 @@ var AuthService = (function () {
     AuthService.prototype.fetchRh = function (userId) {
         var _this = this;
         var param = [userId];
-        var obs = this.get(AuthService_1.GET_RH_FOR_ID, param);
+        var obs = this.get(AuthService_1.GET_HR_FOR_ID, param);
         return obs.map(function (res) {
             console.log("fetchRh, obtained from API : ", res);
             var rh = __WEBPACK_IMPORTED_MODULE_9__model_HR__["a" /* HR */].parseRh(res.json());
@@ -440,7 +440,7 @@ var AuthService = (function () {
         return this.signup(user, AuthService_1.POST_SIGN_UP_COACHEE);
     };
     AuthService.prototype.signUpRh = function (user) {
-        return this.signup(user, AuthService_1.POST_SIGN_UP_RH);
+        return this.signup(user, AuthService_1.POST_SIGN_UP_HR);
     };
     AuthService.prototype.signup = function (user, path) {
         var _this = this;
@@ -509,13 +509,37 @@ var AuthService = (function () {
             return fbUser.getToken();
         });
         var firebaseObs = __WEBPACK_IMPORTED_MODULE_3_rxjs_observable_PromiseObservable__["PromiseObservable"].create(firebasePromise);
-        return firebaseObs.flatMap(function (token) {
+        return firebaseObs
+            .flatMap(function (token) {
             //user should be ok just after a sign up
             var fbUser = _this.firebase.auth().currentUser;
             _this.sessionService.saveSessionTTL();
             //now sign up in AppEngine
             _this.isSignInOrUp = false;
             return _this.getUserForFirebaseId(fbUser.uid, token);
+        })
+            .flatMap(function (user) {
+            return _this.updateUserTimeZone(user);
+        });
+    };
+    AuthService.prototype.updateUserTimeZone = function (user) {
+        var body = {
+            "time_zone_offset": new Date().getTimezoneOffset().toString()
+        };
+        var params = [user.id];
+        var path;
+        if (user instanceof __WEBPACK_IMPORTED_MODULE_7__model_Coach__["a" /* Coach */]) {
+            path = AuthService_1.PUT_COACH_TIMEZONE;
+        }
+        else if (user instanceof __WEBPACK_IMPORTED_MODULE_8__model_Coachee__["a" /* Coachee */]) {
+            path = AuthService_1.PUT_COACHEE_TIMEZONE;
+        }
+        else if (user instanceof __WEBPACK_IMPORTED_MODULE_9__model_HR__["a" /* HR */]) {
+            path = AuthService_1.PUT_HR_TIMEZONE;
+        }
+        return this.put(path, params, body).map(function (response) {
+            // return Coach.parseCoach(response.json());
+            return user;
         });
     };
     AuthService.prototype.loginOut = function () {
@@ -561,7 +585,7 @@ var AuthService = (function () {
             avatar_url: avatarUrl,
         };
         var params = [id];
-        return this.put(AuthService_1.UPDATE_RH, params, body).map(function (response) {
+        return this.put(AuthService_1.UPDATE_HR, params, body).map(function (response) {
             //convert to HR
             return __WEBPACK_IMPORTED_MODULE_9__model_HR__["a" /* HR */].parseRh(response.json());
         });
@@ -587,6 +611,7 @@ var AuthService = (function () {
     AuthService.GET_COACHEE_NOTIFICATIONS = "/v1/coachees/:id/notifications";
     AuthService.PUT_COACHEE_NOTIFICATIONS_READ = "/v1/coachees/:id/notifications/read";
     AuthService.PUT_COACHEE_PROFILE_PICT = "/v1/coachees/:id/profile_picture";
+    AuthService.PUT_COACHEE_TIMEZONE = "/v1/coachees/:id/timezone";
     /* coach */
     AuthService.UPDATE_COACH = "/v1/coachs/:id";
     AuthService.POST_SIGN_UP_COACH = "/v1/coachs";
@@ -595,18 +620,20 @@ var AuthService = (function () {
     AuthService.GET_COACH_NOTIFICATIONS = "/v1/coachs/:id/notifications";
     AuthService.PUT_COACH_NOTIFICATIONS_READ = "/v1/coachs/:id/notifications/read";
     AuthService.PUT_COACH_PROFILE_PICT = "/v1/coachs/:id/profile_picture";
+    AuthService.PUT_COACH_TIMEZONE = "/v1/coachs/:id/timezone";
     /* HR */
-    AuthService.GET_RHS = "/v1/rhs";
-    AuthService.UPDATE_RH = "/v1/rhs/:id";
-    AuthService.POST_SIGN_UP_RH = "/v1/rhs";
-    AuthService.GET_COACHEES_FOR_RH = "/v1/rhs/:uid/coachees";
-    AuthService.GET_POTENTIAL_COACHEES_FOR_RH = "/v1/rhs/:uid/potentials";
-    AuthService.GET_RH_FOR_ID = "/v1/rhs/:id";
-    AuthService.GET_USAGE_RATE_FOR_RH = "/v1/rhs/:id/usage";
-    AuthService.GET_RH_NOTIFICATIONS = "/v1/rhs/:id/notifications";
-    AuthService.PUT_RH_NOTIFICATIONS_READ = "/v1/rhs/:id/notifications/read";
+    AuthService.GET_HRS = "/v1/rhs";
+    AuthService.UPDATE_HR = "/v1/rhs/:id";
+    AuthService.POST_SIGN_UP_HR = "/v1/rhs";
+    AuthService.GET_COACHEES_FOR_HR = "/v1/rhs/:uid/coachees";
+    AuthService.GET_POTENTIAL_COACHEES_FOR_HR = "/v1/rhs/:uid/potentials";
+    AuthService.GET_HR_FOR_ID = "/v1/rhs/:id";
+    AuthService.GET_USAGE_RATE_FOR_HR = "/v1/rhs/:id/usage";
+    AuthService.GET_HR_NOTIFICATIONS = "/v1/rhs/:id/notifications";
+    AuthService.PUT_HR_NOTIFICATIONS_READ = "/v1/rhs/:id/notifications/read";
     AuthService.POST_COACHEE_OBJECTIVE = "/v1/rhs/:uidRH/coachees/:uidCoachee/objective"; //create new objective for this coachee
-    AuthService.PUT_RH_PROFILE_PICT = "/v1/rhs/:id/profile_picture";
+    AuthService.PUT_HR_PROFILE_PICT = "/v1/rhs/:id/profile_picture";
+    AuthService.PUT_HR_TIMEZONE = "/v1/rhs/:id/timezone";
     /* admin */
     AuthService.GET_ADMIN = "/v1/user";
     AuthService.ADMIN_GET_POSSIBLE_COACHS = "/v1/possible_coachs";
@@ -800,7 +827,7 @@ var CoachCoacheeService = (function () {
     };
     /* HR endpoints */
     CoachCoacheeService.prototype.getRhs = function (isAdmin) {
-        return this.apiService.get(__WEBPACK_IMPORTED_MODULE_3__auth_service__["a" /* AuthService */].GET_RHS, null, isAdmin).map(function (res) {
+        return this.apiService.get(__WEBPACK_IMPORTED_MODULE_3__auth_service__["a" /* AuthService */].GET_HRS, null, isAdmin).map(function (res) {
             var resArray = res.json();
             var hrs = new Array();
             for (var _i = 0, resArray_3 = resArray; _i < resArray_3.length; _i++) {
@@ -813,7 +840,7 @@ var CoachCoacheeService = (function () {
     CoachCoacheeService.prototype.getRhForId = function (rhId, isAdmin) {
         console.log("getRhForId, start request");
         var params = [rhId];
-        return this.apiService.get(__WEBPACK_IMPORTED_MODULE_3__auth_service__["a" /* AuthService */].GET_RH_FOR_ID, params, isAdmin).map(function (response) {
+        return this.apiService.get(__WEBPACK_IMPORTED_MODULE_3__auth_service__["a" /* AuthService */].GET_HR_FOR_ID, params, isAdmin).map(function (response) {
             console.log("getRhForId, got rh", response);
             var rh = __WEBPACK_IMPORTED_MODULE_5__model_HR__["a" /* HR */].parseRh(response.json());
             return rh;
@@ -824,7 +851,7 @@ var CoachCoacheeService = (function () {
     CoachCoacheeService.prototype.getAllCoacheesForRh = function (rhId, isAdmin) {
         console.log("getAllCoacheesForRh, start request");
         var params = [rhId];
-        return this.apiService.get(__WEBPACK_IMPORTED_MODULE_3__auth_service__["a" /* AuthService */].GET_COACHEES_FOR_RH, params, isAdmin).map(function (response) {
+        return this.apiService.get(__WEBPACK_IMPORTED_MODULE_3__auth_service__["a" /* AuthService */].GET_COACHEES_FOR_HR, params, isAdmin).map(function (response) {
             var json = response.json();
             var coachees = new Array;
             for (var _i = 0, json_1 = json; _i < json_1.length; _i++) {
@@ -838,7 +865,7 @@ var CoachCoacheeService = (function () {
     CoachCoacheeService.prototype.getAllPotentialCoacheesForRh = function (rhId, isAdmin) {
         console.log("getAllPotentialCoacheesForRh, start request");
         var params = [rhId];
-        return this.apiService.get(__WEBPACK_IMPORTED_MODULE_3__auth_service__["a" /* AuthService */].GET_POTENTIAL_COACHEES_FOR_RH, params, isAdmin).map(function (response) {
+        return this.apiService.get(__WEBPACK_IMPORTED_MODULE_3__auth_service__["a" /* AuthService */].GET_POTENTIAL_COACHEES_FOR_HR, params, isAdmin).map(function (response) {
             var json = response.json();
             console.log("getAllPotentialCoacheesForRh, response json : ", json);
             return json;
@@ -847,7 +874,7 @@ var CoachCoacheeService = (function () {
     CoachCoacheeService.prototype.getUsageRate = function (rhId) {
         console.log("getUsageRate, start request");
         var param = [rhId];
-        return this.apiService.get(__WEBPACK_IMPORTED_MODULE_3__auth_service__["a" /* AuthService */].GET_USAGE_RATE_FOR_RH, param).map(function (response) {
+        return this.apiService.get(__WEBPACK_IMPORTED_MODULE_3__auth_service__["a" /* AuthService */].GET_USAGE_RATE_FOR_HR, param).map(function (response) {
             var json = response.json();
             console.log("getUsageRate, response json : ", json);
             return json;
@@ -902,7 +929,7 @@ var CoachCoacheeService = (function () {
             path = __WEBPACK_IMPORTED_MODULE_3__auth_service__["a" /* AuthService */].GET_COACH_NOTIFICATIONS;
         }
         else if (user instanceof __WEBPACK_IMPORTED_MODULE_5__model_HR__["a" /* HR */]) {
-            path = __WEBPACK_IMPORTED_MODULE_3__auth_service__["a" /* AuthService */].GET_RH_NOTIFICATIONS;
+            path = __WEBPACK_IMPORTED_MODULE_3__auth_service__["a" /* AuthService */].GET_HR_NOTIFICATIONS;
         }
         return this.apiService.get(path, param).map(function (response) {
             var json = response.json();
@@ -918,7 +945,7 @@ var CoachCoacheeService = (function () {
             path = __WEBPACK_IMPORTED_MODULE_3__auth_service__["a" /* AuthService */].PUT_COACH_NOTIFICATIONS_READ;
         }
         else if (user instanceof __WEBPACK_IMPORTED_MODULE_5__model_HR__["a" /* HR */]) {
-            path = __WEBPACK_IMPORTED_MODULE_3__auth_service__["a" /* AuthService */].PUT_RH_NOTIFICATIONS_READ;
+            path = __WEBPACK_IMPORTED_MODULE_3__auth_service__["a" /* AuthService */].PUT_HR_NOTIFICATIONS_READ;
         }
         return this.apiService.put(path, param, null).map(function (response) {
             console.log("readAllNotifications done");
@@ -4258,7 +4285,7 @@ var ProfileRhComponent = (function () {
                 formData.append('uploadFile', _this.avatarUrl, _this.avatarUrl.name);
                 var headers = new __WEBPACK_IMPORTED_MODULE_7__angular_http__["c" /* Headers */]();
                 headers.append('Accept', 'application/json');
-                return _this.authService.put(__WEBPACK_IMPORTED_MODULE_4__service_auth_service__["a" /* AuthService */].PUT_RH_PROFILE_PICT, params, formData, { headers: headers })
+                return _this.authService.put(__WEBPACK_IMPORTED_MODULE_4__service_auth_service__["a" /* AuthService */].PUT_HR_PROFILE_PICT, params, formData, { headers: headers })
                     .map(function (res) { return res.json(); })
                     .catch(function (error) { return __WEBPACK_IMPORTED_MODULE_2_rxjs_Observable__["Observable"].throw(error); });
             }
@@ -9243,12 +9270,15 @@ module.exports = module.exports.toString();
 
 "use strict";
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "a", function() { return environment; });
+/**
+ * Created by guillaume on 31/03/2017.
+ */
 var environment = {
     production: true,
-    BACKEND_BASE_URL: "https://eritis-150320.appspot.com/api",
-    firebase_apiKey: "AIzaSyCDA7dW0JrLRJ0NZFLQKlLnt-vGOLWRet0",
-    firebase_authDomain: "eritis-150320.firebaseapp.com",
-    firebase_databaseURL: "https://eritis-150320.firebaseio.com",
+    BACKEND_BASE_URL: "https://eritis-be-dev.appspot.com/api",
+    firebase_apiKey: "AIzaSyDGJt42caQMGiRJDg8z_0C_sWhy1NFlHJ0",
+    firebase_authDomain: "eritis-be-dev.firebaseapp.com",
+    firebase_databaseURL: "https://eritis-be-dev.firebaseio.com",
 };
 //# sourceMappingURL=/Users/guillaume/angular/eritis_fe/src/environment.js.map
 

@@ -105,7 +105,7 @@ var AuthService = (function () {
     AuthService.prototype.fetchRh = function (userId) {
         var _this = this;
         var param = [userId];
-        var obs = this.get(AuthService_1.GET_RH_FOR_ID, param);
+        var obs = this.get(AuthService_1.GET_HR_FOR_ID, param);
         return obs.map(function (res) {
             console.log("fetchRh, obtained from API : ", res);
             var rh = HR.parseRh(res.json());
@@ -410,7 +410,7 @@ var AuthService = (function () {
         return this.signup(user, AuthService_1.POST_SIGN_UP_COACHEE);
     };
     AuthService.prototype.signUpRh = function (user) {
-        return this.signup(user, AuthService_1.POST_SIGN_UP_RH);
+        return this.signup(user, AuthService_1.POST_SIGN_UP_HR);
     };
     AuthService.prototype.signup = function (user, path) {
         var _this = this;
@@ -479,13 +479,37 @@ var AuthService = (function () {
             return fbUser.getToken();
         });
         var firebaseObs = PromiseObservable.create(firebasePromise);
-        return firebaseObs.flatMap(function (token) {
+        return firebaseObs
+            .flatMap(function (token) {
             //user should be ok just after a sign up
             var fbUser = _this.firebase.auth().currentUser;
             _this.sessionService.saveSessionTTL();
             //now sign up in AppEngine
             _this.isSignInOrUp = false;
             return _this.getUserForFirebaseId(fbUser.uid, token);
+        })
+            .flatMap(function (user) {
+            return _this.updateUserTimeZone(user);
+        });
+    };
+    AuthService.prototype.updateUserTimeZone = function (user) {
+        var body = {
+            "time_zone_offset": new Date().getTimezoneOffset().toString()
+        };
+        var params = [user.id];
+        var path;
+        if (user instanceof Coach) {
+            path = AuthService_1.PUT_COACH_TIMEZONE;
+        }
+        else if (user instanceof Coachee) {
+            path = AuthService_1.PUT_COACHEE_TIMEZONE;
+        }
+        else if (user instanceof HR) {
+            path = AuthService_1.PUT_HR_TIMEZONE;
+        }
+        return this.put(path, params, body).map(function (response) {
+            // return Coach.parseCoach(response.json());
+            return user;
         });
     };
     AuthService.prototype.loginOut = function () {
@@ -531,7 +555,7 @@ var AuthService = (function () {
             avatar_url: avatarUrl,
         };
         var params = [id];
-        return this.put(AuthService_1.UPDATE_RH, params, body).map(function (response) {
+        return this.put(AuthService_1.UPDATE_HR, params, body).map(function (response) {
             //convert to HR
             return HR.parseRh(response.json());
         });
@@ -557,6 +581,7 @@ var AuthService = (function () {
     AuthService.GET_COACHEE_NOTIFICATIONS = "/v1/coachees/:id/notifications";
     AuthService.PUT_COACHEE_NOTIFICATIONS_READ = "/v1/coachees/:id/notifications/read";
     AuthService.PUT_COACHEE_PROFILE_PICT = "/v1/coachees/:id/profile_picture";
+    AuthService.PUT_COACHEE_TIMEZONE = "/v1/coachees/:id/timezone";
     /* coach */
     AuthService.UPDATE_COACH = "/v1/coachs/:id";
     AuthService.POST_SIGN_UP_COACH = "/v1/coachs";
@@ -565,18 +590,20 @@ var AuthService = (function () {
     AuthService.GET_COACH_NOTIFICATIONS = "/v1/coachs/:id/notifications";
     AuthService.PUT_COACH_NOTIFICATIONS_READ = "/v1/coachs/:id/notifications/read";
     AuthService.PUT_COACH_PROFILE_PICT = "/v1/coachs/:id/profile_picture";
+    AuthService.PUT_COACH_TIMEZONE = "/v1/coachs/:id/timezone";
     /* HR */
-    AuthService.GET_RHS = "/v1/rhs";
-    AuthService.UPDATE_RH = "/v1/rhs/:id";
-    AuthService.POST_SIGN_UP_RH = "/v1/rhs";
-    AuthService.GET_COACHEES_FOR_RH = "/v1/rhs/:uid/coachees";
-    AuthService.GET_POTENTIAL_COACHEES_FOR_RH = "/v1/rhs/:uid/potentials";
-    AuthService.GET_RH_FOR_ID = "/v1/rhs/:id";
-    AuthService.GET_USAGE_RATE_FOR_RH = "/v1/rhs/:id/usage";
-    AuthService.GET_RH_NOTIFICATIONS = "/v1/rhs/:id/notifications";
-    AuthService.PUT_RH_NOTIFICATIONS_READ = "/v1/rhs/:id/notifications/read";
+    AuthService.GET_HRS = "/v1/rhs";
+    AuthService.UPDATE_HR = "/v1/rhs/:id";
+    AuthService.POST_SIGN_UP_HR = "/v1/rhs";
+    AuthService.GET_COACHEES_FOR_HR = "/v1/rhs/:uid/coachees";
+    AuthService.GET_POTENTIAL_COACHEES_FOR_HR = "/v1/rhs/:uid/potentials";
+    AuthService.GET_HR_FOR_ID = "/v1/rhs/:id";
+    AuthService.GET_USAGE_RATE_FOR_HR = "/v1/rhs/:id/usage";
+    AuthService.GET_HR_NOTIFICATIONS = "/v1/rhs/:id/notifications";
+    AuthService.PUT_HR_NOTIFICATIONS_READ = "/v1/rhs/:id/notifications/read";
     AuthService.POST_COACHEE_OBJECTIVE = "/v1/rhs/:uidRH/coachees/:uidCoachee/objective"; //create new objective for this coachee
-    AuthService.PUT_RH_PROFILE_PICT = "/v1/rhs/:id/profile_picture";
+    AuthService.PUT_HR_PROFILE_PICT = "/v1/rhs/:id/profile_picture";
+    AuthService.PUT_HR_TIMEZONE = "/v1/rhs/:id/timezone";
     /* admin */
     AuthService.GET_ADMIN = "/v1/user";
     AuthService.ADMIN_GET_POSSIBLE_COACHS = "/v1/possible_coachs";

@@ -5,6 +5,7 @@ import (
 	"golang.org/x/net/context"
 	"google.golang.org/appengine/log"
 	"google.golang.org/appengine/datastore"
+	"time"
 )
 
 type FirebaseUser struct {
@@ -13,9 +14,9 @@ type FirebaseUser struct {
 }
 
 type Login struct {
-	Coach   *CoachAPI `json:"coach"`
+	Coach   *CoachAPI   `json:"coach"`
 	Coachee *CoacheeAPI `json:"coachee"`
-	Rh      *RhAPI `json:"rh"`
+	Rh      *RhAPI      `json:"rh"`
 }
 
 func (u FirebaseUser) OK() error {
@@ -56,24 +57,24 @@ func CreateCoach(ctx context.Context, u *FirebaseUser) (*Coach, error) {
 func CreateCoachee(ctx context.Context, u *FirebaseUser, planId PlanInt, rhKey *datastore.Key) (*Coachee, error) {
 	log.Debugf(ctx, "CreateCoachee, create, %s", u)
 
-	coacheeAPI, err := GetCoacheeFromFirebaseId(ctx, u.UID)
+	coachee, err := GetCoacheeFromFirebaseId(ctx, u.UID)
 	if err != nil && err != ErrNoUser {
 		return nil, errors.New("Error trying to know if a user is already in the datastore")
 	}
 
-	if coacheeAPI != nil {
+	if coachee != nil {
 		return nil, errors.New("coachee already exists")
 	}
 
 	//create a new coachee
-	coachee, err := createCoacheeFromFirebaseUser(ctx, u, planId, rhKey)
+	newCoachee, err := createCoacheeFromFirebaseUser(ctx, u, planId, rhKey)
 	if err != nil {
 		return nil, err
 	}
 
-	log.Debugf(ctx, "firebaseUser, coachee created %s", coachee)
+	log.Debugf(ctx, "firebaseUser, coachee created %s", newCoachee)
 
-	return coachee, nil
+	return newCoachee, nil
 }
 
 func CreateRH(ctx context.Context, u *FirebaseUser, firstName string, lastName string, companyName string) (*Rh, error) {
@@ -119,6 +120,7 @@ func (u *FirebaseUser) GetUser(ctx context.Context) (*Login, error) {
 
 	if err == nil {
 		log.Debugf(ctx, "GetUser, found a coach")
+		coach.UpdateLastConnectionDate(ctx, time.Now())
 		//convert to API object
 		api := coach.ToCoachAPI()
 		//we have a coach
@@ -136,8 +138,11 @@ func (u *FirebaseUser) GetUser(ctx context.Context) (*Login, error) {
 	//no coachee
 	if err == nil {
 		log.Debugf(ctx, "GetUser, found a coachee")
+		coachee.UpdateLastConnectionDate(ctx, time.Now())
+		//convert to API object
+		apiCoachee, _ := coachee.GetAPICoachee(ctx)
 		//we have a coachee
-		return &Login{Coachee: coachee}, nil
+		return &Login{Coachee: apiCoachee}, nil
 	}
 
 	//no coachee
@@ -146,6 +151,7 @@ func (u *FirebaseUser) GetUser(ctx context.Context) (*Login, error) {
 	rh, err := GetRhFromFirebaseId(ctx, u.UID)
 	if err == nil {
 		log.Debugf(ctx, "GetUser, found a rh")
+		rh.UpdateLastConnectionDate(ctx, time.Now())
 		//convert into API object
 		api := rh.ToRhAPI()
 		//we have a rh
